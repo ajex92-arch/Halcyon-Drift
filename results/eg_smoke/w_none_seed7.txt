@@ -1,0 +1,12 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+features: waves_late, lanespawn
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra", "siege_fix": "off", "breach": "off", "ms_cap": "off", "attrition": "off", "surrender": "off", "breach_extra": "off", "ms_soft": "off", "waves_late": "none", "lanespawn": "on", "eff": "off", "ms": "off" } rocks=2676 nodes=9 camps=12 route_nodes=347
+t=25:00  sim 0.0 ms/sim-s  worst tick 0.0 ms  units=34 ships=0 minions=0 drones=8 projectiles=0 fps=1
+  Halcyon tr=6000 ore=0 fac=8 tech=52 turrets=6 killed_turrets=0 K/D=0/0 avg_cr=6000 ms=100% sh=100% flying={  }
+  Cinder tr=6000 ore=0 fac=8 tech=52 turrets=6 killed_turrets=0 K/D=0/0 avg_cr=6000 ms=100% sh=100% flying={  }
+FEED t=1500 Reinforcements are thinning out: the mothership launches no more minion waves.
+t=26:00  sim 138.9 ms/sim-s  worst tick 57.7 ms  units=90 ships=24 minions=0 drones=25 projectiles=2 fps=266
+  Halcyon tr=827 ore=1620 fac=8 tech=52 turrets=11 killed_turrets=0 K/D=0/0 avg_cr=1301 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "bomber": 3, "lance": 2, "ion": 1, "support": 1 }
+  Cinder tr=1261 ore=1260 fac=8 tech=52 turrets=10 killed_turrets=0 K/D=0/0 avg_cr=1262 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "bomber": 3, "lance": 2, "ion": 1, "support": 1 }
+FC_SMOKE {"big_ships":[6,6],"cinder_hull_samples":[[9,1.0],[19,1.0],[29,1.0],[39,1.0],[49,1.0],[59,1.0],[69,1.0]],"cinder_mults":{},"features":["waves_late","lanespawn"],"hull_frac":[1.0,1.0],"minutes":26.33,"phase":"play","scenario":"idle","siege":["",""],"siege_cap":[null,null],"siege_ships":[["flak",21316,2,290],["battlecruiser",18510,6,174],["bomber",20734,3,463],["ion",21392,7,301],["battlecruiser",18781,1,174],["bomber",21182,1,463],["flak",21641,5,290],["battlecruiser",18915,15,174],["bomber",20957,3,463]],"tagged_minions_alive":{},"usage":{"waves_skipped":2},"variants":{"attrition":"off","breach":"off","breach_extra":"off","eff":"off","escort_wing":"extra","lanespawn":"on","ms":"off","ms_cap":"off","ms_soft":"off","retreat":"systems_failure","siege_fix":"off","surrender":"off","waves_late":"none"},"winner":-1}

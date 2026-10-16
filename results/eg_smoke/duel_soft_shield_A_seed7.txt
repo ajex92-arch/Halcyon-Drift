@@ -1,0 +1,18 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+features: retreat, ms_soft
+ms_duel A: mothership upgraded=false hull=16000 shields=3000 guns=8 vs ["flak", "flak", "flak", "destroyer"]
+match: role=spectator variants={ "retreat": "none", "escort_wing": "extra", "siege_fix": "off", "breach": "off", "ms_cap": "off", "attrition": "off", "surrender": "off", "breach_extra": "off", "ms_soft": "shield", "waves_late": "off", "lanespawn": "off", "eff": "off", "ms": "off" } rocks=2676 nodes=9 camps=12 route_nodes=347
+  t=  0s  mothership hull 100% shields 100%  attackers alive 4: flak 100%, flak 100%, flak 100%, destroyer 100%
+  t= 15s  mothership hull 100% shields 94%  attackers alive 4: flak 100%, flak 100%, flak 100%, destroyer 100%
+  t= 30s  mothership hull 80% shields 0%  attackers alive 4: flak 100%, flak 100%, flak 100%, destroyer 100%
+  t= 45s  mothership hull 46% shields 0%  attackers alive 4: flak 93%, flak 100%, flak 100%, destroyer 100%
+  t= 60s  mothership hull 13% shields 0%  attackers alive 4: flak 62%, flak 100%, flak 87%, destroyer 100%
+t=1:00  sim 41.3 ms/sim-s  worst tick 60.3 ms  units=11 ships=4 minions=0 drones=5 projectiles=38 fps=598
+  Halcyon tr=1680 ore=0 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=13% sh=0% flying={  }
+  Cinder tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=302 ms=100% sh=100% flying={ "flak": 3, "destroyer": 1 }
+t=1:06  sim 42.0 ms/sim-s  worst tick 1.1 ms  units=11 ships=4 minions=0 drones=5 projectiles=38 fps=623
+  Halcyon tr=1699 ore=0 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=0% sh=0% flying={  }
+  Cinder tr=2239 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=305 ms=100% sh=100% flying={ "flak": 3, "destroyer": 1 }
+SUMMARY {"Cinder":{"kills":0,"mothership":1.0,"ore":899.999999999999,"turrets_destroyed":0,"unlocks":{}},"Halcyon":{"kills":0,"mothership":0.0,"ore":0.0,"turrets_destroyed":0,"unlocks":{}},"result":"Cinder wins: The Halcyon mothership was destroyed.","time":66.4333333333309,"variants":{"attrition":"off","breach":"off","breach_extra":"off","eff":"off","escort_wing":"extra","lanespawn":"off","ms":"off","ms_cap":"off","ms_soft":"shield","retreat":"none","siege_fix":"off","surrender":"off","waves_late":"off"},"winner":1}
+RESULT A MOTHERSHIP DESTROYED after 66s: mothership 0% hull (0% of total HP left), attackers alive 4
