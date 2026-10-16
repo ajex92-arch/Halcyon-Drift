@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud_slots.gd" id="1_root"]
+
+[node name="Slots" type="VBoxContainer"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_bottom = -8.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 4
+script = ExtResource("1_root")
+
+[node name="Keys" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"MistText"
+theme_override_font_sizes/font_size = 11
+
+[node name="Gear" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4

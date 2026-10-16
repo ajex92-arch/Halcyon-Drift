@@ -1,0 +1,11 @@
+{"id": "tj_r1", "runs": [{"tag":"gl_late","test":"fun_probe","seeds":[101,102,103,104,105],"extra":"--late --symmetric --secs=1200 --skill-jitter --sim-only --variant=group_late:on","per_job":5,"timeout_min":120,"project":"projects/teamfights_jungle"},
+{"tag":"sc_late","test":"fun_probe","seeds":[101,102,103,104,105],"extra":"--late --symmetric --secs=1200 --skill-jitter --sim-only --variant=salvage_core:on","per_job":5,"timeout_min":120,"project":"projects/teamfights_jungle"},
+{"tag":"el_late","test":"fun_probe","seeds":[101,102,103,104,105],"extra":"--late --symmetric --secs=1200 --skill-jitter --sim-only --variant=epic:elder","per_job":5,"timeout_min":120,"project":"projects/teamfights_jungle"},
+{"tag":"js_30","test":"fun_probe","seeds":[101,102,103],"extra":"--secs=1800 --skill-jitter --sim-only --variant=jungle_scale:on","per_job":3,"timeout_min":120,"project":"projects/teamfights_jungle"},
+{"tag":"np_30","test":"fun_probe","seeds":[101,102,103],"extra":"--secs=1800 --skill-jitter --sim-only --variant=node_persist:on","per_job":3,"timeout_min":120,"project":"projects/teamfights_jungle"},
+{"tag":"dr_30","test":"fun_probe","seeds":[101,102,103],"extra":"--secs=1800 --skill-jitter --sim-only --variant=epic:dreadnought","per_job":3,"timeout_min":120,"project":"projects/teamfights_jungle"},
+{"tag":"bc_30","test":"fun_probe","seeds":[101,102,103],"extra":"--secs=1800 --skill-jitter --sim-only --variant=beacons:on","per_job":3,"timeout_min":120,"project":"projects/teamfights_jungle"},
+{"tag":"bca_30","test":"fun_probe","seeds":[101,102,103],"extra":"--secs=1800 --skill-jitter --sim-only --variant=beacons:on --tfj-beacon-any=1","per_job":3,"timeout_min":120,"project":"projects/teamfights_jungle"},
+{"tag":"c4_30","test":"fun_probe","seeds":[101,102,103],"extra":"--secs=1800 --skill-jitter --sim-only --variant=camp4:on","per_job":3,"timeout_min":120,"project":"projects/teamfights_jungle"},
+{"tag":"ft_30","test":"fun_probe","seeds":[101,102,103],"extra":"--secs=1800 --skill-jitter --sim-only --variant=feats:on","per_job":3,"timeout_min":120,"project":"projects/teamfights_jungle"}]
+}

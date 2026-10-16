@@ -1,0 +1,13 @@
+# cloud-runs carries only the workflow, the request and the project copies
+/*
+!/.github/
+!/cloud/
+!/projects/
+!/.gitignore
+!/.gitattributes
+.godot/
+__pycache__/
+*.pyc
+*.translation
+*_seed*.txt
+*_err.txt

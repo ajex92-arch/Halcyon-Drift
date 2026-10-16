@@ -1,0 +1,65 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/help_panel.gd" id="1_root"]
+
+[node name="HelpPanel" type="PanelContainer"]
+mouse_filter = 0
+theme_type_variation = &"HelpLook"
+script = ExtResource("1_root")
+
+[node name="Col" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Head" type="HBoxContainer" parent="Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Col/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "How to play"
+
+[node name="TheMatch" type="Button" parent="Col/Head"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "The match"
+
+[node name="Flying" type="Button" parent="Col/Head"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Flying"
+
+[node name="Admiral" type="Button" parent="Col/Head"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Admiral"
+
+[node name="Close" type="Button" parent="Col/Head"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Close (H)"
+
+[node name="Scroll" type="ScrollContainer" parent="Col"]
+custom_minimum_size = Vector2(0, 360)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 1
+horizontal_scroll_mode = 0
+
+[node name="Body" type="VBoxContainer" parent="Col/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 10
