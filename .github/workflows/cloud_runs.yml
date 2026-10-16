@@ -1,0 +1,144 @@
+# Cloud match runs for Halcyon Drift (headless Godot on GitHub's Linux runners).
+#
+# HOW TO USE: put a request in cloud/request.json on the branch cloud-runs
+# and push it. The request names an id and a list of runs:
+#   {"id": "pilot1", "runs": [
+#     {"tag": "det_n300", "test": "det_hash", "seeds": [7], "extra": "--secs=300",
+#      "per_job": 1, "timeout_min": 60, "project": "remake"}]}
+# Each run is split into jobs of `per_job` seeds (a runner has 2 cores, so 2
+# matches side by side is the sweet spot). Every seed runs
+#   godot --headless --path <project> --fixed-fps 60 -- --all-ai --seed=<s> --test=<test> <extra>
+# and its output goes to <tag>_seed<s>.txt (+ _err.txt). When all jobs are
+# done, the logs are committed to the branch cloud-results under
+# results/<id>/ (the built-in job token pushes; that push starts no new run).
+# workflow_dispatch also works (it reads cloud/request.json of the chosen ref).
+name: cloud-runs
+
+on:
+  push:
+    branches: [cloud-runs]
+    paths: ['cloud/request.json']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# No concurrency group: every pushed request runs as its own workflow run, side
+# by side (a group would keep only one pending run and cancel the others).
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.mk.outputs.matrix }}
+      id: ${{ steps.mk.outputs.id }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: mk
+        name: Split the request into jobs
+        run: |
+          python3 - <<'EOF'
+          import json, os
+          req = json.load(open('cloud/request.json'))
+          jobs = []
+          for r in req['runs']:
+              seeds = [int(s) for s in r['seeds']]
+              per = max(1, int(r.get('per_job', 2)))
+              for i in range(0, len(seeds), per):
+                  jobs.append({
+                      'tag': r['tag'], 'test': r['test'], 'extra': r.get('extra', ''),
+                      'seeds': ' '.join(str(s) for s in seeds[i:i + per]),
+                      'project': r.get('project', 'remake'),
+                      'timeout': int(r.get('timeout_min', 120)),
+                  })
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write('matrix=' + json.dumps({'include': jobs}) + '\n')
+              f.write('id=' + str(req['id']) + '\n')
+          print(len(jobs), 'jobs')
+          EOF
+
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get Godot (official Linux build)
+        run: |
+          set -e
+          V="${GODOT_VERSION}"
+          F="Godot_v${V}-stable_linux.x86_64"
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${V}-stable/${F}.zip" \
+            || curl -fsSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${V}-stable/${F}.zip"
+          unzip -q godot.zip
+          mv "${F}" godot
+          chmod +x godot
+          ./godot --version
+      - name: Import the project (registers class names)
+        run: timeout 10m ./godot --headless --path "${{ matrix.project }}" --import || true
+      - name: Run the matches
+        run: |
+          mkdir -p out
+          echo "cores: $(nproc)" > "out/runner_${{ matrix.tag }}_${{ strategy.job-index }}.txt"
+          for s in ${{ matrix.seeds }}; do
+            (
+              start=$(date +%s)
+              timeout ${{ matrix.timeout }}m ./godot --headless --path "${{ matrix.project }}" --fixed-fps 60 -- \
+                --all-ai --seed=$s --test=${{ matrix.test }} ${{ matrix.extra }} \
+                > "out/${{ matrix.tag }}_seed$s.txt" 2> "out/${{ matrix.tag }}_seed${s}_err.txt"
+              code=$?
+              echo "seed $s exit $code wall_s $(( $(date +%s) - start ))" >> "out/runner_${{ matrix.tag }}_${{ strategy.job-index }}.txt"
+            ) &
+          done
+          wait
+          cat out/runner_*.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.tag }}-${{ strategy.job-index }}
+          path: out/
+          retention-days: 7
+
+  collect:
+    needs: [plan, run]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/art
+      - name: Commit the logs to cloud-results
+        run: |
+          set -e
+          ID="${{ needs.plan.outputs.id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin cloud-results >/dev/null 2>&1; then
+            git fetch -q origin cloud-results
+            git checkout -q -f -B cloud-results origin/cloud-results
+          else
+            git checkout -q -f --orphan cloud-results
+            git rm -rfq . || true
+            git clean -fdq
+          fi
+          mkdir -p "results/${ID}"
+          find /tmp/art -type f -exec cp {} "results/${ID}/" \;
+          git add -f results
+          git commit -q -m "cloud results ${ID}" || echo "nothing to commit"
+          # Several batches may finish at once: on a rejected push, rebase on the
+          # newer cloud-results and retry (each batch writes only results/<id>/).
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if git push -q origin cloud-results; then exit 0; fi
+            sleep $((attempt * 5))
+            git pull -q --rebase origin cloud-results
+          done
+          exit 1

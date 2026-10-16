@@ -1,0 +1,1 @@
+﻿STATUS: 11:58 all 8 modules written; run_checks ALL OK, doc_check 100%, camp4 map probe OK, det_hash normal 900 s seed 7 EQUAL to int3 (181 lines); group_late and salvage_core smokes OK; waiting for queue slots (daytime limit 3, contested) for the late det_hash and the all-eight smoke (counters of epic/jungle_scale/node_persist/beacons/camp4/feats)

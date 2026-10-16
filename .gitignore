@@ -1,0 +1,13 @@
+# Godot 4 import cache and editor state (in any Godot project folder)
+.godot/
+*.translation
+# Match logs, screenshots and scratch output stay out of the repository
+*_seed*.txt
+*_err.txt
+*.png.import.tmp
+# Python bytecode caches
+__pycache__/
+*.pyc
+# Session operations notes stay private (schedule, plan, decisions)
+deep_dive/STATE.md
+deep_dive/PLAN_AFTER_RESET.md
