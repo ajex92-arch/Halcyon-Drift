@@ -213,7 +213,7 @@ func pilot_think(brain: PilotAI, ship: Ship) -> bool:
 		# (TEST/TUNING OPTION --tfj-beacon-any=1: count friendly ships of every
 		# size, not only small ones, for the group rule above. Without it,
 		# only small ships count, as the idea says.)
-		var small_only: bool = Game.opt("tfj-beacon-any", false) == false
+		var small_only: bool = str(Game.opt("tfj-beacon-any", "0")) != "1"
 		if TfjKit.friends_near(world, ship, ship.global_position, AI_RADIUS, small_only) < AI_FRIENDS:
 			return false
 		committed[ship.uid] = world.time + COMMIT

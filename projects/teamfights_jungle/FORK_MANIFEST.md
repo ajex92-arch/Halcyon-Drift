@@ -13,7 +13,7 @@ same `rocks=2676 camps=12 route_nodes=347` line and the same det_hash lines as i
 | `jungle_scale` | off, on | D3 a jungle that scales with the match, AI gank | none | `scripts/features/jungle_scale.gd` | `gank_attempts` |
 | `node_persist` | off, on | D4 persistent nodes (owns the turret rebuild-lock lever) | none | `scripts/features/node_persist.gd` | `persist_rebuilds` |
 | `epic` | off, dreadnought, elder | D5 timed epic neutral at the Crossing | REQ-CHANGE: "Remove the dynamic event zones" | `scripts/features/epic_neutral.gd` | `epic_kills`, `boon_seconds`, `elder_cores`, `elder_executes`, `elder_ms_hits` |
-| `beacons` | off, on | D6 salvage beacons with a sensor blackout | REQ-CHANGE: "Remove the dynamic event zones" and the capture points that mining drones replaced | `scripts/features/beacons.gd` | `beacon_captures`, `blackout_seconds` |
+| `beacons` | off, on | D6 salvage beacons with a sensor blackout | REQ-CHANGE: "Remove the dynamic event zones" and the capture points that mining drones replaced | `scripts/features/beacons.gd` | `beacon_trips`, `beacon_captures`, `blackout_seconds` |
 | `camp4` | off, on | D7 a fourth jungle camp per quarter | DESIGN (map generation changes) | `scripts/features/camp4.gd` + map builder | `camp4_camps`, `camp4_kills` |
 | `feats` | off, on | D8 early feats of strength and the 14:00 Vanguard | DESIGN | `scripts/features/feats.gd` | `feats_claimed`, `vanguards` |
 

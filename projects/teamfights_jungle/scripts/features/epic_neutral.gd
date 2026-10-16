@@ -37,7 +37,13 @@ extends RefCounted
 ## else is.
 ## Usage counts: "epic_kills", "boon_seconds", "elder_cores",
 ## "elder_executes" (turrets destroyed by the Core) and "elder_ms_hits"
-## (mothership hits boosted by the Core). No random numbers are drawn here
+## (mothership hits boosted by the Core). Measurement-only counts (they change
+## nothing in the match): "epic_spawns" (Dreadnoughts made), "epic_commits"
+## (pilots that committed to it), "epic_dread_damage" (hull points taken off
+## it in total), "epic_ship_seconds" (pilot-ship seconds spent within 1,500 of
+## it), "epic_peak_ships" (most pilot ships within 1,500 of it at once) and
+## "epic_ship_deaths" (pilot ships lost within 1,800 of it). No random numbers
+## are drawn here
 ## (the Dreadnought's own facing and snub launches roll a few, like any
 ## derelict).
 ##
@@ -82,6 +88,26 @@ const FRIENDS_NEEDED := 3
 const FRIEND_RADIUS := 6000.0
 ## A laner within this many world units joins when its lane wave is dead.
 const LANER_RADIUS := 5000.0
+## PARTY AI (TEST/TUNING OPTION --tfj-epic-ai=party; without it the rules above
+## apply and none of the following is used): a team with at least PARTY_MIN
+## healthy pilots (--tfj-epic-party=N changes this number) sends its nearest
+## PARTY_MIN + PARTY_EXTRA seats; they first gather at a staging point
+## STAGE_DIST short of the Dreadnought on their own side, and attack together
+## once 70% of them are within GATHER_NEAR of it (or after GATHER_MAX seconds).
+## A party with fewer than 3 seats alive breaks up and may form again after
+## RETRY_AFTER seconds.
+## Healthy pilots a team needs for a party (seats).
+const PARTY_MIN := 8
+## Seats sent on top of PARTY_MIN.
+const PARTY_EXTRA := 2
+## How far (world units) short of the Dreadnought the party gathers.
+const STAGE_DIST := 3200.0
+## A party member counts as gathered within this many world units of the staging point.
+const GATHER_NEAR := 1800.0
+## Longest wait (seconds) for the party to gather before it attacks anyway.
+const GATHER_MAX := 60.0
+## Seconds before a broken-up party may form again.
+const RETRY_AFTER := 90.0
 
 ## The match.
 var world: World
@@ -109,8 +135,30 @@ var _in_extra := false
 var committed := {}
 ## Boon-seconds not yet added to the usage count.
 var _acc := 0.0
+## Measurement only: the instance id of the Dreadnought last measured, its hull
+## then, hull points lost and not yet counted, pilot-ship seconds near it not yet
+## counted, and the most pilot ships near it at once so far.
+var _m_id := 0
+## Measurement only: the Dreadnought's hull when last measured.
+var _m_hull := 0.0
+## Measurement only: hull points lost and not yet counted.
+var _m_dmg := 0.0
+## Measurement only: pilot-ship seconds near the Dreadnought not yet counted.
+var _m_near_acc := 0.0
+## Measurement only: the most pilot ships near the Dreadnought at once so far.
+var _m_peak := 0
 ## Seconds until the next tick work.
 var _t := 0.0
+## Party AI (see PARTY_MIN): is it on, the party size asked for, and one record
+## per team: {"phase": "" (no party), "gather" or "assault", "members": seat
+## numbers (PilotProfile.slot) -> true, "stage": the staging point, "since":
+## match time the party formed, "cool": match time before which no new party
+## forms}.
+var _party_ai := false
+## The party size asked for (--tfj-epic-party=N; PARTY_MIN without it).
+var _party_min := PARTY_MIN
+## The party record of each team (index = team; see above).
+var parties: Array = []
 
 
 ## Hook the module into match `w`: pick the spot, listen for kills (and, for
@@ -119,6 +167,10 @@ func install(w: World) -> void:
 	world = w
 	buffs = MinionBuffs.ensure(w)
 	spot = _find_spot()
+	_party_ai = str(Game.opt("tfj-epic-ai", "")) == "party"
+	_party_min = int(Game.opt("tfj-epic-party", PARTY_MIN))
+	for t in 2:
+		parties.append({"phase": "", "members": {}, "stage": Vector2.ZERO, "since": 0.0, "cool": 0.0})
 	Events.unit_killed.connect(_on_unit_killed)
 	if Game.variant(KEY) == "elder":
 		Events.damage_applied.connect(_on_damage)
@@ -169,10 +221,122 @@ func tick(dt: float) -> void:
 	# Step 3: forget committed pilots when there is nothing to go for.
 	if live() == null and not committed.is_empty():
 		committed.clear()
+	# Step 4: measurement only.
+	var d := live()
+	if d != null:
+		_measure(d)
+	# Step 5: the party AI (only with --tfj-epic-ai=party).
+	if _party_ai:
+		_party_step(d)
+
+
+## PARTY AI: once a quarter second, form, advance or break up each team's party
+## (see PARTY_MIN). `d` is the live Dreadnought or null.
+func _party_step(d: Derelict) -> void:
+	for t in 2:
+		var p: Dictionary = parties[t]
+		var phase := str(p["phase"])
+		if d == null:
+			if phase != "":
+				p["phase"] = ""
+				p["members"] = {}
+			continue
+		if phase == "":
+			if world.time >= float(p["cool"]):
+				_party_form(t, d, p)
+			continue
+		# A party that is on its way: count its living seats and those at the staging point.
+		var members: Dictionary = p["members"]
+		var stage: Vector2 = p["stage"]
+		var alive := 0
+		var near := 0
+		for s: Ship in world.ships:
+			if s.alive and s.team == t and s.profile != null and members.has(s.profile.slot):
+				alive += 1
+				if s.global_position.distance_to(stage) < GATHER_NEAR:
+					near += 1
+		if alive < 3:
+			p["phase"] = ""
+			p["members"] = {}
+			p["cool"] = world.time + RETRY_AFTER
+			Game.count_usage("epic_party_breaks")
+		elif phase == "gather" and (float(near) >= 0.7 * float(alive) or world.time - float(p["since"]) > GATHER_MAX):
+			p["phase"] = "assault"
+			Game.count_usage("epic_assaults")
+
+
+## PARTY AI: team `t` forms a party against Dreadnought `d` if it has enough
+## healthy AI pilots (record `p` is the team's entry of `parties`).
+func _party_form(t: int, d: Derelict, p: Dictionary) -> void:
+	var ms := world.mothership(t)
+	var dir := Vector2.LEFT
+	if ms != null and ms.global_position.distance_to(d.global_position) > 1.0:
+		dir = (ms.global_position - d.global_position).normalized()
+	var stage := _free_near(d.global_position + dir * STAGE_DIST)
+	var pool: Array = []
+	for s: Ship in world.ships:
+		if s.alive and s.team == t and s.profile != null and not s.profile.is_human and s.hull_frac() >= 0.6:
+			pool.append([s.global_position.distance_to(stage), s.profile.slot])
+	if pool.size() < _party_min:
+		return
+	pool.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+	var members := {}
+	for i in mini(_party_min + PARTY_EXTRA, pool.size()):
+		members[int(pool[i][1])] = true
+	p["phase"] = "gather"
+	p["members"] = members
+	p["stage"] = stage
+	p["since"] = world.time
+	Game.count_usage("epic_party_forms")
+
+
+## `p` if no rock is within 500 of it, else the nearest free spot on a small
+## grid around it (800 and 1,600 world units away), else `p`.
+func _free_near(p: Vector2) -> Vector2:
+	for off: Vector2 in [Vector2.ZERO, Vector2(0, 800), Vector2(0, -800), Vector2(800, 0), Vector2(-800, 0), Vector2(0, 1600), Vector2(0, -1600), Vector2(1600, 0), Vector2(-1600, 0)]:
+		if not world.asteroids.blocked(p + off, 500.0):
+			return p + off
+	return p
+
+
+## Measurement only (changes nothing in the match): update the "epic_*" usage
+## counts for the live Dreadnought `d`; called every quarter second.
+func _measure(d: Derelict) -> void:
+	if d.get_instance_id() != _m_id:
+		_m_id = d.get_instance_id()
+		_m_hull = d.hull
+		_m_peak = 0
+		Game.count_usage("epic_spawns")
+	var lost := _m_hull - d.hull
+	_m_hull = d.hull
+	if lost > 0.0:
+		_m_dmg += lost
+		var whole := int(_m_dmg)
+		if whole > 0:
+			Game.count_usage("epic_dread_damage", whole)
+			_m_dmg -= float(whole)
+	var near := 0
+	for s: Ship in world.ships:
+		if s.alive and s.global_position.distance_to(d.global_position) < 1500.0:
+			near += 1
+	_m_near_acc += float(near) * 0.25
+	var secs := int(_m_near_acc)
+	if secs > 0:
+		Game.count_usage("epic_ship_seconds", secs)
+		_m_near_acc -= float(secs)
+	if near > _m_peak:
+		Game.count_usage("epic_peak_ships", near - _m_peak)
+		_m_peak = near
 
 
 ## Events.unit_killed: the Dreadnought died (reward its killer's team).
 func _on_unit_killed(unit: Node, info: RefCounted) -> void:
+	if unit is Ship:
+		# Measurement only: a pilot ship lost near the Dreadnought.
+		var dl := live()
+		if dl != null and (unit as Ship).global_position.distance_to(dl.global_position) < 1800.0:
+			Game.count_usage("epic_ship_deaths")
+		return
 	if not (unit is Derelict) or (unit as Derelict).camp_id != "epic":
 		return
 	var di := info as DamageInfo
@@ -241,6 +405,8 @@ func pilot_think(brain: PilotAI, ship: Ship) -> bool:
 	var d := live()
 	if d == null or ship.hull_frac() < 0.5 or brain.fallback_t > 0.0:
 		return false
+	if _party_ai:
+		return _party_think(brain, ship, d)
 	var go := committed.has(ship.uid)
 	var role := brain.profile.role
 	if not go:
@@ -249,11 +415,31 @@ func pilot_think(brain: PilotAI, ship: Ship) -> bool:
 			go = n >= FRIENDS_NEEDED
 			if go:
 				committed[ship.uid] = true
+				Game.count_usage("epic_commits")
 		elif ship.global_position.distance_to(d.global_position) < LANER_RADIUS:
 			go = TfjKit.minions_on_lane(world, ship.team, brain.goals.lane_id()) == 0
 	if not go:
 		return false
 	TfjKit.attack_derelict(brain, ship, d)
+	return true
+
+
+## PARTY AI (see PARTY_MIN): a seat of its team's party flies to the staging
+## point while the party gathers, then attacks the Dreadnought with the rest.
+## Returns true when it set the goal and target.
+func _party_think(brain: PilotAI, ship: Ship, d: Derelict) -> bool:
+	var p: Dictionary = parties[ship.team]
+	var phase := str(p["phase"])
+	if phase == "" or not (p["members"] as Dictionary).has(brain.profile.slot):
+		return false
+	if phase == "assault":
+		TfjKit.attack_derelict(brain, ship, d)
+		return true
+	# Gathering: go to the staging point, fighting whatever shows up on the way.
+	brain.goal = p["stage"]
+	brain.intent = ""
+	brain.target = brain.targeting.pick_target(ship, PilotTargeting.engage_range(ship))
+	brain.lock_target = brain.target
 	return true
 
 
