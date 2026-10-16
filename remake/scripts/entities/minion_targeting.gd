@@ -6,11 +6,9 @@ extends RefCounted
 ## HOW IT WORKS: this is a "static library": it keeps no memory of its own.
 ## Each function is handed the minion and reads or changes the minion's own
 ## fields (target, position, order...).
-##   - pick_target() runs 4 times a second. It keeps the current target
-##     while that is still close, visible, near our lane and not hidden
-##     behind a rock. Otherwise it gives every enemy in reach (that no rock
-##     hides) a score: its distance plus a penalty by
-##     kind. The LOWEST score wins:
+##   - pick_target() runs 4 times a second. It gives every enemy in reach
+##     (that no rock hides) a score (score_of()): its distance plus a
+##     penalty by kind. The LOWEST score wins:
 ##        enemy ship that just hurt one of our ships nearby   distance - 1200
 ##        enemy minion                                        distance
 ##        enemy structure (turret, repair bay)                distance + 600
@@ -20,6 +18,12 @@ extends RefCounted
 ##     The enemy mothership is checked on its own at the end (it isn't in
 ##     the spatial hash) and scored like a structure, by the distance to
 ##     its hull.
+##     The current target is not dropped just because the scores changed: it
+##     stays while it is still close, visible, near our lane and not hidden
+##     behind a rock, unless something else scores at least RETARGET_MARGIN
+##     (600) better. (Without that, a minion that had picked a pilot ship
+##     kept chasing it when a whole enemy wave arrived.)
+##   - score_of() is the score table itself, for one minion and one enemy.
 ##   - lane_anchor() is the point the leash (Minion.LEASH) is measured from.
 ##   - target_point() is the spot on the target we aim at and measure to.
 ## Distances are in world units (1 world unit is about one pixel at normal
@@ -28,20 +32,31 @@ extends RefCounted
 ## WHO USES IT: only Minion: _think() calls pick_target(), and sim_update()
 ## calls target_point().
 
+## How much better (lower, in score points, which are world units of
+## distance) a new target must score than the current one before a minion
+## gives the current one up. This is a tuning knob: 600 is the head start a
+## structure has over a minion in the score table, so a clearly better kind
+## wins, while two near-equal targets don't make the minion swap back and
+## forth. A bigger number makes minions stick to a target longer.
+const RETARGET_MARGIN := 600.0
 
-## Choose what minion `m` fights: sets m.target (null for nobody). Keeps
-## the current target if it is still worth it; otherwise scores every enemy
-## in aggro range (see HOW IT WORKS above).
+
+## Choose what minion `m` fights: sets m.target (null for nobody). Scores
+## every enemy in aggro range (score_of(), see HOW IT WORKS above) and keeps
+## the current target, if it is still worth keeping, unless the best new one
+## scores at least RETARGET_MARGIN (600) better.
 static func pick_target(m: Minion) -> void:
 	var anchor := lane_anchor(m)
-	# Step 1: stay on the current target while it is alive, can be shot, is
-	# within 1.15x our aggro range, can be seen by our team, is within
-	# LEASH of our anchor, and no rock hides it (a rock stops the rounds).
+	# Step 1: the current target is worth keeping while it is alive, can be
+	# shot, is within 1.15x our aggro range, can be seen by our team, is
+	# within LEASH of our anchor, and no rock hides it (a rock stops the
+	# rounds). `keep` is it, or null. We still look around below.
+	var keep: Unit = null
 	if m.target != null and is_instance_valid(m.target) and m.target.alive:
 		var tp := target_point(m)
 		if m.position.distance_to(tp) < m.aggro * 1.15 and m.target.visible_to(m.team) and tp.distance_to(anchor) < Minion.LEASH \
 				and not m.world.asteroids.segment_blocked(m.position, tp):
-			return
+			keep = m.target
 	# Step 2: start fresh and look at every unit near us. The spatial hash
 	# (World.unit_hash, a grid of the map) finds them quickly.
 	m.target = null
@@ -65,25 +80,8 @@ static func pick_target(m: Minion) -> void:
 		# No targets behind asteroids (turrets pick theirs the same way).
 		if m.world.asteroids.segment_blocked(m.position, u.position):
 			continue
-		# Step 3: the score (lower is better). A ship that hurt one of our
-		# pilot ships in the last 2 s, where that victim was within 1.5x
-		# our aggro range of us, gets 2400 off ("aggro_time" is stamped by
-		# Combat).
-		var score := d
-		if u.kind == Unit.K_SHIP:
-			score += 1200.0
-			if now - u.aggro_time < 2.0 and u.aggro_victim_pos.distance_to(m.position) < m.aggro * 1.5:
-				score -= 2400.0
-		elif u.kind == Unit.K_MINION:
-			score += 0.0
-		elif u.is_structure():
-			score += 600.0
-		else:
-			score += 900.0
-		# Bombers go for structures and big hulls.
-		if m.mtype == "bomber":
-			if u.is_structure() or u.size_class >= Rules.SIZE_MEDIUM:
-				score -= 1500.0
+		# Step 3: the score (lower is better), see score_of().
+		var score := score_of(m, u, now)
 		if score < best_score:
 			best_score = score
 			best = u
@@ -93,12 +91,46 @@ static func pick_target(m: Minion) -> void:
 	# visibility or the leash.
 	var ems := m.world.mothership(1 - m.team)
 	if ems != null and ems.alive:
-		var hd := ems.hull_dist(m.position)
-		if hd < m.aggro:
-			var score := hd + 600.0 - (1500.0 if m.mtype == "bomber" else 0.0)
+		if ems.hull_dist(m.position) < m.aggro:
+			var score := score_of(m, ems, now)
 			if score < best_score:
 				best = ems
+				best_score = score
+	# Step 5: the current target (if it was worth keeping) stays unless the
+	# best new one scores at least RETARGET_MARGIN better. With nobody else in
+	# reach it stays too.
+	if keep != null and best != keep and (best == null or best_score > score_of(m, keep, now) - RETARGET_MARGIN):
+		best = keep
 	m.target = best
+
+
+## The score (lower is better) that minion `m` gives enemy `u` when it
+## chooses a target: the distance (to the hull, for a mothership) plus a
+## penalty by kind (the table in HOW IT WORKS at the top). `now` is the match
+## time in seconds (World.time).
+static func score_of(m: Minion, u: Unit, now: float) -> float:
+	# The mothership is scored like a structure, by the distance to its hull.
+	if u is Mothership:
+		return (u as Mothership).hull_dist(m.position) + 600.0 - (1500.0 if m.mtype == "bomber" else 0.0)
+	# A ship that hurt one of our pilot ships in the last 2 s, where that
+	# victim was within 1.5x our aggro range of us, gets 2400 off
+	# ("aggro_time" is stamped by Combat).
+	var score := m.position.distance_to(u.position)
+	if u.kind == Unit.K_SHIP:
+		score += 1200.0
+		if now - u.aggro_time < 2.0 and u.aggro_victim_pos.distance_to(m.position) < m.aggro * 1.5:
+			score -= 2400.0
+	elif u.kind == Unit.K_MINION:
+		score += 0.0
+	elif u.is_structure():
+		score += 600.0
+	else:
+		score += 900.0
+	# Bombers go for structures and big hulls.
+	if m.mtype == "bomber":
+		if u.is_structure() or u.size_class >= Rules.SIZE_MEDIUM:
+			score -= 1500.0
+	return score
 
 
 ## The point minion `m`'s leash is measured from: its ordered spot for a

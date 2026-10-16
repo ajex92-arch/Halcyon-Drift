@@ -74,6 +74,7 @@ signal admiral_result(team: int, action: String, ok: bool, message: String)
 ## hull took after the shields and armour (0 when the shields soaked it
 ## all). Sent by Combat.apply_damage(), but ONLY while
 ## world.combat.emit_damage_events is true, which only probes turn on
-## (tests/fun_probe.gd); the game itself never listens. For a killing hit
+## (tests/fun_probe.gd and tests/pilot_audit.gd); the game itself never
+## listens. For a killing hit
 ## it comes just before unit_killed.
 signal damage_applied(target: Node, info: RefCounted, amount: float, hull_dmg: float)

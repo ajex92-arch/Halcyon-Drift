@@ -1,0 +1,420 @@
+# Playable builds of Halcyon Drift: a Windows version on GitHub Releases and a
+# browser version on GitHub Pages.
+#
+# WHAT RUNS WHEN
+#   Push to main that changes remake/** or this file
+#       -> build + smoke test + deploy the browser version to GitHub Pages.
+#          The live browser version is always the newest main. No Release.
+#   Push of a tag that starts with "v" (for example v0.1.0)
+#       -> build + smoke test + the GitHub Release with the Windows zip.
+#          GitHub Pages is not touched: the deploy job never runs for a tag.
+#   Run by hand (Actions tab > release > Run workflow), by the ref you pick:
+#       main                   -> the same as a push to main (deploys Pages)
+#       a tag starting with v  -> the same as a tag push (makes or updates
+#                                 that tag's Release)
+#       any other branch       -> build + smoke test only: a dry run that
+#                                 publishes nothing
+#   Nothing else starts it: not a push to another branch, and not a push to
+#   main that changes neither remake/** nor this file.
+#   A tag with a "-" in its name (v0.1.0-rc1) makes a prerelease; like every
+#   tag it never touches Pages.
+#
+# WHY PAGES NEVER RUNS FOR A TAG
+#   The github-pages environment has GitHub's default deployment policy: only
+#   the default branch (main) may deploy to it. A deployment started from a tag
+#   would be rejected, so the deploy job is skipped for tags. The browser
+#   version therefore always comes from main and the Windows version from tags.
+#
+# WHAT IT DOES (the export settings are in remake/export_presets.cfg)
+#   1. build job (every run): gets the Godot Linux editor and the Windows + Web
+#      export templates (downloaded once, checked against Godot's published
+#      SHA-512 sums, then kept in the Actions cache), imports the project and
+#      exports both presets, headless:
+#        "Windows Desktop" -> HalcyonDrift.exe (the game data is inside it)
+#        "Web"             -> index.html and its files (single-threaded build,
+#                             so it needs no special server headers)
+#      Then it starts the exported game data without a window as a smoke test;
+#      a script error or a missing "match:" line fails the run, so nothing
+#      broken is published. Both builds carry the Godot Engine license notice
+#      (README.txt in the zip, LICENSE-Godot.txt next to the web build). The
+#      Windows zip is kept as a run artifact for 7 days; the Web build is
+#      packaged for Pages when the ref is main.
+#   2. release job (tags that start with v): attaches the Windows zip to the
+#      GitHub Release of the tag (uses the built-in GITHUB_TOKEN).
+#   3. deploy-pages job (main only): publishes the Web build on GitHub Pages.
+#
+# CONCURRENCY (nothing here is shared with another workflow)
+#   build:        group "release-build-<ref>": one build at a time per ref. A
+#                 newer push waits for the running build and replaces an older
+#                 waiting one; a running build is never cancelled.
+#   deploy-pages: group "pages" (as GitHub recommends): one deployment at a
+#                 time; a running deployment is never cancelled.
+#
+# The actions are pinned to full commit ids (the version is in the comment on
+# each line), so a moved tag cannot swap code in. To update one, look up the
+# commit of the new tag and change the id and the comment together.
+#
+# ONE-TIME SETTING (repository owner, on the GitHub website; already done):
+#   Settings > Pages > Build and deployment > Source: "GitHub Actions".
+#   The github-pages environment keeps GitHub's default policy (default branch
+#   only); no tag rule is needed. If a deployment ever fails, "Re-run failed
+#   jobs" on that run deploys the kept build (stored for 7 days).
+name: release
+run-name: release ${{ github.ref_name }}
+
+on:
+  push:
+    # The paths filter applies to the branch only; GitHub does not evaluate
+    # it for pushes of tags, so every v* tag runs.
+    branches: [main]
+    paths:
+      - 'remake/**'
+      - '.github/workflows/release.yml'
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: "4.7.2"
+  PROJECT_DIR: remake
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build the Windows and Web versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # One build at a time per ref, so two pushes do not race (cache writes,
+    # artifacts). Queued, never cancelled: a running build finishes first.
+    concurrency:
+      group: release-build-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Restore the Godot editor from the cache
+        id: cache-editor
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/godot-editor
+          key: godot-editor-${{ runner.os }}-${{ env.GODOT_VERSION }}
+
+      - name: Restore the export templates from the cache
+        id: cache-templates
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-export-templates-windows-web-${{ env.GODOT_VERSION }}
+
+      - name: Download Godot (only what is not cached)
+        if: steps.cache-editor.outputs.cache-hit != 'true' || steps.cache-templates.outputs.cache-hit != 'true'
+        env:
+          EDITOR_CACHED: ${{ steps.cache-editor.outputs.cache-hit }}
+          TEMPLATES_CACHED: ${{ steps.cache-templates.outputs.cache-hit }}
+        run: |
+          tag="${GODOT_VERSION}-stable"
+          dl="$RUNNER_TEMP/godot-dl"
+          mkdir -p "$dl"
+          cd "$dl"
+
+          # Download one release file (the official release first, the
+          # godot-builds mirror second) and check it against the published
+          # SHA-512 sums.
+          fetch() {
+            local name="$1" base want got
+            for base in \
+              "https://github.com/godotengine/godot/releases/download/${tag}" \
+              "https://github.com/godotengine/godot-builds/releases/download/${tag}"
+            do
+              if curl -fsSL --retry 4 --retry-delay 5 --retry-all-errors -o "$name" "$base/$name" \
+                && curl -fsSL --retry 4 --retry-delay 5 --retry-all-errors -o SHA512-SUMS.txt "$base/SHA512-SUMS.txt"; then
+                want="$(awk -v n="$name" '$2 == n { print $1 }' SHA512-SUMS.txt)"
+                got="$(sha512sum "$name" | cut -d' ' -f1)"
+                if [ -n "$want" ] && [ "$want" = "$got" ]; then
+                  echo "Downloaded and verified $name"
+                  return 0
+                fi
+                echo "Checksum mismatch for $name (from $base)" >&2
+              fi
+            done
+            echo "Could not download $name" >&2
+            return 1
+          }
+
+          if [ "$EDITOR_CACHED" != "true" ]; then
+            name="Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+            fetch "$name.zip"
+            unzip -q "$name.zip"
+            mkdir -p "$HOME/godot-editor"
+            mv "$name" "$HOME/godot-editor/godot"
+            chmod +x "$HOME/godot-editor/godot"
+          fi
+
+          if [ "$TEMPLATES_CACHED" != "true" ]; then
+            fetch "Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          fi
+
+      - name: Unpack the export templates (Windows and Web only)
+        if: steps.cache-templates.outputs.cache-hit != 'true'
+        shell: "python3 {0}"
+        env:
+          TPZ: ${{ runner.temp }}/godot-dl/Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
+        run: |
+          import os
+          import re
+          import sys
+          import zipfile
+
+          # The .tpz is a zip file with every platform's templates (over 1 GB).
+          # Keep only what the two presets use. Godot wants the debug AND the
+          # release template of a preset to exist, even for a release export.
+          keep = re.compile(r"windows_(debug|release)_x86_64(_console)?\.exe|web_nothreads_(debug|release)\.zip")
+          need = [
+              "windows_debug_x86_64.exe", "windows_release_x86_64.exe",
+              "web_nothreads_debug.zip", "web_nothreads_release.zip",
+          ]
+          root = os.path.expanduser("~/.local/share/godot/export_templates")
+
+          with zipfile.ZipFile(os.environ["TPZ"]) as z:
+              files = {os.path.basename(i.filename): i for i in z.infolist() if not i.is_dir()}
+              if "version.txt" not in files:
+                  sys.exit("version.txt is not in the templates archive")
+              version = z.read(files["version.txt"]).decode().strip()
+              dest = os.path.join(root, version)
+              os.makedirs(dest, exist_ok=True)
+              for name, info in sorted(files.items()):
+                  if keep.fullmatch(name):
+                      with z.open(info) as src, open(os.path.join(dest, name), "wb") as out:
+                          while True:
+                              block = src.read(1 << 20)
+                              if not block:
+                                  break
+                              out.write(block)
+                      print("%-36s %12d bytes" % (name, info.file_size))
+
+          missing = [n for n in need if not os.path.isfile(os.path.join(dest, n))]
+          if missing:
+              sys.exit("not in the templates archive: " + ", ".join(missing))
+          with open(os.path.join(dest, "version.txt"), "w") as f:
+              f.write(version + "\n")
+          print("Export templates installed in", dest)
+
+      - name: Check the Godot setup
+        run: |
+          echo "$HOME/godot-editor" >> "$GITHUB_PATH"
+          godot="$HOME/godot-editor/godot"
+          "$godot" --version
+          case "$("$godot" --version)" in
+            "${GODOT_VERSION}.stable"*) ;;
+            *) echo "::error::Unexpected Godot version, wanted ${GODOT_VERSION}.stable"; exit 1 ;;
+          esac
+          templates="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          ls -l "$templates"
+          for f in windows_debug_x86_64.exe windows_release_x86_64.exe web_nothreads_debug.zip web_nothreads_release.zip; do
+            test -s "$templates/$f" || { echo "::error::Missing export template $f"; exit 1; }
+          done
+
+      - name: Import the project
+        run: |
+          # The import registers the game's class names and imports the icon;
+          # the exports need both. Godot can exit oddly after a good import, so
+          # the exit code is only reported; the check on the next line decides.
+          timeout 10m godot --headless --path "$PROJECT_DIR" --import || echo "The import exited with code $?"
+          test -s "$PROJECT_DIR/.godot/global_script_class_cache.cfg"
+
+      - name: Export the Windows version
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/build/windows"
+          timeout 15m godot --headless --path "$PROJECT_DIR" --export-release "Windows Desktop" "$GITHUB_WORKSPACE/build/windows/HalcyonDrift.exe"
+
+      - name: Export the Web version
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/build/web"
+          timeout 15m godot --headless --path "$PROJECT_DIR" --export-release "Web" "$GITHUB_WORKSPACE/build/web/index.html"
+
+      - name: Check the exported files
+        run: |
+          for f in build/windows/HalcyonDrift.exe build/web/index.html build/web/index.js build/web/index.wasm build/web/index.pck; do
+            test -s "$f" || { echo "::error::Missing or empty export file $f"; exit 1; }
+          done
+          # The tests, the documentation and the tools are not part of the game.
+          for f in build/windows/HalcyonDrift.exe build/web/index.pck; do
+            if grep -aqE 'res://(tests|docs|tools)/' "$f"; then
+              echo "::error::$f contains files from tests/, docs/ or tools/"
+              exit 1
+            fi
+          done
+          ls -l build/windows build/web
+
+      - name: Start the exported game data without a window
+        run: |
+          # Started without a window, the game builds its world and prints a
+          # "match:" line when that worked; a few hundred frames are enough.
+          # This runs the exported data (the exe holds the same pck), so a
+          # broken export is caught before anything is published. Script
+          # errors fail the step too. (Without a window the game skips its
+          # start screen and HUD, so this covers the world, not the menus.)
+          mkdir -p "$RUNNER_TEMP/smoke"
+          cd "$RUNNER_TEMP/smoke"
+          timeout 5m godot --headless --main-pack "$GITHUB_WORKSPACE/build/web/index.pck" --quit-after 300 > smoke.log 2>&1 || echo "The game exited with code $?"
+          cat smoke.log
+          if ! grep -q '^match: role=' smoke.log; then
+            echo "::error::The exported game data did not start (no match line)"
+            exit 1
+          fi
+          if grep -q 'SCRIPT ERROR' smoke.log; then
+            grep -m 10 'SCRIPT ERROR' smoke.log
+            echo "::error::The exported game data printed script errors (first lines above)"
+            exit 1
+          fi
+
+      - name: Write the Godot license notice
+        run: |
+          # One notice for both builds (the MIT license asks for it in every
+          # copy): it goes next to the web build and into the Windows zip.
+          cat > "$RUNNER_TEMP/godot-license.txt" <<'TXT'
+          Made with the Godot Engine (https://godotengine.org).
+
+          Godot Engine: Copyright (c) 2014-present Godot Engine contributors.
+          Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.
+
+          Permission is hereby granted, free of charge, to any person obtaining a
+          copy of this software and associated documentation files (the
+          "Software"), to deal in the Software without restriction, including
+          without limitation the rights to use, copy, modify, merge, publish,
+          distribute, sublicense, and/or sell copies of the Software, and to
+          permit persons to whom the Software is furnished to do so, subject to
+          the following conditions:
+
+          The above copyright notice and this permission notice shall be included
+          in all copies or substantial portions of the Software.
+
+          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+          OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+          MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+          IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+          CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+          TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+          SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+          The libraries inside the engine have their own licenses; see
+          https://godotengine.org/license/
+          TXT
+          cp "$RUNNER_TEMP/godot-license.txt" build/web/LICENSE-Godot.txt
+          test -s build/web/LICENSE-Godot.txt
+
+      - name: Zip the Windows version
+        run: |
+          cd build/windows
+          cat > README.txt <<'TXT'
+          Halcyon Drift for Windows
+
+          Double-click HalcyonDrift.exe to play. There is nothing to install.
+
+          Windows may say "Windows protected your PC" because the game is not
+          code-signed. Click "More info", then "Run anyway".
+
+          On the start screen pick a seat (Admiral or Pilot). Press H in the game
+          for the how-to-play.
+
+          ------------------------------------------------------------------------
+          TXT
+          cat "$RUNNER_TEMP/godot-license.txt" >> README.txt
+          python3 -m zipfile -c "$GITHUB_WORKSPACE/HalcyonDrift-windows-x86_64.zip" *
+          python3 -m zipfile -l "$GITHUB_WORKSPACE/HalcyonDrift-windows-x86_64.zip"
+
+      - name: Keep the Windows zip (for the release job, and to download from the run)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-build
+          path: HalcyonDrift-windows-x86_64.zip
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: Package the Web version for GitHub Pages
+        # Only where it will be deployed (main); tag runs and branch dry runs
+        # skip it.
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: build/web
+          # Kept for a week (the default is one day) so that "Re-run failed
+          # jobs" still works if the deployment fails.
+          retention-days: 7
+
+  release:
+    name: Publish the GitHub Release
+    needs: build
+    # Tags that start with v only (a push of one, or a manual run on one).
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Get the Windows zip
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: windows-build
+          path: dist
+
+      - name: Write the release notes
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          repo="${GITHUB_REPOSITORY#*/}"
+          cat > "$RUNNER_TEMP/notes.md" <<'EOF'
+          **Halcyon Drift** is a top-down space MOBA: two motherships, three lanes, minion waves and an asteroid jungle. It is 13 vs 13 (12 pilots and an Admiral per side) and AI fills every seat you do not take.
+
+          ### Play it
+
+          - **Windows**: download `HalcyonDrift-windows-x86_64.zip` below, unzip it and run `HalcyonDrift.exe`. Windows may warn about an unrecognised app because the game is not code-signed: choose "More info", then "Run anyway".
+          - **In the browser**: PAGES_URL (always the newest build, so it can be a little ahead of this release; a desktop browser with a mouse and keyboard works best).
+
+          On the start screen pick Admiral or Pilot. Press H in the game for the how-to-play.
+          EOF
+          sed -i "s|PAGES_URL|https://${owner}.github.io/${repo}/|" "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Create the release and attach the zip
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Halcyon Drift ${{ github.ref_name }}
+          body_path: ${{ runner.temp }}/notes.md
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: dist/HalcyonDrift-windows-x86_64.zip
+          fail_on_unmatched_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-pages:
+    name: Deploy the Web version to GitHub Pages
+    needs: build
+    # Main only. Never for a tag: the github-pages environment accepts the
+    # default branch only, so a deployment from a tag would be rejected. A
+    # manual run on another branch is a dry run and does not deploy either.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

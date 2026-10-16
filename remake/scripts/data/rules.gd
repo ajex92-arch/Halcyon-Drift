@@ -530,7 +530,7 @@ const TUNABLES := {
 	# Moving the mothership.
 	"mothership_move_unlock": "match time in seconds from which motherships may move (MOTHERSHIP_MOVE_UNLOCK, 1200; move_unlock_time())",
 	"mothership_move_gap": "seconds between the AI admiral's advance moves of the mothership (AdmiralMothershipMover.MOVE_GAP, 120)",
-	"mothership_advance_frac": "how far up the pushed lane the AI moves the mothership, as a fraction (AdmiralMothershipMover.ADVANCE_FRAC, 0.35)",
+	"mothership_advance_frac": "how far up the mid lane the AI moves the mothership, as a fraction (AdmiralMothershipMover.ADVANCE_FRAC, 0.35)",
 	# Minion waves (MinionDirector).
 	"wave_interval": "seconds between free minion waves (Minions.WAVE_INTERVAL, 35; MinionDirector)",
 }

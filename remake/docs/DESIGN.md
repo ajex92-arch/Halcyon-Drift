@@ -83,7 +83,7 @@ Pillars:
 | C16 | P1 waypoints with benefits | Kept: ships inside the waypoint ring get +8% speed, +25% shield regen, +15% vision. One active waypoint, lasts 75 s. |
 | C17 | P1 "Use CharacterBody2D or kinematic" | Pilot ships are CharacterBody2D using move_and_slide (asteroid collisions, forgiving damage). Light units (minions, drones, wards, bays in flight) use custom kinematics for performance. |
 | C18 | P1 modules (CS-style per ship) + new pilot items | Both: ship modules (2 per ship, lost when the ship dies, swappable at mothership or a repair bay) and pilot gear (6 slots, persists through death). |
-| C19 | "mothership can be moved by a docked admiral from 20:00" — how should the AI admiral use it? | Humans can always move it. AI variants (`ai_ms`): advance (up the push/siege lane when at least even), siege (only up its own siege lane, home otherwise), home (never). **Decided: advance.** Full 60-minute AI matches, 2 per variant: advance ended both (43:49, 47:48), siege 1 of 2, home 0 of 2. (2026-10-15: `siege` and `home` were taken out of the code, and with them the `ai_ms` switch.) |
+| C19 | "mothership can be moved by a docked admiral from 20:00" — how should the AI admiral use it? | Humans can always move it. AI variants (`ai_ms`): advance (up the push/siege lane when at least even; since 2026-10-16 always up the mid lane), siege (only up its own siege lane, home otherwise), home (never). **Decided: advance.** Full 60-minute AI matches, 2 per variant: advance ended both (43:49, 47:48), siege 1 of 2, home 0 of 2. (2026-10-15: `siege` and `home` were taken out of the code, and with them the `ai_ms` switch. 2026-10-16: the advance lane is now always the mid lane, also during a siege. Following the push or siege lane parked the two motherships on different lanes, top against bottom some 30,000 units apart, and no 30-minute AI match ended; parked on the shortest lane they meet, and two test matches ended after about 24 and 25 minutes. That was on the AI before the pass 1-3 fixes; with them, 0 of 3 normal 30-minute AI matches ended, see docs/AI_DEEP_DIVE.md.) |
 
 ### A3. Roles and the core loop
 
@@ -440,12 +440,13 @@ Pacing target in AI matches: bombers ~3–4 min, corvettes ~6–8, frigates
   jungle entrances and the connector, waypoint on the lane being pushed,
   mothership upgrades mid/late (no Fleet Command: it starved AI pushes),
   mothership advance after 20:00 when at least even in fleet strength
-  (once up a lane it only changes lanes for a siege).
+  (always up the mid lane, also during a siege, so that both motherships
+  park on the shortest lane and meet there).
 - **Siege and defense (late game, added 2026-10-14 after AI-vs-AI matches
   ran 50 minutes without touching a mothership):** with 2+ healthy big
   ships and a power edge, the admiral declares a siege on the lane with the
   fewest enemy inner turrets (or, once the enemy mothership is parked more
-  than 2,500 from home, on the lane it is parked on): gather at 0.6 of the
+  than 2,500 from home, on the lane it is parked on: the mid lane when the other admiral is an AI too): gather at 0.6 of the
   lane (until 2 big ships mass, max 45 s), then assault; in the assault big ships put their main
   guns on the mothership and let PD/flak handle defenders. A stalled
   assault regroups: < 15% hull damage in the 120 s after the first big

@@ -53,6 +53,7 @@ changes.
 - `func reset_progress() -> void`
 - `func target_hidden(ship: Ship, to: Vector2) -> bool`
 - `func travel(ship: Ship, to: Vector2, arrive: float) -> void`
+- `func avoid_hulls(ship: Ship) -> void`
 - `func avoid_rocks(ship: Ship) -> void`
 
 ## scripts/ai/pilot_goals.gd  (class_name PilotGoals extends RefCounted)
@@ -287,6 +288,7 @@ changes.
 
 ## scripts/entities/minion_targeting.gd  (class_name MinionTargeting extends RefCounted)
 - `static func pick_target(m: Minion) -> void`
+- `static func score_of(m: Minion, u: Unit, now: float) -> float`
 - `static func lane_anchor(m: Minion) -> Vector2`
 - `static func target_point(m: Minion) -> Vector2`
 
@@ -411,6 +413,7 @@ changes.
 - `func forward() -> Vector2`
 - `func hull_frac() -> float`
 - `func shield_total() -> float`
+- `func total_frac() -> float`
 - `func is_structure() -> bool`
 - `func visible_to(viewer_team: int) -> bool`
 - `func hit_t(a: Vector2, b: Vector2, pad: float) -> float`

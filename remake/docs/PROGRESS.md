@@ -656,3 +656,18 @@ much of that back). Next: pass 2 (targeting + admiral) and minion re-targeting.
   bombers skipping small craft, ships sliding along mothership hulls, a
   shield-aware retreat for small ships, and the user's "always park on mid")
   is being ported.
+### 2026-10-16 evening: cloud runs, baseline v2, fork screens, speed-ups (no game code banked yet today after pass 2)
+- GitHub: the project now lives also in a public repository; matches run on GitHub's free cloud runners
+  (each platform repeats itself exactly; cloud and PC runs are never mixed in one comparison). Personal and
+  machine-identifying information was scrubbed from it and a pre-push guard keeps it (and any credential) out.
+- Baseline v2 (40 full matches in the cloud): FUN 63.9; 70% of matches end, median 46.5 min; Halcyon and
+  Cinder won 14 each (the earlier "Cinder always wins" was chance; six small code asymmetries were found and
+  fixed behind switches anyway).
+- A "sim-only" mode for headless test runs (no drawing or sound, provably identical simulation) makes
+  matches ~1.9x faster; being ported into the game with an adversarial exactness review.
+- All six fun-plan forks are built (every idea as a switchable feature module, requirement-breaking ones
+  flagged) and are being screened in the cloud with early stopping; results so far: combat roles keeps the
+  minion damage cap on pilots, the Lance hunter role and stronger torpedoes vs small craft; pacing keeps the
+  ship-size-scaled respawn wait.
+- In progress: pass 3 of the AI fixes (incl. "always park on mid"), a balance-tuning sweep for the open
+  design calls, playable builds (Windows on GitHub Releases, browser on GitHub Pages).

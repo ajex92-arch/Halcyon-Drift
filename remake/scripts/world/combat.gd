@@ -44,8 +44,8 @@ extends RefCounted
 ## AdmiralCommand (an old ward replaced by a new one), RepairBay and Ship
 ## (their drones when they die), RepairDrone and SnubFighter (themselves).
 ## The ui_tour test calls kill(); the support_probe test calls
-## apply_damage(). Feature modules set minion_scale_hook; the fun probe
-## turns on emit_damage_events.
+## apply_damage(). Feature modules set minion_scale_hook; the fun probe and
+## the pilot audit turn on emit_damage_events.
 
 ## How much more damage a torpedo does to a "painted" ship: x1.3, that is
 ## +30%. A Support ship paints enemies (Ship.paint_t, set by WorldSupport).
@@ -59,9 +59,9 @@ var scaling: CombatScaling
 var beam_area: CombatBeamArea
 ## Measurement only: when true, every applied hit sends
 ## Events.damage_applied(target, info, amount, hull damage). False by
-## default; only probes turn it on (tests/fun_probe.gd sets
-## world.combat.emit_damage_events = true). Nothing in the game listens,
-## so the match plays the same either way.
+## default; only probes turn it on (tests/fun_probe.gd and
+## tests/pilot_audit.gd set world.combat.emit_damage_events = true). They
+## are the only listeners, so the match plays the same either way.
 var emit_damage_events := false
 ## Feature hook: a different strength for a minion's hit against one
 ## target. Empty (the default) = no change. A feature module sets it to a

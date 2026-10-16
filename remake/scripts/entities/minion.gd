@@ -23,8 +23,9 @@ extends Unit
 ##     other enemy ship. Each liking is a head start in distance, so a much
 ##     nearer enemy can still win (the exact scores are in
 ##     MinionTargeting). Bombers prefer structures and bigger hulls. A
-##     minion never chases more than LEASH away from its lane, and never
-##     picks (or keeps) a target that a rock hides.
+##     minion keeps its target until something scores 600 or more better
+##     (MinionTargeting.RETARGET_MARGIN), never chases more than LEASH away
+##     from its lane, and never picks (or keeps) a target that a rock hides.
 ##   - Fighting: each type flies its own way (MinionFlight): fighters circle
 ##     the target, bombers make straight attack runs, the corvette keeps its
 ##     distance. Fighters and bombers have fixed guns, so they turn the nose

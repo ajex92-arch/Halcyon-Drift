@@ -7,9 +7,15 @@ extends RefCounted
 ##   - pick_target() gives every enemy in range a score and takes the
 ##     lowest. The score starts as the distance (in world units), then gets
 ##     bonuses (lower) for juicy targets and penalties (higher) for bad
-##     ones: minions about to die (last hits) and weak pilots are juicy,
+##     ones: minions about to die (last hits) and weak pilots are juicy
+##     ("weak" counts hull and shields together, Unit.total_frac()),
 ##     turrets only count while our minions tank them, and a target with a
 ##     rock between it and us is 700 worse (our shots would hit the rock).
+##     The pilot we are shooting now gets STICK_BONUS (250) off, and stays a
+##     candidate out to STICK_RANGE (1.3) times the range, so two pilots of
+##     about equal value don't make us swap every think. A bomber in the
+##     lane leaves small craft alone (its torpedoes do little to them and
+##     mostly miss): only turrets, repair bays and bigger hulls count.
 ##   - push_target() finds a structure worth attacking with the wave (an
 ##     enemy turret, or the enemy mothership). Feature modules may change
 ##     how the turrets are scored (World.push_weight_hooks); with none, the
@@ -26,7 +32,8 @@ extends RefCounted
 ## PilotCombat uses main_reach. It asks PilotSenses about turrets, minions
 ## and odds, runs the feature modules' World.push_weight_hooks, and asks the
 ## asteroid field (AsteroidField.segment_blocked) whether a rock blocks the
-## line to a candidate (pick_target, prey).
+## line to a candidate (pick_target, prey). It reads how hurt a pilot is
+## from Unit.total_frac() (pick_target, prey).
 ##
 ## Words used here:
 ##   tanking   our minions stand in an enemy turret's range, so it shoots
@@ -46,6 +53,15 @@ const SEEK := [2600.0, 2000.0, 0.0, 0.0]
 ## How far from our station we chase prey, per size class (world units;
 ## see SEEK above; 0 = never).
 const LEASH := [3200.0, 2400.0, 0.0, 0.0]
+## How much better (lower score) the pilot we are shooting now counts than
+## any other target: a new pilot has to beat it by this much before we
+## swap. A tuning knob: more makes pilots finish duels, less makes them
+## swap more.
+const STICK_BONUS := 250.0
+## The pilot we are shooting now stays a candidate out to this many times
+## the search range (so a step back or a dodge doesn't end the duel). A
+## tuning knob.
+const STICK_RANGE := 1.3
 
 ## The pilot brain this part belongs to (we read its state and world, and
 ## set its lock_target). It is reached through a weak link: see `_ai_ref`.
@@ -73,8 +89,10 @@ func _init(owner: PilotAI) -> void:
 ## The best enemy within r of us to shoot, or null. Lower score = better.
 ## Last hits, weak pilots and drones are juicy; turrets only while our
 ## minions tank them; an enemy with a rock between it and us (a shot would
-## hit the rock) scores 700 worse. Also sets the brain's lock_target to the
-## answer.
+## hit the rock) scores 700 worse. The pilot we are shooting now (the
+## brain's target) counts STICK_BONUS better and may be up to STICK_RANGE
+## times r away; a bomber in the lane skips small craft. Also sets the
+## brain's lock_target to the answer.
 func pick_target(ship: Ship, r: float) -> Unit:
 	var brain := ai
 	var world := brain.world
@@ -88,8 +106,18 @@ func pick_target(ship: Ship, r: float) -> Unit:
 	var heavy_hitter := ship.hull_id in ["bomber", "ion", "destroyer", "battlecruiser", "lance"]
 	# Are we inside an enemy turret's range ourselves (plus 150)?
 	var me_covered := brain.senses.enemy_turret_at(ship.global_position, ship.team, 150.0) != null
-	for u: Unit in world.unit_hash.query(ship.global_position, r, _scratch):
-		# Step 1: only live, visible enemies truly within r.
+	# The pilot we are shooting now, if it is still a live ship: it counts
+	# STICK_BONUS better and stays a candidate out to STICK_RANGE times r.
+	var prev: Unit = brain.target
+	if prev != null and not is_instance_valid(prev):
+		prev = null
+	var stick_on := prev != null and prev.kind == Unit.K_SHIP and prev.alive
+	# A bomber in the lane leaves small craft alone: its torpedoes do x0.35
+	# to them and miss 8 times in 10 (minions, drones, wards and small pilots).
+	var bomber_lane := ship.hull_id == "bomber" and brain.state == "lane"
+	for u: Unit in world.unit_hash.query(ship.global_position, r * STICK_RANGE if stick_on else r, _scratch):
+		# Step 1: only live, visible enemies truly within r (the pilot we
+		# stick to: within STICK_RANGE times r).
 		# Neutral units (jungle monsters) only count while jungling.
 		if not u.alive or u.team == ship.team:
 			continue
@@ -101,14 +129,18 @@ func pick_target(ship: Ship, r: float) -> Unit:
 		if not u.visible_to(ship.team):
 			continue
 		var d := ship.global_position.distance_to(u.global_position)
-		if d > r:
+		if d > r and not (stick_on and u == prev and d <= r * STICK_RANGE):
+			continue
+		if bomber_lane and u.size_class == Rules.SIZE_SMALL and u.kind != Unit.K_TURRET and u.kind != Unit.K_BAY:
 			continue
 		# Step 2: start from the distance, then adjust by kind.
 		var s := d
 		match u.kind:
 			Unit.K_SHIP:
-				# Pilots: +200, but up to 600 less the more damaged they are.
-				s += 200.0 - (1.0 - u.hull_frac()) * 600.0
+				# Pilots: +200, but up to 600 less the more damaged they are
+				# (hull and shields together: the hull alone stays at 100%
+				# until the shields are gone).
+				s += 200.0 - (1.0 - u.total_frac()) * 600.0
 				# Much bigger hulls (2+ size classes up) are a poor match,
 				# unless our weapons are made for them.
 				if u.size_class > ship.size_class + 1 and not heavy_hitter:
@@ -147,6 +179,9 @@ func pick_target(ship: Ship, r: float) -> Unit:
 				s += 100.0
 			Unit.K_MONSTER, Unit.K_SNUB:
 				s += 100.0
+		# The pilot we are shooting now counts STICK_BONUS better.
+		if stick_on and u == prev:
+			s -= STICK_BONUS
 		# Step 3: keep the lowest score so far. A candidate that would win
 		# gets 700 added if a rock blocks the line to it (checked only then,
 		# to save the cost); it may lose its lead because of that.
@@ -268,8 +303,9 @@ func prey(ship: Ship, station: Vector2) -> Unit:
 			continue
 		if brain.senses.enemy_turret_at(u.global_position, ship.team, 200.0) != null:
 			continue
-		# Step 4: score: distance, minus up to 800 the more damaged it is.
-		var s := d - (1.0 - u.hull_frac()) * 800.0
+		# Step 4: score: distance, minus up to 800 the more damaged it is
+		# (hull and shields together).
+		var s := d - (1.0 - u.total_frac()) * 800.0
 		# Match-ups: bombers hunt big hulls; everyone else avoids frigates
 		# and capitals unless they're nearly dead (30% hull or less), since
 		# flak shreds strike craft.

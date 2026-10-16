@@ -9,8 +9,11 @@ extends RefCounted
 ## hull. The closest one leads the push; it and every other one within
 ## 5,000 units of it make up the push. (Once our mothership is parked up a
 ## lane, more than 2,500 from its home spot, the search radius is cut to
-## FORWARD_DEFEND_RADIUS, 4,000, so a fight in the middle of the map is not
-## "an attack on the base".) With 2 or more ships in the push, the alarm
+## FORWARD_DEFEND_RADIUS, 4,000, so a fight far from the base is not "an
+## attack on the base". It does not exclude the middle of the map: with both
+## motherships parked 35% up the mid lane, at (15355, 13000) and (24645,
+## 13000), 9,290 apart, The Crossing (20000, 13000) is about 3,845 from each
+## hull, inside both teams' radius.) With 2 or more ships in the push, the alarm
 ## goes off, except that while our own siege is on it takes a push within
 ## SIEGE_DROP_RADIUS (2,500) of our hull:
 ##   - TeamState.defend_point is set on our side of the push (the place
@@ -39,8 +42,10 @@ extends RefCounted
 const DEFEND_RADIUS := 7000.0
 ## The radius used instead (at most) while our mothership is parked away
 ## from its home spot (more than 2,500 from it): 4,000 world units. From
-## 20:00 the AI parks it 35% up a lane, where 7,000 from its hull reaches
-## the middle of the map.
+## 20:00 the AI parks it 35% up the mid lane, where 7,000 from its hull
+## reaches well past the middle of the map. 4,000 still reaches The Crossing
+## (about 3,845 from each hull when both motherships are parked there), so a
+## fight in the middle of the map counts as an attack on both bases.
 const FORWARD_DEFEND_RADIUS := 4000.0
 ## While our siege is on, the push must be this close to our hull (world
 ## units) to sound the alarm and drop the siege. Our siege fleet gathers

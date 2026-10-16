@@ -154,10 +154,9 @@ func update(ts: TeamState) -> bool:
 			fewest = n
 			best = lane
 	# The enemy mothership is parked up a lane (it is, from 20:00 on): siege
-	# that lane at once. The fewest-turret lane would send OUR mothership
-	# thousands of units up another lane in this same think, and a second
-	# later the siege would be re-aimed at the lane the enemy mothership is on
-	# (step 3 of _run_siege).
+	# that lane at once. With the fewest-turret lane the siege would be
+	# re-aimed a second later at the lane the enemy mothership is on (step 3
+	# of _run_siege).
 	if ems2 != null and ems2.global_position.distance_to(world.map.mothership_pos[1 - team]) > PARKED_DIST:
 		best = world.map.lane_for(ems2.global_position)
 	# Step 5: declare it and start gathering. (We return true below, so the

@@ -3,7 +3,7 @@ extends RefCounted
 ## WHAT THIS IS: how an AI pilot flies its ship to a point (a part of
 ## PilotAI): follow a route around the asteroids, slow down so we arrive
 ## without overshooting, get unstuck when pinned on a rock, and nudge away
-## from rocks just ahead.
+## from rocks and mothership hulls just ahead.
 ##
 ## HOW IT WORKS:
 ##   - travel(): for long trips (or when we're off the open lanes, or when
@@ -19,14 +19,17 @@ extends RefCounted
 ##     PilotEscape plans a way out of the rock pocket.
 ##   - avoid_rocks(): look a little ahead of where we're going; if that spot
 ##     is inside a rock, turn and slide away from it (and brake if we're
-##     heading straight in).
+##     heading straight in). It starts with avoid_hulls(): a ship about to
+##     run into a mothership hull (the route knows only rocks) slides along
+##     the hull instead of pinning itself against it.
 ##   - target_hidden(): is a rock between us and the target? PilotCombat
 ##     asks it so that nobody shoots into a rock.
 ##
 ## WHO USES IT: PilotCombat (steer and fight call travel, avoid_rocks and
-## target_hidden). It reads the route graph (world.map.route) and the
-## asteroid field (world.asteroids), and makes a PilotEscape part for the
-## rock pockets. The planned route itself lives on the brain
+## target_hidden). It reads the route graph (world.map.route), the
+## asteroid field (world.asteroids) and the motherships' hulls
+## (World.mothership(), Mothership.hull_dist; avoid_hulls), and makes a
+## PilotEscape part for the rock pockets. The planned route itself lives on the brain
 ## (PilotAI.path, path_i, path_goal) because tests read it.
 ##
 ## Timing note: the stuck timers here count 1/60 of a second per call:
@@ -283,18 +286,72 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 			if cap_d < need + 120.0 or gate_d < 800.0:
 				c.forward = minf(c.forward, -0.8 if v_now > v_cap * 1.3 else 0.0)
 				c.boost = false
-	# Step 9: steer around rocks just ahead.
+	# Step 9: steer around mothership hulls and rocks just ahead.
 	avoid_rocks(ship)
 
 
-## Nudge the nose away from rocks just ahead. It runs about once a tick;
-## the rock search itself runs on every 5th call (about 12 times a second;
-## it's the costliest part of steering), and the push it finds is reused
-## in between.
+## Slide along a mothership hull instead of flying into it. A mothership is
+## a solid wall to a ship, and once it has moved up into a lane (after
+## 20:00) it lies right across the lane line. The route and avoid_rocks()
+## know only rocks, and avoid_rocks() does nothing under 60 units a second,
+## so ships (frigates and capitals above all, they turn slowly) flew into
+## the hull and stayed pressed against it. A ship that is about to run into
+## a mothership hull, its own or the enemy's, now turns to slide along it,
+## toward the side it wants to go, a little outward. Not when the goal
+## itself is within 600 of the hull (docking, defending, attacking it).
+## It changes the controls' face point, forward and strafe; avoid_rocks()
+## calls it first.
+func avoid_hulls(ship: Ship) -> void:
+	var brain := ai
+	var c := ship.controls
+	var p := ship.global_position
+	var want := c.face_point - p
+	if want.length() < 1.0:
+		return
+	want = want.normalized()
+	# How near the hull has to be to matter: our size, 140, and how far we
+	# will travel while we turn (slower turners look further ahead).
+	var trig := ship.radius + 140.0 + ship.velocity.length() * clampf(1.2 / maxf(ship.f_turn, 0.3), 0.3, 3.0)
+	for t in 2:
+		var ms := brain.world.mothership(t)
+		if ms == null or not ms.alive:
+			continue
+		# Cheap early out with the same answer as the hull_dist test below:
+		# the hull surface is never nearer than (distance to the centre -
+		# half_len - beam / 2), so a ship farther out than that plus `trig`
+		# is not near.
+		var far := ms.half_len + ms.beam * 0.5 + trig + 1.0
+		if p.distance_squared_to(ms.global_position) > far * far:
+			continue
+		if ms.hull_dist(p) > trig or ms.hull_dist(brain.goal) < 600.0:
+			continue
+		var a := ms.global_position + Vector2.from_angle(ms.rotation) * ms.half_len
+		var b := ms.global_position - Vector2.from_angle(ms.rotation) * ms.half_len
+		# `n` points from the hull's keel (its centre line) to us. A ship
+		# heading within about 75 degrees of straight away from it is fine.
+		var n := (p - Util.closest_on_segment(p, a, b)).normalized()
+		if want.dot(n) >= 0.25:
+			continue
+		# Slide along the hull the way we want to go, a little outward.
+		var tang := Vector2(-n.y, n.x)
+		if tang.dot(want) < 0.0:
+			tang = -tang
+		var dir := (tang + n * 0.5).normalized()
+		c.face_point = p + dir * 400.0
+		c.forward = maxf(c.forward, 0.6)
+		c.strafe = clampf(Util.port_of(ship.rotation).dot(dir) * 1.5, -1.0, 1.0)
+		return
+
+
+## Nudge the nose away from mothership hulls (avoid_hulls()) and from rocks
+## just ahead. It runs about once a tick; the rock search itself runs on
+## every 5th call (about 12 times a second; it's the costliest part of
+## steering), and the push it finds is reused in between.
 func avoid_rocks(ship: Ship) -> void:
 	var brain := ai
 	var c := ship.controls
 	var v := ship.velocity
+	avoid_hulls(ship)
 	# Step 1: nearly stopped (under 60 units a second): nothing to dodge.
 	if v.length() < 60.0:
 		return

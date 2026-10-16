@@ -33,7 +33,8 @@ extends CharacterBody2D
 ## visible_mask and seen_mask; Economy reads damage_log and bounty_value();
 ## turrets and minions read aggro_time (the "aggro" rule); WeaponMount calls
 ## homing_target(); the HUD, minimap and AI pilots read hull_frac(),
-## visible_to() and is_structure(); feature modules (scripts/features/)
+## visible_to() and is_structure(); the AI pilots (PilotTargeting, PilotAI)
+## also read total_frac(); feature modules (scripts/features/)
 ## fill incoming_mults and Combat reads incoming_mult_product().
 ##
 ## Functions marked "Override" are meant to be replaced: a script that
@@ -212,6 +213,15 @@ func hull_frac() -> float:
 ## Shield points left over all zones (0 for units without shields).
 func shield_total() -> float:
 	return shields.total() if shields != null else 0.0
+
+
+## Hull plus shields left as a 0..1 fraction of their maximum together
+## (1 = undamaged). Unlike hull_frac(), which stays at 1 until the shields
+## are gone, this one falls as soon as the shields do. 0 if the unit has
+## neither hull nor shields.
+func total_frac() -> float:
+	var most := hull_max + (shields.max_total if shields != null else 0.0)
+	return (hull + shield_total()) / most if most > 0.0 else 0.0
 
 
 ## True for buildings: turrets, repair bays and motherships.

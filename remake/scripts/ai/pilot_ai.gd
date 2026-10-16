@@ -35,8 +35,9 @@ extends RefCounted
 ##                       don't chase: they hold and shoot what comes close).
 ##       jungle   clear derelict camps (neutral monster ships in the asteroid
 ##                "jungle" between the lanes).
-##       retreat  hull is low: use a repair kit, then fly to a repair bay or
-##                home to dock.
+##       retreat  hull is low (or, for a ship smaller than a frigate, hull and
+##                shields together are under SOFT_RETREAT_BELOW): use a
+##                repair kit, then fly to a repair bay or home to dock.
 ##       home     fly home to dock and shop.
 ##   - Its `temperament` (picked from its seat number) decides what it likes
 ##     to buy: heavy hulls, strike craft (bombers/lances), support corvettes,
@@ -68,6 +69,15 @@ extends RefCounted
 ## the lanes) or "flex" (the support pilot, who moves from lane to lane).
 ## World.setup() copies these into PilotProfile.role.
 const ROLE_PLAN := ["top", "mid", "bot", "jungle", "top", "mid", "bot", "flex", "top", "mid", "bot", "jungle"]
+## A ship smaller than a frigate turns back (a "soft" retreat) when its hull
+## plus shields together fall below this fraction of their maximum. The
+## hull alone is the wrong gauge for them: it stays full until the shields
+## are gone, so at 35% hull they have already lost most of their health.
+## A tuning knob: a higher number makes small ships retreat earlier.
+const SOFT_RETREAT_BELOW := 0.25
+## A soft retreat ends when hull plus shields are back up to this fraction.
+## A tuning knob.
+const SOFT_RETREAT_END := 0.7
 
 # --- the brain's memory ----------------------------------------------------------------
 
@@ -144,6 +154,10 @@ var home_reason := ""
 var skip_id := 0
 ## Game time (seconds) until which the unit `skip_id` is ignored.
 var skip_until := 0.0
+## True while the current retreat is a "soft" one: it began because hull
+## plus shields fell under SOFT_RETREAT_BELOW while the hull was still over
+## 35%, so it ends sooner (see _think()).
+var soft_retreat := false
 
 # --- the parts (see THE PARTS at the top) ----------------------------------------------
 
@@ -279,6 +293,7 @@ func _reset_after_launch() -> void:
 	camp = null
 	evade_t = 0.0
 	fallback_t = 0.0
+	soft_retreat = false
 	path = PackedVector2Array()
 	path_goal = Vector2.INF
 	launched_at = world.time
@@ -320,11 +335,26 @@ func _think(ship: Ship) -> void:
 	# repair drone to fix our hull) is used below 50% while retreating, or
 	# below 60% between fights (no hull damage for 2 seconds), never while
 	# one is already working.
-	if hp < 0.35 or (state == "retreat" and hp < 0.85):
+	var want_retreat := hp < 0.35 or (state == "retreat" and hp < 0.85)
+	# A ship smaller than a frigate also turns back when hull plus shields
+	# together fall under SOFT_RETREAT_BELOW (a "soft" retreat), and goes
+	# back out once they are over SOFT_RETREAT_END again. (The hull is what
+	# is left after the shields are gone, so at 35% hull such a ship has
+	# already lost most of its health.) A hull under 35% is a normal
+	# retreat, with its normal end.
+	if hp < 0.35:
+		soft_retreat = false
+	elif state != "retreat" and ship.size_class < Rules.SIZE_LARGE and ship.total_frac() < SOFT_RETREAT_BELOW:
+		want_retreat = true
+		soft_retreat = true
+	elif state == "retreat" and soft_retreat and ship.total_frac() >= SOFT_RETREAT_END:
+		want_retreat = false
+	if want_retreat:
 		state = "retreat"
 		if hp < 0.5 and profile.kit_count() > 0 and not ship.has_active_kit():
 			c.use_kit = true
 	elif state == "retreat":
+		soft_retreat = false
 		state = "jungle" if profile.role == "jungle" else "lane"
 	elif hp < 0.6 and profile.kit_count() > 0 and not ship.has_active_kit() and world.time - ship.last_hull_damage_time > 2.0:
 		# Top up between fights.

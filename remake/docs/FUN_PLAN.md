@@ -79,15 +79,15 @@ fooling ourselves.
    - only ideas aimed at S1-S3 (match arc, endgame arc, comebacks) need full
      60-minute matches (`--secs=3600`).
    Screens STOP EARLY (sequential screening, user 2026-10-16): run the first
-   half (seeds 101-103; late screens 101-105) and score it paired against
+   half (seeds 101-106; late screens 101-110) and score it paired against
    baseline v2 on the same seeds. Stop and KEEP if the target ingredient rose
    16+ points and FUN did not fall; stop and REJECT if it rose less than 2
    points (or fell) and FUN did not rise 3+; otherwise run the second half
-   (104-106; late 106-110) and apply the standard rule: keep if the target
+   (107-112; late 111-120) and apply the standard rule: keep if the target
    ingredient rises 8+ points and FUN doesn't fall. A screen only REJECTS
    ideas from the fork's combination. A screen where usage is near zero is
    invalid, not negative (fix the AI's use and rerun).
-4. Run the fork's best combination on 20 seeds (101-120) against baseline
+4. Run the fork's best combination on 40 seeds (101-140) against baseline
    v2. Report every ingredient, FUN with its 90% lower bound, usage, the
    ms_duel results for anything touching the mothership, and the REQ-CHANGE
    flags.
@@ -150,7 +150,7 @@ scope and risk, engineer for modularity) read every fork report and score
 every idea that survived screening. A chair synthesizes a combination; the
 combination is built in `remake-council/` from main by porting the chosen
 feature modules; it must reach FUN +5 over baseline v2 with a 95% lower
-bound above 0 on 40 seeds, with every ingredient checked on its 80%
+bound above 0 on 80 seeds, with every ingredient checked on its 80%
 interval. Requirement-changing ideas in the council branch stay behind
 switches, grouped into two presets: "within requirements" and "council's
 pick". The final report lists every REQ-CHANGE in plain words.
@@ -162,3 +162,7 @@ the machine runs 6 at once (about 8-12 matches an hour). Budget about 60
 match-equivalents per fork (a `--late` run counts as a third), 40 for
 baseline v2 and 80 for the council. Forks share the queue, so they run
 for many hours: that's expected.
+
+(Seed counts raised 2026-10-16 by the user's choice to spend the free cloud runners on
+statistical power: screens 12 seeds in two halves of 6, late screens 20 in halves of 10,
+final combinations 40, council validation 80; baseline v2 extended to seeds 141-180 and late 111-120.)

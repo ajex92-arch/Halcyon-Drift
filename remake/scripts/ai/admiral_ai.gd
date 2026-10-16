@@ -25,7 +25,8 @@ extends RefCounted
 ##      the siege lane (AdmiralWaypoint).
 ##   6. After 20:00, sieges: attacks on the enemy mothership with our big
 ##      ships, the frigates and capital ships (AdmiralSiege).
-##   7. After 20:00, moving our mothership up behind a winning push
+##   7. After 20:00, moving our mothership up the mid lane (always mid)
+##      when we are at least as strong as the enemy
 ##      (AdmiralMothershipMover).
 ##   8. Buying minions (small computer-flown lane ships), if we own the
 ##      Fleet Command Module (AdmiralFleetCommand).
