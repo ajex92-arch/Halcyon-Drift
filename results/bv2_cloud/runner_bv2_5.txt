@@ -1,0 +1,5 @@
+cores: 4
+seed 123 exit 0 wall_s 1111
+seed 121 exit 0 wall_s 1730
+seed 122 exit 0 wall_s 1883
+seed 124 exit 0 wall_s 2019
