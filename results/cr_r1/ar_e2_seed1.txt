@@ -1,0 +1,124 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+features: escort_pd
+arena_matrix: 40 fights, limit 180s
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra", "minion_cap": "off", "escort_pd": "on", "lance_role": "off", "routing_payoff": "off", "jungle_big": "off", "zoom_max": "off", "bomber_role": "off" } rocks=2676 nodes=9 camps=12 route_nodes=347
+fight 1/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 36s (focus side: win)
+t=1:00  sim 41.5 ms/sim-s  worst tick 58.8 ms  units=18 ships=8 minions=0 drones=8 projectiles=18 fps=796
+  Halcyon tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=90 ms=100% sh=100% flying={ "flak": 1 }
+  Cinder tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=450 ms=100% sh=100% flying={ "fighter": 7 }
+fight 2/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap no -> Cinder wins after 32s (focus side: win)
+fight 3/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap yes -> Halcyon wins after 31s (focus side: win)
+t=2:00  sim 40.4 ms/sim-s  worst tick 9.8 ms  units=10 ships=0 minions=0 drones=8 projectiles=0 fps=633
+  Halcyon tr=2940 ore=1799 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+  Cinder tr=2940 ore=1799 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+fight 4/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap yes -> Cinder wins after 26s (focus side: win)
+t=3:00  sim 37.2 ms/sim-s  worst tick 10.5 ms  units=18 ships=8 minions=0 drones=8 projectiles=24 fps=592
+  Halcyon tr=3840 ore=2999 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=446 ms=100% sh=100% flying={ "fighter": 7 }
+  Cinder tr=3660 ore=2699 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=70 ms=100% sh=100% flying={ "flak": 1 }
+fight 5/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 26s (focus side: win)
+fight 6/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap no -> Cinder wins after 30s (focus side: win)
+t=4:00  sim 35.2 ms/sim-s  worst tick 10.7 ms  units=18 ships=8 minions=0 drones=8 projectiles=0 fps=878
+  Halcyon tr=4740 ore=4199 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=424 ms=100% sh=100% flying={ "fighter": 7 }
+  Cinder tr=4740 ore=4199 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=69 ms=100% sh=100% flying={ "flak": 1 }
+fight 7/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap yes -> Halcyon wins after 29s (focus side: win)
+fight 8/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap yes -> Cinder wins after 28s (focus side: win)
+t=5:00  sim 41.0 ms/sim-s  worst tick 10.5 ms  units=10 ships=0 minions=0 drones=8 projectiles=0 fps=555
+  Halcyon tr=5460 ore=5099 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+  Cinder tr=5460 ore=5099 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+fight 9/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 30s (focus side: win)
+t=6:00  sim 35.7 ms/sim-s  worst tick 11.5 ms  units=18 ships=8 minions=0 drones=8 projectiles=19 fps=642
+  Halcyon tr=6360 ore=6299 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=80 ms=100% sh=100% flying={ "flak": 1 }
+  Cinder tr=6180 ore=5999 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=431 ms=100% sh=100% flying={ "fighter": 7 }
+fight 10/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap no -> Cinder wins after 30s (focus side: win)
+fight 11/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 14s (focus side: win)
+t=7:00  sim 29.4 ms/sim-s  worst tick 5.2 ms  units=14 ships=4 minions=0 drones=8 projectiles=6 fps=979
+  Halcyon tr=7260 ore=7499 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=89 ms=100% sh=100% flying={ "flak": 1 }
+  Cinder tr=7080 ore=7199 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=199 ms=100% sh=100% flying={ "bomber": 3 }
+fight 12/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 14s (focus side: win)
+fight 13/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap yes -> Halcyon wins after 14s (focus side: win)
+fight 14/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap yes -> Cinder wins after 16s (focus side: win)
+t=8:00  sim 21.2 ms/sim-s  worst tick 5.3 ms  units=14 ships=4 minions=0 drones=8 projectiles=7 fps=936
+  Halcyon tr=8160 ore=8699 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=186 ms=100% sh=100% flying={ "bomber": 3 }
+  Cinder tr=7980 ore=8399 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=58 ms=100% sh=100% flying={ "flak": 1 }
+fight 15/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 14s (focus side: win)
+fight 16/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 14s (focus side: win)
+fight 17/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap yes -> Halcyon wins after 14s (focus side: win)
+t=9:00  sim 22.9 ms/sim-s  worst tick 5.2 ms  units=10 ships=0 minions=0 drones=8 projectiles=0 fps=848
+  Halcyon tr=9060 ore=9899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+  Cinder tr=8880 ore=9599 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+fight 18/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap yes -> Cinder wins after 13s (focus side: win)
+fight 19/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 14s (focus side: win)
+t=10:00  sim 22.1 ms/sim-s  worst tick 5.2 ms  units=14 ships=4 minions=0 drones=8 projectiles=3 fps=975
+  Halcyon tr=9780 ore=10799 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=69 ms=100% sh=100% flying={ "flak": 1 }
+  Cinder tr=9600 ore=10499 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=188 ms=100% sh=100% flying={ "bomber": 3 }
+fight 20/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 14s (focus side: win)
+fight 21/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap no -> Halcyon wins after 13s (focus side: win)
+fight 22/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 14s (focus side: win)
+t=11:00  sim 28.7 ms/sim-s  worst tick 9.6 ms  units=17 ships=7 minions=0 drones=8 projectiles=17 fps=741
+  Halcyon tr=10680 ore=11999 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=352 ms=100% sh=100% flying={ "bomber": 6 }
+  Cinder tr=10500 ore=11699 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=58 ms=100% sh=100% flying={ "destroyer": 1 }
+fight 23/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap yes -> Halcyon wins after 13s (focus side: win)
+fight 24/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap yes -> Cinder wins after 14s (focus side: win)
+fight 25/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap no -> Halcyon wins after 11s (focus side: win)
+t=12:00  sim 29.5 ms/sim-s  worst tick 10.0 ms  units=17 ships=7 minions=0 drones=8 projectiles=0 fps=837
+  Halcyon tr=11400 ore=12899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=58 ms=100% sh=100% flying={ "destroyer": 1 }
+  Cinder tr=11220 ore=12599 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=350 ms=100% sh=100% flying={ "bomber": 6 }
+fight 26/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 12s (focus side: win)
+fight 27/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap yes -> Halcyon wins after 16s (focus side: win)
+fight 28/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap yes -> Cinder wins after 12s (focus side: win)
+t=13:00  sim 31.9 ms/sim-s  worst tick 9.1 ms  units=10 ships=0 minions=0 drones=8 projectiles=0 fps=873
+  Halcyon tr=12300 ore=14099 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+  Cinder tr=12120 ore=13799 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+fight 29/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap no -> Halcyon wins after 12s (focus side: win)
+fight 30/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 13s (focus side: win)
+t=14:00  sim 28.6 ms/sim-s  worst tick 9.8 ms  units=15 ships=5 minions=0 drones=8 projectiles=0 fps=895
+  Halcyon tr=13020 ore=14999 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=249 ms=100% sh=100% flying={ "lance": 4 }
+  Cinder tr=13200 ore=15299 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=89 ms=100% sh=100% flying={ "ion": 1 }
+t=15:00  sim 30.2 ms/sim-s  worst tick 1.9 ms  units=12 ships=2 minions=0 drones=8 projectiles=0 fps=830
+  Halcyon tr=13920 ore=16199 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/2 avg_cr=329 ms=100% sh=100% flying={ "lance": 1 }
+  Cinder tr=13920 ore=16199 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=2/0 avg_cr=150 ms=100% sh=100% flying={ "ion": 1 }
+fight 31/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap no -> Cinder wins after 109s (focus side: loss)
+t=16:00  sim 21.5 ms/sim-s  worst tick 6.6 ms  units=15 ships=5 minions=0 drones=8 projectiles=0 fps=941
+  Halcyon tr=14820 ore=17399 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=80 ms=100% sh=100% flying={ "ion": 1 }
+  Cinder tr=14640 ore=17099 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=251 ms=100% sh=100% flying={ "lance": 4 }
+t=17:00  sim 27.2 ms/sim-s  worst tick 2.1 ms  units=12 ships=2 minions=0 drones=8 projectiles=0 fps=873
+  Halcyon tr=15540 ore=18299 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=2/0 avg_cr=140 ms=100% sh=100% flying={ "ion": 1 }
+  Cinder tr=15540 ore=18299 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/2 avg_cr=336 ms=100% sh=100% flying={ "lance": 1 }
+fight 32/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap no -> Halcyon wins after 75s (focus side: loss)
+t=18:00  sim 30.0 ms/sim-s  worst tick 6.4 ms  units=13 ships=3 minions=0 drones=8 projectiles=0 fps=786
+  Halcyon tr=16440 ore=19499 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/1 avg_cr=289 ms=100% sh=100% flying={ "lance": 2 }
+  Cinder tr=16440 ore=19499 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=1/0 avg_cr=116 ms=100% sh=100% flying={ "ion": 1 }
+fight 33/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap yes -> Cinder wins after 88s (focus side: loss)
+t=19:00  sim 21.4 ms/sim-s  worst tick 6.3 ms  units=15 ships=5 minions=0 drones=8 projectiles=0 fps=795
+  Halcyon tr=17340 ore=20699 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=80 ms=100% sh=100% flying={ "ion": 1 }
+  Cinder tr=16980 ore=20099 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=241 ms=100% sh=100% flying={ "lance": 4 }
+fight 34/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap yes -> Cinder wins after 36s (focus side: win)
+t=20:00  sim 31.6 ms/sim-s  worst tick 6.7 ms  units=15 ships=5 minions=0 drones=8 projectiles=1 fps=767
+  Halcyon tr=18060 ore=21599 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=268 ms=100% sh=100% flying={ "lance": 4 }
+  Cinder tr=17880 ore=21299 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=72 ms=100% sh=100% flying={ "ion": 1 }
+fight 35/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap no -> Cinder wins after 72s (focus side: loss)
+t=21:00  sim 24.3 ms/sim-s  worst tick 5.7 ms  units=15 ships=5 minions=0 drones=8 projectiles=0 fps=1085
+  Halcyon tr=18780 ore=22499 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=59 ms=100% sh=100% flying={ "ion": 1 }
+  Cinder tr=18600 ore=22199 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=238 ms=100% sh=100% flying={ "lance": 4 }
+t=22:00  sim 27.6 ms/sim-s  worst tick 1.8 ms  units=13 ships=3 minions=0 drones=8 projectiles=0 fps=891
+  Halcyon tr=19860 ore=23999 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=1/0 avg_cr=128 ms=100% sh=100% flying={ "ion": 1 }
+  Cinder tr=19500 ore=23399 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/1 avg_cr=308 ms=100% sh=100% flying={ "lance": 2 }
+fight 36/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap no -> Halcyon wins after 83s (focus side: loss)
+fight 37/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap yes -> Halcyon wins after 32s (focus side: win)
+t=23:00  sim 26.5 ms/sim-s  worst tick 6.6 ms  units=10 ships=0 minions=0 drones=8 projectiles=0 fps=694
+  Halcyon tr=20761 ore=25199 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+  Cinder tr=20401 ore=24599 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=100% flying={  }
+t=24:00  sim 31.7 ms/sim-s  worst tick 5.5 ms  units=14 ships=4 minions=0 drones=8 projectiles=0 fps=778
+  Halcyon tr=21661 ore=26399 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=95 ms=100% sh=100% flying={ "ion": 1 }
+  Cinder tr=21301 ore=25799 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=287 ms=100% sh=100% flying={ "lance": 3 }
+fight 38/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap yes -> Halcyon wins after 100s (focus side: loss)
+t=25:00  sim 21.1 ms/sim-s  worst tick 6.0 ms  units=15 ships=5 minions=0 drones=8 projectiles=0 fps=1073
+  Halcyon tr=22381 ore=27299 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=257 ms=100% sh=100% flying={ "lance": 4 }
+  Cinder tr=22381 ore=27299 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=79 ms=100% sh=100% flying={ "ion": 1 }
+fight 39/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap no -> Halcyon wins after 29s (focus side: win)
+t=26:00  sim 32.5 ms/sim-s  worst tick 5.5 ms  units=15 ships=5 minions=0 drones=8 projectiles=0 fps=721
+  Halcyon tr=23281 ore=28499 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=82 ms=100% sh=100% flying={ "ion": 1 }
+  Cinder tr=23101 ore=28199 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=269 ms=100% sh=100% flying={ "lance": 4 }
+fight 40/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap no -> Cinder wins after 46s (focus side: win)
+DUEL_JSON {"arena_small_winrate":0.85,"duel":null,"duel_skill_winrate":null,"fights":[["matrix",0,false,"a","win",36],["matrix",0,false,"b","win",32],["matrix",0,true,"a","win",31],["matrix",0,true,"b","win",26],["matrix",0,false,"a","win",26],["matrix",0,false,"b","win",30],["matrix",0,true,"a","win",29],["matrix",0,true,"b","win",28],["matrix",0,false,"a","win",30],["matrix",0,false,"b","win",30],["matrix",1,false,"a","win",14],["matrix",1,false,"b","win",14],["matrix",1,true,"a","win",14],["matrix",1,true,"b","win",16],["matrix",1,false,"a","win",14],["matrix",1,false,"b","win",14],["matrix",1,true,"a","win",14],["matrix",1,true,"b","win",13],["matrix",1,false,"a","win",14],["matrix",1,false,"b","win",14],["matrix",2,false,"a","win",13],["matrix",2,false,"b","win",14],["matrix",2,true,"a","win",13],["matrix",2,true,"b","win",14],["matrix",2,false,"a","win",11],["matrix",2,false,"b","win",12],["matrix",2,true,"a","win",16],["matrix",2,true,"b","win",12],["matrix",2,false,"a","win",12],["matrix",2,false,"b","win",13],["matrix",3,false,"a","loss",109],["matrix",3,false,"b","loss",75],["matrix",3,true,"a","loss",88],["matrix",3,true,"b","win",36],["matrix",3,false,"a","loss",72],["matrix",3,false,"b","loss",83],["matrix",3,true,"a","win",32],["matrix",3,true,"b","loss",100],["matrix",3,false,"a","win",29],["matrix",3,false,"b","win",46]],"limit_secs":180,"matrix":[{"big":"flak","draws":0,"losses":0,"mean_secs":29.8,"n":7,"name":"7 fighters vs flak frigate","runs":10,"small":"fighter","winrate":1.0,"wins":10},{"big":"flak","draws":0,"losses":0,"mean_secs":14.1,"n":3,"name":"3 bombers vs flak frigate","runs":10,"small":"bomber","winrate":1.0,"wins":10},{"big":"destroyer","draws":0,"losses":0,"mean_secs":13.0,"n":6,"name":"6 bombers vs destroyer","runs":10,"small":"bomber","winrate":1.0,"wins":10},{"big":"ion","draws":0,"losses":6,"mean_secs":67.0,"n":4,"name":"4 lances vs ion frigate","runs":10,"small":"lance","winrate":0.4,"wins":4}],"matrix_skill":0.72,"probe":"arena_matrix","seed":1,"version":1}
