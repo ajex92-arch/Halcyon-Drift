@@ -1,0 +1,452 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra" } rocks=2676 nodes=9 camps=12 route_nodes=347
+hash t=5 52 units, bb384360
+hash t=10 52 units, 8c94295d
+hash t=15 52 units, 360f2c80
+hash t=20 52 units, ea658435
+hash t=25 52 units, 44cb8829
+hash t=30 52 units, 74f4914f
+hash t=35 51 units, 5c213d83
+hash t=40 51 units, 36153aca
+hash t=45 56 units, 250aae1b
+hash t=50 111 units, 51935fee
+hash t=55 110 units, 2d8c39f7
+hash t=60 113 units, 65290dbf
+t=1:00  sim 116.8 ms/sim-s  worst tick 61.1 ms  units=113 ships=24 minions=60 drones=9 projectiles=9 fps=380
+  Halcyon tr=395 ore=899 fac=1 tech=0 turrets=3 killed_turrets=0 K/D=0/0 avg_cr=307 ms=100% sh=100% flying={ "fighter": 12 }
+  Cinder tr=195 ore=899 fac=1 tech=0 turrets=3 killed_turrets=0 K/D=0/0 avg_cr=307 ms=100% sh=100% flying={ "fighter": 12 }
+hash t=65 111 units, d947a3fd
+hash t=70 113 units, e533d80d
+hash t=75 113 units, 5c02c1b4
+hash t=80 120 units, 7da3342e
+hash t=85 175 units, 57297601
+hash t=90 172 units, d9ee5476
+hash t=95 171 units, 8368d3ea
+hash t=100 170 units, 8a92b4fb
+hash t=105 170 units, 81c2addd
+hash t=110 163 units, 81a76f1b
+hash t=115 159 units, cc926746
+hash t=120 209 units, c214091f
+t=2:00  sim 194.0 ms/sim-s  worst tick 12.6 ms  units=209 ships=21 minions=152 drones=14 projectiles=51 fps=233
+  Halcyon tr=420 ore=2099 fac=1 tech=0 turrets=3 killed_turrets=0 K/D=1/1 avg_cr=501 ms=100% sh=100% flying={ "fighter": 11 }
+  Cinder tr=420 ore=2099 fac=2 tech=0 turrets=3 killed_turrets=0 K/D=1/2 avg_cr=489 ms=100% sh=100% flying={ "fighter": 10 }
+hash t=125 209 units, f75c3e4b
+hash t=130 202 units, dddff763
+hash t=135 193 units, 9f2d7704
+hash t=140 181 units, db317c22
+hash t=145 165 units, c65e58cc
+hash t=150 154 units, a6ae0dc1
+hash t=155 196 units, a7671d14
+hash t=160 190 units, 533fd260
+hash t=165 189 units, afbd246c
+hash t=170 182 units, 8553b9c4
+hash t=175 176 units, 26bcb5d7
+hash t=180 165 units, dea4d14c
+t=3:00  sim 217.0 ms/sim-s  worst tick 9.5 ms  units=165 ships=23 minions=110 drones=13 projectiles=38 fps=281
+  Halcyon tr=205 ore=3899 fac=2 tech=1 turrets=3 killed_turrets=0 K/D=4/5 avg_cr=644 ms=100% sh=100% flying={ "fighter": 12 }
+  Cinder tr=445 ore=3299 fac=2 tech=1 turrets=3 killed_turrets=0 K/D=5/6 avg_cr=591 ms=100% sh=100% flying={ "fighter": 11 }
+hash t=185 167 units, a4bd2ddf
+hash t=190 213 units, bbd607c9
+hash t=195 205 units, 3cb263cd
+hash t=200 199 units, 5b14e990
+hash t=205 187 units, c4074571
+hash t=210 181 units, 4b4286dd
+hash t=215 177 units, 738b8044
+hash t=220 170 units, 5c07d83a
+hash t=225 206 units, 20a96017
+hash t=230 204 units, 2eb43f93
+hash t=235 195 units, 7bfef116
+hash t=240 196 units, 2d7891e2
+t=4:00  sim 215.6 ms/sim-s  worst tick 8.9 ms  units=196 ships=23 minions=137 drones=15 projectiles=56 fps=271
+  Halcyon tr=390 ore=5699 fac=3 tech=3 turrets=3 killed_turrets=0 K/D=7/8 avg_cr=702 ms=100% sh=100% flying={ "fighter": 10, "bomber": 1 }
+  Cinder tr=230 ore=5099 fac=2 tech=3 turrets=3 killed_turrets=0 K/D=8/9 avg_cr=522 ms=100% sh=100% flying={ "fighter": 10, "bomber": 2 }
+hash t=245 190 units, 90eab9a0
+hash t=250 180 units, 3d45f1c3
+hash t=255 180 units, 047e3592
+hash t=260 218 units, 7356147f
+hash t=265 208 units, eac8f4c3
+hash t=270 204 units, 506e31be
+hash t=275 198 units, 85d3edcb
+hash t=280 189 units, 38d000a3
+hash t=285 170 units, de8c0a6a
+hash t=290 169 units, 62b65e84
+hash t=295 215 units, 19c312c0
+hash t=300 212 units, 2f656149
+t=5:00  sim 219.6 ms/sim-s  worst tick 8.3 ms  units=212 ships=24 minions=144 drones=18 projectiles=35 fps=249
+  Halcyon tr=475 ore=7499 fac=3 tech=3 turrets=3 killed_turrets=0 K/D=10/14 avg_cr=715 ms=100% sh=100% flying={ "fighter": 11, "bomber": 1 }
+  Cinder tr=115 ore=6899 fac=3 tech=3 turrets=3 killed_turrets=0 K/D=13/12 avg_cr=791 ms=100% sh=100% flying={ "fighter": 11, "bomber": 1 }
+hash t=305 208 units, 052125a7
+hash t=310 196 units, a9ef6131
+hash t=315 181 units, 1d4d7774
+hash t=320 175 units, d2e1ddbc
+hash t=325 183 units, 35cc14f4
+hash t=330 226 units, 657c6ed7
+hash t=335 218 units, 5e16f0cf
+hash t=340 207 units, 5eed68c3
+hash t=345 198 units, 71fbd139
+hash t=350 194 units, 027d0414
+hash t=355 180 units, 344eb53a
+hash t=360 173 units, b66ed360
+t=6:00  sim 223.8 ms/sim-s  worst tick 9.7 ms  units=173 ships=22 minions=105 drones=19 projectiles=55 fps=287
+  Halcyon tr=320 ore=9899 fac=4 tech=4 turrets=3 killed_turrets=0 K/D=15/19 avg_cr=784 ms=100% sh=100% flying={ "fighter": 9, "bomber": 2 }
+  Cinder tr=130 ore=8999 fac=4 tech=4 turrets=3 killed_turrets=0 K/D=15/17 avg_cr=904 ms=100% sh=100% flying={ "fighter": 10, "bomber": 1 }
+hash t=365 224 units, 7f82c6c8
+hash t=370 217 units, 2b0c4a3c
+hash t=375 210 units, faa838fe
+hash t=380 195 units, f9f83020
+hash t=385 181 units, f0f32e3c
+hash t=390 171 units, 368ba38f
+hash t=395 173 units, 458deca6
+hash t=400 224 units, 29265ae1
+hash t=405 213 units, 633c03d3
+hash t=410 207 units, 66acd1a4
+hash t=415 194 units, 2cffcb07
+hash t=420 187 units, 75f11ec9
+t=7:00  sim 224.0 ms/sim-s  worst tick 8.8 ms  units=187 ships=23 minions=113 drones=22 projectiles=34 fps=267
+  Halcyon tr=565 ore=12299 fac=4 tech=6 turrets=3 killed_turrets=0 K/D=17/19 avg_cr=798 ms=100% sh=100% flying={ "fighter": 8, "bomber": 3, "lance": 1 }
+  Cinder tr=330 ore=11699 fac=4 tech=6 turrets=3 killed_turrets=0 K/D=15/19 avg_cr=943 ms=100% sh=100% flying={ "fighter": 9, "bomber": 1, "logistics": 1 }
+hash t=425 184 units, c9d7bdb4
+hash t=430 186 units, d157c756
+hash t=435 240 units, 13b927f2
+hash t=440 227 units, 1aa4e4d4
+hash t=445 215 units, 8680a038
+hash t=450 197 units, 7a1a3cd7
+hash t=455 190 units, 62ccca1e
+hash t=460 188 units, 83285b3e
+hash t=465 186 units, 1e2f5b3d
+hash t=470 232 units, 9013be16
+hash t=475 225 units, 19dbc078
+hash t=480 221 units, c9f265f3
+t=8:00  sim 227.8 ms/sim-s  worst tick 9.0 ms  units=220 ships=24 minions=139 drones=24 projectiles=54 fps=230
+  Halcyon tr=175 ore=15599 fac=4 tech=8 turrets=3 killed_turrets=0 K/D=19/20 avg_cr=972 ms=100% sh=100% flying={ "fighter": 8, "bomber": 3, "lance": 1 }
+  Cinder tr=80 ore=14399 fac=4 tech=7 turrets=3 killed_turrets=0 K/D=16/21 avg_cr=617 ms=100% sh=100% flying={ "bomber": 3, "fighter": 5, "logistics": 1, "lance": 3 }
+hash t=485 208 units, 1d63f0fb
+hash t=490 201 units, 31b48120
+hash t=495 193 units, b87fd38c
+hash t=500 189 units, 5b813608
+hash t=505 227 units, b6b9ec6d
+hash t=510 224 units, 4076be8a
+hash t=515 221 units, 3d796ba3
+hash t=520 213 units, 3d4f7883
+hash t=525 203 units, 56a10f95
+hash t=530 196 units, 2e192227
+hash t=535 191 units, 5d0907db
+hash t=540 240 units, 1dcd1e23
+t=9:00  sim 230.0 ms/sim-s  worst tick 11.2 ms  units=240 ships=22 minions=157 drones=26 projectiles=33 fps=234
+  Halcyon tr=440 ore=17699 fac=4 tech=9 turrets=4 killed_turrets=0 K/D=21/24 avg_cr=972 ms=100% sh=100% flying={ "bomber": 3, "fighter": 4, "lance": 2, "support": 1 }
+  Cinder tr=785 ore=17399 fac=4 tech=8 turrets=3 killed_turrets=0 K/D=20/26 avg_cr=695 ms=100% sh=100% flying={ "lance": 3, "bomber": 3, "fighter": 5, "support": 1 }
+hash t=545 230 units, 5aaa710d
+hash t=550 227 units, cca35d39
+hash t=555 221 units, f8be32c7
+hash t=560 209 units, 68eb3885
+hash t=565 197 units, 33be79a7
+hash t=570 195 units, 7bc2e72d
+hash t=575 246 units, 47d11adb
+hash t=580 242 units, 031ed223
+hash t=585 234 units, 47643270
+hash t=590 224 units, 7b00a546
+hash t=595 213 units, 7f03a945
+hash t=600 207 units, 6e6d144f
+t=10:00  sim 241.7 ms/sim-s  worst tick 10.8 ms  units=207 ships=24 minions=111 drones=26 projectiles=38 fps=248
+  Halcyon tr=550 ore=20999 fac=4 tech=11 turrets=4 killed_turrets=0 K/D=22/25 avg_cr=1136 ms=100% sh=100% flying={ "bomber": 3, "lance": 3, "fighter": 5, "support": 1 }
+  Cinder tr=95 ore=20699 fac=4 tech=11 turrets=3 killed_turrets=0 K/D=21/29 avg_cr=874 ms=100% sh=100% flying={ "lance": 3, "bomber": 3, "fighter": 6 }
+hash t=605 206 units, d8ea828e
+hash t=610 254 units, b2be3455
+hash t=615 239 units, 8a6daa7e
+hash t=620 232 units, 800bf74e
+hash t=625 216 units, 43e54c8d
+hash t=630 213 units, 60ab9aa0
+hash t=635 210 units, 5f5ab933
+hash t=640 197 units, 67f73c3e
+hash t=645 241 units, 01b558e9
+hash t=650 233 units, d4522dd1
+hash t=655 232 units, de70a1a6
+hash t=660 226 units, 19ec9dfc
+t=11:00  sim 238.1 ms/sim-s  worst tick 12.0 ms  units=226 ships=20 minions=133 drones=28 projectiles=37 fps=233
+  Halcyon tr=260 ore=24299 fac=5 tech=12 turrets=4 killed_turrets=0 K/D=22/32 avg_cr=1258 ms=100% sh=100% flying={ "bomber": 2, "fighter": 4, "lance": 1, "support": 1 }
+  Cinder tr=100 ore=23699 fac=4 tech=13 turrets=3 killed_turrets=0 K/D=27/29 avg_cr=1270 ms=100% sh=100% flying={ "lance": 3, "bomber": 3, "fighter": 6 }
+hash t=665 215 units, 39714942
+hash t=670 209 units, 9aceff69
+hash t=675 204 units, 0da30859
+hash t=680 251 units, f5497de4
+hash t=685 234 units, bb5f543a
+hash t=690 229 units, 4c6b6286
+hash t=695 227 units, 279f0890
+hash t=700 213 units, a224cbbb
+hash t=705 204 units, e588e5db
+hash t=710 195 units, 5074cd1e
+hash t=715 240 units, 4b769f6b
+hash t=720 237 units, 13808ebb
+t=12:00  sim 263.6 ms/sim-s  worst tick 29.5 ms  units=237 ships=21 minions=146 drones=28 projectiles=39 fps=216
+  Halcyon tr=395 ore=27599 fac=6 tech=13 turrets=4 killed_turrets=0 K/D=24/39 avg_cr=1005 ms=100% sh=100% flying={ "bomber": 2, "lance": 3, "support": 1, "fighter": 3, "flak": 1 }
+  Cinder tr=790 ore=27299 fac=6 tech=14 turrets=3 killed_turrets=0 K/D=30/32 avg_cr=1346 ms=100% sh=100% flying={ "lance": 3, "bomber": 2, "fighter": 4, "flak": 2 }
+hash t=725 230 units, a40996d5
+hash t=730 228 units, 7345f237
+hash t=735 222 units, 8f584c37
+hash t=740 220 units, 2b839e4d
+hash t=745 221 units, ee0d678b
+hash t=750 254 units, 3ccadbaa
+hash t=755 245 units, 960f5fa3
+hash t=760 233 units, 471c2756
+hash t=765 226 units, 2c7638ef
+hash t=770 219 units, a4ad9b59
+hash t=775 215 units, 7734004c
+hash t=780 211 units, 64008c53
+t=13:00  sim 263.6 ms/sim-s  worst tick 17.1 ms  units=209 ships=24 minions=111 drones=28 projectiles=49 fps=210
+  Halcyon tr=405 ore=30899 fac=6 tech=15 turrets=5 killed_turrets=0 K/D=24/46 avg_cr=861 ms=100% sh=100% flying={ "bomber": 2, "lance": 3, "fighter": 5, "flak": 1, "support": 1 }
+  Cinder tr=1570 ore=30299 fac=6 tech=16 turrets=4 killed_turrets=0 K/D=32/32 avg_cr=1460 ms=100% sh=100% flying={ "lance": 3, "bomber": 3, "fighter": 2, "flak": 3, "support": 1 }
+hash t=785 254 units, 12e55a40
+hash t=790 241 units, 3cbf6a25
+hash t=795 232 units, 7ad8bb71
+hash t=800 224 units, 2a5f31b2
+hash t=805 217 units, fd6faba1
+hash t=810 207 units, 822a947e
+hash t=815 205 units, 693bd00d
+hash t=820 247 units, e69371e3
+hash t=825 242 units, b45196e7
+hash t=830 232 units, 2bdb65ee
+hash t=835 230 units, 605e087e
+hash t=840 223 units, e426bb9f
+t=14:00  sim 267.4 ms/sim-s  worst tick 16.0 ms  units=222 ships=23 minions=125 drones=28 projectiles=33 fps=229
+  Halcyon tr=1530 ore=33599 fac=6 tech=17 turrets=4 killed_turrets=0 K/D=25/48 avg_cr=1062 ms=100% sh=100% flying={ "bomber": 2, "lance": 3, "fighter": 5, "flak": 1, "support": 1 }
+  Cinder tr=440 ore=34199 fac=6 tech=18 turrets=4 killed_turrets=1 K/D=32/33 avg_cr=1515 ms=100% sh=100% flying={ "bomber": 3, "lance": 3, "fighter": 1, "flak": 3, "support": 1 }
+hash t=845 216 units, ef4c4178
+hash t=850 214 units, 8f9fa4b3
+hash t=855 250 units, 32f1fba5
+hash t=860 241 units, f9be3112
+hash t=865 237 units, 5d35d2d2
+hash t=870 229 units, bd7e75ef
+hash t=875 221 units, 786c214c
+hash t=880 207 units, 72999f2c
+hash t=885 210 units, 029771b1
+hash t=890 261 units, 9a4e0dc3
+hash t=895 254 units, 772efdfd
+hash t=900 248 units, b9967752
+t=15:00  sim 248.9 ms/sim-s  worst tick 14.1 ms  units=248 ships=21 minions=145 drones=28 projectiles=26 fps=237
+  Halcyon tr=1395 ore=37199 fac=6 tech=18 turrets=6 killed_turrets=0 K/D=27/50 avg_cr=1315 ms=100% sh=100% flying={ "bomber": 2, "flak": 2, "lance": 2, "support": 1, "fighter": 3 }
+  Cinder tr=1440 ore=36899 fac=7 tech=20 turrets=5 killed_turrets=1 K/D=34/36 avg_cr=1502 ms=100% sh=100% flying={ "bomber": 3, "lance": 3, "flak": 3, "support": 1, "fighter": 1 }
+hash t=905 239 units, 81cf70f3
+hash t=910 228 units, 8a62550d
+hash t=915 211 units, cda7c7e6
+hash t=920 207 units, e51d90d2
+hash t=925 258 units, 65022382
+hash t=930 252 units, ce33827c
+hash t=935 247 units, 58ae906b
+hash t=940 235 units, a351a7cd
+hash t=945 226 units, f9d37013
+hash t=950 211 units, cd7a7b1c
+hash t=955 215 units, 3ba37adc
+hash t=960 256 units, fc6a7ce8
+t=16:00  sim 250.6 ms/sim-s  worst tick 13.2 ms  units=256 ships=22 minions=161 drones=26 projectiles=67 fps=221
+  Halcyon tr=1325 ore=40199 fac=6 tech=18 turrets=8 killed_turrets=0 K/D=29/56 avg_cr=1169 ms=100% sh=100% flying={ "bomber": 3, "flak": 2, "fighter": 2, "lance": 3 }
+  Cinder tr=695 ore=41399 fac=7 tech=22 turrets=6 killed_turrets=1 K/D=39/38 avg_cr=1464 ms=100% sh=100% flying={ "bomber": 3, "flak": 2, "support": 1, "lance": 3, "fighter": 2, "ion": 1 }
+hash t=965 250 units, 1af6e911
+hash t=970 246 units, fe177e5a
+hash t=975 245 units, 81a02e19
+hash t=980 228 units, af01efcf
+hash t=985 212 units, 343eae52
+hash t=990 202 units, 39b2fa43
+hash t=995 248 units, 6315707b
+hash t=1000 240 units, b5a56574
+hash t=1005 237 units, 28c9b1b4
+hash t=1010 229 units, 0abc6140
+hash t=1015 213 units, 769b4be9
+hash t=1020 206 units, 290f367d
+t=17:00  sim 260.7 ms/sim-s  worst tick 16.3 ms  units=206 ships=20 minions=106 drones=28 projectiles=44 fps=235
+  Halcyon tr=2125 ore=42899 fac=6 tech=18 turrets=7 killed_turrets=1 K/D=30/63 avg_cr=1203 ms=100% sh=100% flying={ "bomber": 2, "fighter": 1, "flak": 1, "lance": 2, "ion": 1, "support": 1, "scout": 1 }
+  Cinder tr=750 ore=44399 fac=7 tech=22 turrets=8 killed_turrets=3 K/D=45/40 avg_cr=1882 ms=100% sh=100% flying={ "bomber": 3, "flak": 2, "support": 1, "lance": 2, "ion": 1, "fighter": 2 }
+hash t=1025 206 units, 11200793
+hash t=1030 255 units, 6a613fd4
+hash t=1035 243 units, 4c7cf867
+hash t=1040 241 units, 695e9d58
+hash t=1045 230 units, 15722ec9
+hash t=1050 217 units, 900da456
+hash t=1055 217 units, 48be34b6
+hash t=1060 210 units, 2a64ae68
+hash t=1065 249 units, 92843bc1
+hash t=1070 244 units, 926bf6dc
+hash t=1075 240 units, eacfa514
+hash t=1080 234 units, 831c1097
+t=18:00  sim 252.7 ms/sim-s  worst tick 14.2 ms  units=233 ships=19 minions=134 drones=28 projectiles=29 fps=230
+  Halcyon tr=370 ore=45299 fac=6 tech=18 turrets=7 killed_turrets=1 K/D=31/71 avg_cr=846 ms=100% sh=100% flying={ "bomber": 3, "lance": 2, "ion": 1, "support": 1, "fighter": 1, "flak": 1 }
+  Cinder tr=460 ore=47699 fac=7 tech=24 turrets=9 killed_turrets=3 K/D=50/42 avg_cr=2269 ms=100% sh=100% flying={ "bomber": 1, "flak": 2, "support": 1, "lance": 3, "ion": 1, "fighter": 2 }
+hash t=1085 226 units, cd21b2f3
+hash t=1090 224 units, ecf39c88
+hash t=1095 216 units, a1a7c3ec
+hash t=1100 262 units, 4cba0afc
+hash t=1105 252 units, 70d8e8e3
+hash t=1110 245 units, 65f8bb92
+hash t=1115 235 units, 5e297c47
+hash t=1120 229 units, 3c55fbfe
+hash t=1125 220 units, 9ec16e5d
+hash t=1130 223 units, 1ed5ba3a
+hash t=1135 261 units, ccbd82c9
+hash t=1140 243 units, cf012b8a
+t=19:00  sim 260.4 ms/sim-s  worst tick 18.2 ms  units=243 ships=24 minions=140 drones=26 projectiles=56 fps=188
+  Halcyon tr=1380 ore=48599 fac=7 tech=19 turrets=8 killed_turrets=3 K/D=31/74 avg_cr=1074 ms=100% sh=76% flying={ "bomber": 3, "ion": 1, "support": 1, "fighter": 4, "lance": 2, "scout": 1 }
+  Cinder tr=1480 ore=51599 fac=7 tech=26 turrets=8 killed_turrets=3 K/D=51/45 avg_cr=1731 ms=100% sh=100% flying={ "flak": 1, "support": 1, "lance": 3, "ion": 1, "bomber": 3, "fighter": 2, "destroyer": 1 }
+hash t=1145 237 units, 2d6666a1
+hash t=1150 228 units, 5adcb33f
+hash t=1155 219 units, c5467e34
+hash t=1160 215 units, aef54abb
+hash t=1165 220 units, bfc18677
+hash t=1170 261 units, d63a0029
+hash t=1175 253 units, 35484dfe
+hash t=1180 244 units, b0322ced
+hash t=1185 241 units, 3bec39bc
+hash t=1190 231 units, 779690b9
+hash t=1195 215 units, 74733f75
+hash t=1200 210 units, ebb3f4cb
+t=20:00  sim 256.1 ms/sim-s  worst tick 14.4 ms  units=210 ships=22 minions=109 drones=26 projectiles=37 fps=239
+  Halcyon tr=515 ore=50399 fac=7 tech=21 turrets=7 killed_turrets=4 K/D=34/76 avg_cr=1392 ms=100% sh=100% flying={ "bomber": 3, "ion": 1, "support": 1, "fighter": 3, "lance": 2, "scout": 1 }
+  Cinder tr=240 ore=54899 fac=7 tech=28 turrets=7 killed_turrets=4 K/D=53/48 avg_cr=1645 ms=100% sh=100% flying={ "support": 1, "lance": 3, "ion": 1, "bomber": 2, "fighter": 2, "destroyer": 2 }
+hash t=1205 252 units, cac89c40
+hash t=1210 245 units, d378b818
+hash t=1215 235 units, ff3984d1
+hash t=1220 219 units, 6d3dd129
+hash t=1225 207 units, 6069aa5c
+hash t=1230 197 units, dc612e5f
+hash t=1235 199 units, 4abdea64
+hash t=1240 250 units, 04f9753e
+hash t=1245 239 units, 666ce946
+hash t=1250 236 units, 56da04f9
+hash t=1255 229 units, 5cbb6ee7
+hash t=1260 218 units, b1438420
+t=21:00  sim 253.3 ms/sim-s  worst tick 14.8 ms  units=218 ships=23 minions=116 drones=28 projectiles=26 fps=232
+  Halcyon tr=170 ore=53399 fac=7 tech=22 turrets=7 killed_turrets=4 K/D=35/79 avg_cr=1152 ms=100% sh=100% flying={ "bomber": 3, "ion": 2, "support": 1, "lance": 2, "fighter": 4 }
+  Cinder tr=275 ore=58199 fac=7 tech=28 turrets=8 killed_turrets=4 K/D=54/50 avg_cr=1852 ms=100% sh=100% flying={ "support": 1, "lance": 3, "ion": 1, "bomber": 2, "fighter": 2, "destroyer": 2 }
+hash t=1265 211 units, 9923d81b
+hash t=1270 206 units, 2bd45d0f
+hash t=1275 256 units, 89f3c052
+hash t=1280 249 units, 8a0bf2bb
+hash t=1285 240 units, cdfb62fc
+hash t=1290 234 units, 907c0176
+hash t=1295 221 units, 56f20688
+hash t=1300 216 units, f7b7b906
+hash t=1305 216 units, 51e26824
+hash t=1310 263 units, 5284ce21
+hash t=1315 251 units, 9fb19446
+hash t=1320 245 units, df5e7fc7
+t=22:00  sim 255.8 ms/sim-s  worst tick 12.2 ms  units=245 ships=19 minions=148 drones=26 projectiles=36 fps=223
+  Halcyon tr=95 ore=56099 fac=7 tech=23 turrets=8 killed_turrets=5 K/D=39/85 avg_cr=1427 ms=100% sh=100% flying={ "bomber": 3, "support": 1, "lance": 1, "fighter": 3 }
+  Cinder tr=2716 ore=66300 fac=7 tech=29 turrets=8 killed_turrets=4 K/D=59/55 avg_cr=2049 ms=100% sh=100% flying={ "lance": 2, "ion": 1, "destroyer": 2, "fighter": 1, "bomber": 3, "support": 1, "flak": 1 }
+hash t=1325 240 units, c767ee4f
+hash t=1330 232 units, ead71a97
+hash t=1335 221 units, c800066d
+hash t=1340 217 units, 9bc28bd3
+hash t=1345 264 units, 11d35c22
+hash t=1350 263 units, d2f256bf
+hash t=1355 256 units, b1892f60
+hash t=1360 250 units, c40777d0
+hash t=1365 239 units, 3c551f75
+hash t=1370 233 units, b52d6f0a
+hash t=1375 233 units, 31ea8f3c
+hash t=1380 269 units, d85000be
+t=23:00  sim 295.2 ms/sim-s  worst tick 48.5 ms  units=268 ships=19 minions=166 drones=25 projectiles=99 fps=150
+  Halcyon tr=436 ore=58199 fac=7 tech=25 turrets=7 killed_turrets=5 K/D=42/91 avg_cr=1367 ms=100% sh=16% flying={ "fighter": 2, "bomber": 2, "lance": 1, "destroyer": 1, "flak": 2 }
+  Cinder tr=2101 ore=72600 fac=7 tech=30 turrets=11 killed_turrets=5 K/D=63/60 avg_cr=1865 ms=100% sh=100% flying={ "lance": 2, "destroyer": 2, "fighter": 1, "bomber": 2, "flak": 1, "ion": 1, "battlecruiser": 1, "support": 1 }
+hash t=1385 246 units, 50785a28
+hash t=1390 230 units, 6510a60c
+hash t=1395 216 units, 04f5c676
+hash t=1400 194 units, c057befb
+hash t=1405 179 units, f12fa7cc
+hash t=1410 179 units, bf47e1ca
+hash t=1415 224 units, 14d3ba0e
+hash t=1420 212 units, 7855e7ab
+hash t=1425 205 units, 4650ddac
+hash t=1430 193 units, 8dd7b5e1
+hash t=1435 187 units, 5ff7c551
+hash t=1440 181 units, a323161c
+t=24:00  sim 315.8 ms/sim-s  worst tick 20.6 ms  units=183 ships=21 minions=80 drones=21 projectiles=41 fps=220
+  Halcyon tr=1091 ore=61199 fac=7 tech=27 turrets=8 killed_turrets=5 K/D=45/91 avg_cr=1328 ms=73% sh=9% flying={ "bomber": 3, "lance": 3, "fighter": 1, "destroyer": 1, "flak": 3, "support": 1 }
+  Cinder tr=4947 ore=78001 fac=7 tech=31 turrets=11 killed_turrets=5 K/D=63/65 avg_cr=1942 ms=100% sh=100% flying={ "lance": 2, "fighter": 1, "destroyer": 2, "battlecruiser": 1, "support": 1, "bomber": 2 }
+hash t=1445 175 units, 3f8fad9c
+hash t=1450 227 units, 38a1949a
+hash t=1455 212 units, 402fcd16
+hash t=1460 197 units, 597b26cc
+hash t=1465 192 units, 09680faf
+hash t=1470 188 units, 6b852330
+hash t=1475 183 units, 67a51ced
+hash t=1480 183 units, 886b5771
+hash t=1485 227 units, e32c8c37
+hash t=1490 218 units, 270de342
+hash t=1495 211 units, 0f6e4046
+hash t=1500 199 units, 5112b023
+t=25:00  sim 315.1 ms/sim-s  worst tick 14.9 ms  units=198 ships=17 minions=100 drones=24 projectiles=124 fps=180
+  Halcyon tr=1296 ore=62699 fac=7 tech=28 turrets=8 killed_turrets=5 K/D=51/95 avg_cr=1336 ms=51% sh=0% flying={ "bomber": 3, "destroyer": 1, "flak": 4, "lance": 1, "ion": 1 }
+  Cinder tr=7837 ore=84601 fac=7 tech=32 turrets=11 killed_turrets=5 K/D=67/73 avg_cr=1863 ms=100% sh=100% flying={ "lance": 2, "destroyer": 1, "bomber": 2, "flak": 1, "ion": 1 }
+hash t=1505 180 units, a774a8ec
+hash t=1510 171 units, f6f7768a
+hash t=1515 172 units, 7eab50b8
+hash t=1520 219 units, 201a8aff
+hash t=1525 210 units, 42878a90
+hash t=1530 204 units, f74088d9
+hash t=1535 196 units, 5eccd149
+hash t=1540 183 units, 163c0438
+hash t=1545 174 units, 130c3771
+hash t=1550 175 units, 165817c9
+hash t=1555 227 units, 8fcb73fd
+hash t=1560 219 units, 9f80a7de
+t=26:00  sim 278.9 ms/sim-s  worst tick 15.2 ms  units=219 ships=22 minions=112 drones=22 projectiles=85 fps=171
+  Halcyon tr=1986 ore=67800 fac=7 tech=28 turrets=8 killed_turrets=6 K/D=55/96 avg_cr=1853 ms=49% sh=21% flying={ "bomber": 3, "destroyer": 1, "flak": 3, "lance": 2, "ion": 1, "fighter": 1 }
+  Cinder tr=5717 ore=90601 fac=8 tech=34 turrets=10 killed_turrets=6 K/D=67/81 avg_cr=1605 ms=100% sh=100% flying={ "lance": 3, "fighter": 2, "support": 1, "flak": 2, "bomber": 3 }
+hash t=1565 203 units, 0a7aa97e
+hash t=1570 193 units, eac1fc15
+hash t=1575 190 units, 8a135eee
+hash t=1580 183 units, 03b652a8
+hash t=1585 180 units, 98c533b8
+hash t=1590 232 units, 6fcd9ea7
+hash t=1595 228 units, 97fb3bb2
+hash t=1600 224 units, 0a519aec
+hash t=1605 223 units, d6f08b5a
+hash t=1610 217 units, 3dde37b9
+hash t=1615 202 units, 192b2ea4
+hash t=1620 205 units, 7961f3f3
+t=27:00  sim 275.2 ms/sim-s  worst tick 18.3 ms  units=211 ships=22 minions=100 drones=22 projectiles=51 fps=209
+  Halcyon tr=192 ore=75301 fac=7 tech=28 turrets=8 killed_turrets=6 K/D=56/105 avg_cr=1900 ms=49% sh=46% flying={ "lance": 2, "flak": 4, "support": 1, "bomber": 3 }
+  Cinder tr=4047 ore=93602 fac=8 tech=35 turrets=11 killed_turrets=7 K/D=75/85 avg_cr=1910 ms=100% sh=94% flying={ "lance": 3, "bomber": 3, "flak": 3, "fighter": 2, "support": 1 }
+hash t=1625 249 units, e72e2dde
+hash t=1630 237 units, 564c7534
+hash t=1635 232 units, 1ec37815
+hash t=1640 228 units, f9a5a42a
+hash t=1645 224 units, a982ca1b
+hash t=1650 220 units, 1fdac264
+hash t=1655 216 units, 926dbf3d
+hash t=1660 269 units, b935e008
+hash t=1665 267 units, 4b263fc1
+hash t=1670 259 units, 245f23e6
+hash t=1675 252 units, df601e3c
+hash t=1680 240 units, ed93820d
+t=28:00  sim 290.2 ms/sim-s  worst tick 13.5 ms  units=240 ships=17 minions=141 drones=27 projectiles=68 fps=203
+  Halcyon tr=157 ore=77402 fac=7 tech=28 turrets=7 killed_turrets=6 K/D=59/112 avg_cr=1860 ms=49% sh=68% flying={ "lance": 1, "bomber": 3, "ion": 2, "support": 1, "fighter": 1 }
+  Cinder tr=4112 ore=95702 fac=8 tech=36 turrets=11 killed_turrets=8 K/D=79/89 avg_cr=2280 ms=100% sh=100% flying={ "lance": 3, "bomber": 2, "fighter": 3, "flak": 1 }
+hash t=1685 225 units, dbb5f794
+hash t=1690 222 units, b977511c
+hash t=1695 272 units, 73141a13
+hash t=1700 260 units, 4e27e14e
+hash t=1705 238 units, 1279c796
+hash t=1710 227 units, 8165ed30
+hash t=1715 225 units, b0389273
+hash t=1720 225 units, 1e2695d4
+hash t=1725 219 units, 858e6588
+hash t=1730 257 units, 519a32aa
+hash t=1735 247 units, cc0f386c
+hash t=1740 237 units, 80101451
+t=29:00  sim 286.9 ms/sim-s  worst tick 15.6 ms  units=236 ships=23 minions=144 drones=23 projectiles=55 fps=193
+  Halcyon tr=723 ore=79504 fac=7 tech=29 turrets=4 killed_turrets=6 K/D=60/118 avg_cr=1784 ms=49% sh=70% flying={ "lance": 3, "bomber": 3, "fighter": 3, "flak": 2 }
+  Cinder tr=7994 ore=100204 fac=8 tech=37 turrets=12 killed_turrets=11 K/D=82/91 avg_cr=2491 ms=100% sh=100% flying={ "lance": 3, "bomber": 3, "fighter": 4, "flak": 2 }
+hash t=1745 230 units, 2f7e3676
+hash t=1750 207 units, 7d36c53c
+hash t=1755 207 units, c4bfc419
+hash t=1760 212 units, a0e35861
+hash t=1765 265 units, 3d239bba
+hash t=1770 238 units, 24237c43
+hash t=1775 209 units, 17711813
+hash t=1780 202 units, 23a3d219
+hash t=1785 201 units, 26f0080c
+hash t=1790 202 units, bcd9f148
+hash t=1795 197 units, 2d98358e
+hash t=1800 251 units, 09461d67
+DET_HASH END t=1800 251 units, 09461d67
+DET_RNG 699334656

@@ -1,0 +1,80 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra" } rocks=2676 nodes=9 camps=12 route_nodes=347
+t=25:00  sim 0.0 ms/sim-s  worst tick 0.0 ms  units=32 ships=0 minions=0 drones=8 projectiles=0 fps=1
+  Halcyon tr=6000 ore=0 fac=8 tech=52 turrets=6 killed_turrets=0 K/D=0/0 avg_cr=6000 ms=100% sh=100% flying={  }
+  Cinder tr=6000 ore=0 fac=8 tech=52 turrets=4 killed_turrets=0 K/D=0/0 avg_cr=6000 ms=100% sh=100% flying={  }
+hash t=1505 75 units, ff1c4d15
+hash t=1510 137 units, 87533af8
+hash t=1515 139 units, 49749a72
+hash t=1520 141 units, 31726ed2
+hash t=1525 142 units, fb3c1f13
+hash t=1530 142 units, 3af524e6
+hash t=1535 144 units, e22c714b
+hash t=1540 152 units, 39ae0f6c
+hash t=1545 218 units, e4d68534
+hash t=1550 221 units, 6b8a39c1
+hash t=1555 217 units, 7bdef10f
+hash t=1560 212 units, 8774e8ab
+t=26:00  sim 145.6 ms/sim-s  worst tick 32.7 ms  units=212 ships=24 minions=123 drones=25 projectiles=10 fps=222
+  Halcyon tr=811 ore=1260 fac=8 tech=52 turrets=11 killed_turrets=0 K/D=0/0 avg_cr=1262 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "bomber": 3, "lance": 2, "ion": 1, "support": 1 }
+  Cinder tr=136 ore=1260 fac=8 tech=52 turrets=10 killed_turrets=0 K/D=0/0 avg_cr=1283 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "bomber": 3, "lance": 2, "ion": 1, "support": 1 }
+hash t=1565 215 units, 6afd0e60
+hash t=1570 213 units, c26fecc8
+hash t=1575 198 units, e6a20de1
+hash t=1580 243 units, ddfd271a
+hash t=1585 236 units, 44c539e0
+hash t=1590 227 units, 9fa05b19
+hash t=1595 221 units, 8c2bb448
+hash t=1600 219 units, b9584afe
+hash t=1605 217 units, 9cfae3b0
+hash t=1610 210 units, 4c7f486c
+hash t=1615 264 units, 5afbda63
+hash t=1620 250 units, 5c165b8d
+t=27:00  sim 188.3 ms/sim-s  worst tick 11.7 ms  units=249 ships=22 minions=148 drones=27 projectiles=54 fps=179
+  Halcyon tr=4878 ore=8280 fac=8 tech=52 turrets=11 killed_turrets=1 K/D=1/1 avg_cr=1855 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "lance": 2, "ion": 1, "bomber": 2, "support": 1 }
+  Cinder tr=3800 ore=8400 fac=8 tech=52 turrets=9 killed_turrets=0 K/D=0/1 avg_cr=1795 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "bomber": 3, "lance": 2, "support": 1 }
+hash t=1625 236 units, 36d30449
+hash t=1630 233 units, 537de20d
+hash t=1635 223 units, 761b5e96
+hash t=1640 223 units, 8a42a611
+hash t=1645 220 units, 5b9a3812
+hash t=1650 274 units, 9f4e5ca6
+hash t=1655 268 units, ac70996e
+hash t=1660 256 units, f0225b7f
+hash t=1665 230 units, 8b40cb37
+hash t=1670 217 units, ff98b84f
+hash t=1675 202 units, b1012bdb
+hash t=1680 198 units, 157c1b08
+t=28:00  sim 206.4 ms/sim-s  worst tick 14.1 ms  units=198 ships=23 minions=91 drones=22 projectiles=73 fps=199
+  Halcyon tr=5549 ore=13681 fac=8 tech=52 turrets=10 killed_turrets=1 K/D=1/3 avg_cr=2190 ms=100% sh=86% flying={ "flak": 2, "battlecruiser": 3, "lance": 2, "ion": 1, "bomber": 3 }
+  Cinder tr=6824 ore=13682 fac=8 tech=52 turrets=10 killed_turrets=1 K/D=1/1 avg_cr=2201 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "bomber": 3, "lance": 2, "support": 1, "ion": 1 }
+hash t=1685 244 units, f5416dd6
+hash t=1690 231 units, 6e728f75
+hash t=1695 223 units, f8796b28
+hash t=1700 205 units, 45cf5305
+hash t=1705 185 units, 3decc3d8
+hash t=1710 176 units, f0cff02a
+hash t=1715 171 units, 65e9a320
+hash t=1720 222 units, bfe285ac
+hash t=1725 218 units, 3126929d
+hash t=1730 202 units, b8a8d52b
+hash t=1735 178 units, 0398b558
+hash t=1740 167 units, 2bdf2288
+t=29:00  sim 201.9 ms/sim-s  worst tick 11.1 ms  units=166 ships=20 minions=61 drones=25 projectiles=65 fps=224
+  Halcyon tr=5860 ore=16775 fac=8 tech=52 turrets=9 killed_turrets=2 K/D=4/4 avg_cr=2251 ms=100% sh=53% flying={ "battlecruiser": 3, "lance": 2, "flak": 2, "bomber": 2, "support": 1, "ion": 1 }
+  Cinder tr=11521 ore=21002 fac=8 tech=52 turrets=10 killed_turrets=2 K/D=1/4 avg_cr=2608 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "bomber": 2, "lance": 2 }
+hash t=1745 161 units, 813f3831
+hash t=1750 166 units, efb5c6a2
+hash t=1755 227 units, a433ba36
+hash t=1760 228 units, 507e9258
+hash t=1765 220 units, d022f0ea
+hash t=1770 218 units, 6e9d8efa
+hash t=1775 204 units, 45b6e779
+hash t=1780 191 units, 220f7c8b
+hash t=1785 188 units, 360d6197
+hash t=1790 237 units, 8e09847a
+hash t=1795 236 units, c348ab6f
+hash t=1800 232 units, 063b166f
+DET_HASH END t=1800 232 units, 063b166f
+DET_RNG 4224758651
