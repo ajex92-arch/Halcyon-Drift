@@ -1,0 +1,34 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra" } rocks=2676 nodes=9 camps=12 route_nodes=347
+t=25:00  sim 0.0 ms/sim-s  worst tick 0.0 ms  units=32 ships=0 minions=0 drones=8 projectiles=0 fps=1
+  Halcyon tr=6000 ore=0 fac=8 tech=52 turrets=6 killed_turrets=0 K/D=0/0 avg_cr=6000 ms=100% sh=100% flying={  }
+  Cinder tr=6000 ore=0 fac=8 tech=52 turrets=4 killed_turrets=0 K/D=0/0 avg_cr=6000 ms=100% sh=100% flying={  }
+hash t=1505 75 units, 48c8a028
+hash t=1510 137 units, 4ebd1bb7
+hash t=1515 139 units, 502e1342
+hash t=1520 141 units, 96264f31
+hash t=1525 140 units, d1213ac0
+hash t=1530 141 units, 10073b68
+hash t=1535 144 units, 2930646b
+hash t=1540 153 units, 668fe72d
+hash t=1545 216 units, 059a70ed
+hash t=1550 220 units, dc5995eb
+hash t=1555 219 units, 83a6c7f7
+hash t=1560 211 units, 052eefa7
+t=26:00  sim 258.7 ms/sim-s  worst tick 68.9 ms  units=211 ships=24 minions=123 drones=25 projectiles=13 fps=123
+  Halcyon tr=811 ore=1260 fac=8 tech=52 turrets=11 killed_turrets=0 K/D=0/0 avg_cr=1283 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "bomber": 3, "lance": 2, "ion": 1, "support": 1 }
+  Cinder tr=311 ore=1260 fac=8 tech=52 turrets=10 killed_turrets=0 K/D=0/0 avg_cr=1283 ms=100% sh=100% flying={ "flak": 2, "battlecruiser": 3, "bomber": 3, "lance": 2, "ion": 1, "support": 1 }
+hash t=1565 210 units, ddca7a90
+hash t=1570 206 units, 079ee6e6
+hash t=1575 199 units, d8b1c3ce
+hash t=1580 250 units, cf686ea1
+hash t=1585 240 units, 28dc65d1
+hash t=1590 233 units, 4b99098d
+hash t=1595 226 units, 7002eb93
+hash t=1600 224 units, 803ebe30
+hash t=1605 217 units, 031a21a5
+hash t=1610 210 units, 7cc13101
+hash t=1615 255 units, 934daebe
+hash t=1620 247 units, 65c916de
+DET_HASH END t=1620 247 units, 65c916de
