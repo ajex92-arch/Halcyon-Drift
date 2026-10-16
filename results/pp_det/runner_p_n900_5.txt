@@ -1,0 +1,2 @@
+cores: 4
+seed 23 exit 0 wall_s 232
