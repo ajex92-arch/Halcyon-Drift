@@ -1,0 +1,17 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+arena: ["ion"] vs ["flak"]
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra" } rocks=2676 nodes=9 camps=12 route_nodes=347
+  t=  0s A ["ion 100%"] | B ["flak 100%"]
+  t= 10s A ["ion 100%"] | B ["flak 34%"]
+  t= 20s A ["ion 100%"] | B ["flak 28%"]
+  t= 30s A ["ion 100%"] | B ["flak 28%"]
+  t= 40s A ["ion 100%"] | B ["flak 28%"]
+  t= 50s A ["ion 100%"] | B ["flak 28%"]
+  t= 60s A ["ion 100%"] | B ["flak 28%"]
+t=1:00  sim 43.7 ms/sim-s  worst tick 103.4 ms  units=12 ships=2 minions=0 drones=8 projectiles=0 fps=662
+  Halcyon tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=95 ms=100% sh=100% flying={ "ion": 1 }
+  Cinder tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=95 ms=100% sh=100% flying={ "flak": 1 }
+  t= 70s A ["ion 100%"] | B ["flak 28%"]
+  t= 78s Cinder flak-0 DOCKED (counts as out)
+ARENA RESULT after 78s: A alive 1, B alive 0, first kill at -1s

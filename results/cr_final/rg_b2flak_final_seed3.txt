@@ -1,0 +1,19 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+features: minion_cap, lance_role, bomber_role
+arena: ["bomber", "bomber"] vs ["flak"]
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra", "minion_cap": "on", "escort_pd": "off", "lance_role": "on", "routing_payoff": "off", "jungle_big": "off", "zoom_max": "off", "bomber_role": "both" } rocks=2676 nodes=9 camps=12 route_nodes=347
+  t=  0s A ["bomber 100%", "bomber 100%"] | B ["flak 100%"]
+  t= 10s A ["bomber 100%", "bomber 100%"] | B ["flak 96%"]
+  t= 20s A ["bomber 100%", "bomber 100%"] | B ["flak 31%"]
+  t= 30s A ["bomber 100%", "bomber 100%"] | B ["flak 31%"]
+  t= 40s A ["bomber 100%", "bomber 100%"] | B ["flak 31%"]
+  t= 50s A ["bomber 100%", "bomber 100%"] | B ["flak 31%"]
+  t= 60s A ["bomber 100%", "bomber 100%"] | B ["flak 31%"]
+t=1:00  sim 46.7 ms/sim-s  worst tick 117.6 ms  units=13 ships=3 minions=0 drones=8 projectiles=4 fps=566
+  Halcyon tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=161 ms=100% sh=100% flying={ "bomber": 2 }
+  Cinder tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=95 ms=100% sh=100% flying={ "flak": 1 }
+  t= 70s A ["bomber 100%", "bomber 100%"] | B ["flak 31%"]
+  t= 80s A ["bomber 100%", "bomber 100%"] | B ["flak 31%"]
+  t= 85s Cinder flak-0 DOCKED (counts as out)
+ARENA RESULT after 85s: A alive 2, B alive 0, first kill at -1s

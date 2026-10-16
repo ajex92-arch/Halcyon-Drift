@@ -1,0 +1,6 @@
+cores: 4
+seed 5 exit 0 wall_s 11
+seed 2 exit 0 wall_s 13
+seed 4 exit 0 wall_s 13
+seed 3 exit 0 wall_s 13
+seed 1 exit 0 wall_s 14

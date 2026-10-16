@@ -1,0 +1,9 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+features: minion_cap, lance_role, bomber_role
+arena: ["bomber", "bomber"] vs ["flak"]
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra", "minion_cap": "on", "escort_pd": "off", "lance_role": "on", "routing_payoff": "off", "jungle_big": "off", "zoom_max": "off", "bomber_role": "both" } rocks=2676 nodes=9 camps=12 route_nodes=347
+  t=  0s A ["bomber 100%", "bomber 100%"] | B ["flak 100%"]
+  t= 10s A ["bomber 100%", "bomber 100%"] | B ["flak 90%"]
+  t= 20s A ["bomber 100%", "bomber 100%"] | B ["flak 44%"]
+ARENA RESULT after 28s: A alive 2, B alive 0, first kill at 28s
