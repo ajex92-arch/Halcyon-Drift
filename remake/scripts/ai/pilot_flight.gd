@@ -300,18 +300,23 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 ## toward the side it wants to go, a little outward. Not when the goal
 ## itself is within 600 of the hull (docking, defending, attacking it).
 ## It changes the controls' face point, forward and strafe; avoid_rocks()
-## calls it first.
+## calls it first. Speed: it runs for every ship on every tick, and a ship is
+## almost never near a hull, so a hull that is clearly too far away is
+## skipped by a cheap distance check before the exact hull distance is worked
+## out, and the direction we want to go is worked out only once a hull is
+## near (the answers are the same).
 func avoid_hulls(ship: Ship) -> void:
 	var brain := ai
 	var c := ship.controls
 	var p := ship.global_position
-	var want := c.face_point - p
-	if want.length() < 1.0:
-		return
-	want = want.normalized()
 	# How near the hull has to be to matter: our size, 140, and how far we
 	# will travel while we turn (slower turners look further ahead).
 	var trig := ship.radius + 140.0 + ship.velocity.length() * clampf(1.2 / maxf(ship.f_turn, 0.3), 0.3, 3.0)
+	# The way we want to go (unit vector). It is worked out when the first
+	# hull near enough to matter is found, not before: this function changes
+	# nothing until then, so the order of the work does not change the result.
+	var want := Vector2.ZERO
+	var have_want := false
 	for t in 2:
 		var ms := brain.world.mothership(t)
 		if ms == null or not ms.alive:
@@ -325,8 +330,15 @@ func avoid_hulls(ship: Ship) -> void:
 			continue
 		if ms.hull_dist(p) > trig or ms.hull_dist(brain.goal) < 600.0:
 			continue
-		var a := ms.global_position + Vector2.from_angle(ms.rotation) * ms.half_len
-		var b := ms.global_position - Vector2.from_angle(ms.rotation) * ms.half_len
+		if not have_want:
+			want = c.face_point - p
+			if want.length() < 1.0:
+				return
+			want = want.normalized()
+			have_want = true
+		var kf := ms.keel_arrow()
+		var a := ms.global_position + kf
+		var b := ms.global_position - kf
 		# `n` points from the hull's keel (its centre line) to us. A ship
 		# heading within about 75 degrees of straight away from it is fine.
 		var n := (p - Util.closest_on_segment(p, a, b)).normalized()

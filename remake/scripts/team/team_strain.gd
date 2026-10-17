@@ -54,7 +54,7 @@ func note_respawn() -> void:
 		var was := ts.strain_t > 0.0
 		ts.strain_t = maxf(ts.strain_t, Rules.STRAIN_TIME)
 		if not was:
-			Events.feed.emit("Respawn strain: the %s mothership's guns are slowed and its shields stop recharging for %ds." % [Rules.TEAM_NAMES[ts.team], int(Rules.STRAIN_TIME)], "info", ts.team)
+			Events.feed.emit("Respawn strain: the %s mothership's guns are slowed and its shields stop recharging for %ds." % [Rules.TEAM_DISPLAY[ts.team], int(Rules.STRAIN_TIME)], "info", ts.team)
 
 
 ## Count strain down by one tick of `dt` seconds (never below 0).

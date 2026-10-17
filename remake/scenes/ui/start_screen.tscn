@@ -39,7 +39,7 @@ theme_override_constants/separation = 12
 layout_mode = 2
 theme_type_variation = &"AmberText"
 theme_override_font_sizes/font_size = 13
-text = "13 VS 13 · THREE LANES · AN ASTEROID JUNGLE"
+text = "13 VS 13 · THREE LANES · THE HALCYON DRIFT ASTEROID BELT"
 
 [node name="Title" type="Label" parent="Scroll/Center/Card/Col"]
 layout_mode = 2
@@ -116,7 +116,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 14
-text = "Buy a ship, modules and pilot gear with your own credits; earn them from minion last hits, kills, assists, jungle derelicts and your share of every ore delivery. Hold your lane, push turrets with your minion waves and help break the enemy mothership. An AI Admiral commands Halcyon."
+text = "Buy a ship, modules and pilot gear with your own credits; earn them from minion last hits, kills, assists, jungle derelicts and your share of every ore delivery. Hold your lane, push turrets with your minion waves and help break the enemy mothership. An AI Admiral commands Aurelian."
 autowrap_mode = 3
 
 [node name="Pick" type="Button" parent="Scroll/Center/Card/Col/Seats/Pilot/Col"]

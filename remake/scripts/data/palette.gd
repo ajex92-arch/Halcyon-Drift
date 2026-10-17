@@ -1,6 +1,6 @@
 class_name Palette
 extends RefCounted
-## WHAT THIS IS: the game's box of colours. Colours. Team colours: Halcyon
+## WHAT THIS IS: the game's box of colours. Colours. Team colours: Aurelian
 ## amber, Cinder red, derelicts grey-teal. Every screen, ship and effect
 ## takes its colours from here, so the whole game looks like one piece.
 ##
@@ -34,7 +34,7 @@ const MIST := Color(0.5765, 0.6275, 0.6902)
 
 # --- team and meaning colours ------------------------------------------------------
 
-## Warm amber: Halcyon's team colour (also the menus' highlight colour).
+## Warm amber: Aurelian's team colour (also the menus' highlight colour).
 const AMBER := Color(0.8863, 0.6314, 0.2902)
 ## Red: Cinder's team colour.
 const CINDER := Color(0.8314, 0.3255, 0.2353)
@@ -66,7 +66,7 @@ const ORE_ROCK := Color(0.5529, 0.4745, 0.3765)
 const ORE_DRY := Color(0.1647, 0.1922, 0.2196)
 ## The lane corridors drawn on the map and the minimap.
 const LANE := Color(0.20, 0.25, 0.32)
-## Halcyon's shots (see bolt()).
+## Aurelian's shots (see bolt()).
 const BOLT_H := Color(0.9490, 0.8431, 0.6353)
 ## Cinder's shots.
 const BOLT_C := Color(0.9412, 0.6275, 0.5647)
@@ -87,7 +87,7 @@ const REPAIR := Color(0.45, 0.95, 0.6)
 const FOG := Color(0.02, 0.025, 0.04)
 
 
-## The colour of team `t`: amber for Halcyon, red for Cinder, and the
+## The colour of team `t`: amber for Aurelian, red for Cinder, and the
 ## derelict grey-teal for anything else.
 static func team(t: int) -> Color:
 	if t == Rules.HALCYON:
@@ -97,7 +97,7 @@ static func team(t: int) -> Color:
 	return DERELICT
 
 
-## The colour of team `t`'s shots: BOLT_H for Halcyon, BOLT_C for Cinder,
+## The colour of team `t`'s shots: BOLT_H for Aurelian, BOLT_C for Cinder,
 ## BOLT_N for anything else.
 static func bolt(t: int) -> Color:
 	if t == Rules.HALCYON:

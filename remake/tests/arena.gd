@@ -6,7 +6,7 @@ extends Node
 ##
 ## HOW IT WORKS: setup() stops the minion waves and builds the two squads
 ## with the arena toolkit (tests/lib/arena_kit.gd): squad A flies for
-## Halcyon, squad B for Cinder. They start 1,000 world units either side of
+## Aurelian, squad B for Cinder. They start 1,000 world units either side of
 ## the arena's centre (1 world unit is about one pixel at normal zoom), all
 ## facing the middle, and every pilot holds a spot 500 units from the centre
 ## on its own side, so both squads want the same ground and must fight for
@@ -28,7 +28,7 @@ extends Node
 ##   --skill-a=<0..1>  every squad A pilot's skill (PilotAI.skill; default:
 ##                the skill of each pilot's seat number, as before)
 ##   --skill-b=<0..1>  the same for squad B
-##   --swap       Halcyon starts east and Cinder west (this tells "which
+##   --swap       Aurelian starts east and Cinder west (this tells "which
 ##                side of the map" apart from "which team")
 ##   --debug      report every 2 s instead of every 10 s, with one extra
 ##                line per ship (its AI state, target, beams ...)
@@ -55,7 +55,7 @@ const ArenaKit := preload("res://tests/lib/arena_kit.gd")
 
 ## The running match (set by setup()).
 var world: World
-## Squad A's ships (Halcyon), in launch order.
+## Squad A's ships (Aurelian), in launch order.
 var a: Array = []
 ## Squad B's ships (Cinder), in launch order.
 var b: Array = []
@@ -80,7 +80,7 @@ func setup(w: World) -> void:
 	var lb := str(Game.opt("b", "lance,lance,lance")).split(",")
 	var ska := float(Game.opt("skill-a", -1.0))
 	var skb := float(Game.opt("skill-b", -1.0))
-	# --swap: Halcyon starts east, Cinder west (separates side from team).
+	# --swap: Aurelian starts east, Cinder west (separates side from team).
 	var swap := Game.opt("swap") != null
 	a = ArenaKit.squad(world, Rules.HALCYON, la, swap, ska)
 	b = ArenaKit.squad(world, Rules.CINDER, lb, swap, skb)

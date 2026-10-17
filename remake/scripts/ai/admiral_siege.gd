@@ -80,7 +80,7 @@ const PARKED_DIST := 2500.0
 
 ## The game world (ships, nodes, motherships, the map, match time).
 var world: World
-## Our team: 0 = Halcyon, 1 = Cinder.
+## Our team: 0 = Aurelian, 1 = Cinder.
 var team := 0
 ## The admiral's lane helper (we use its fleet strength measure).
 var lanes: AdmiralLanes
@@ -166,7 +166,7 @@ func update(ts: TeamState) -> bool:
 	ts.siege_t = world.time
 	# "team" tone: only our side's HUD shows this, so the enemy doesn't get
 	# our plan.
-	Events.feed.emit("The %s fleet is massing to assault the %s mothership (%s)." % [Rules.TEAM_NAMES[team], Rules.TEAM_NAMES[1 - team], MapLayout.LANES[best]["label"].to_lower()], "team", team)
+	Events.feed.emit("The %s fleet is massing to assault the %s mothership (%s)." % [Rules.TEAM_DISPLAY[team], Rules.TEAM_DISPLAY[1 - team], MapLayout.LANES[best]["label"].to_lower()], "team", team)
 	return true
 
 

@@ -231,6 +231,7 @@ changes.
 
 ## scripts/data/rules.gd  (class_name Rules extends RefCounted)
 - `static func enemy_of(team: int) -> int`
+- `static func display_label(text: String) -> String`
 - `static func size_index(size_class: int) -> int`
 - `static func damage_mult(kind: int, target_class: int) -> float`
 - `static func tune(name: String, default_value: Variant) -> Variant`
@@ -294,6 +295,7 @@ changes.
 
 ## scripts/entities/mothership.gd  (class_name Mothership extends Unit)
 - `func setup(w: World, t: int, at: Vector2, facing: float) -> void`
+- `func keel_arrow() -> Vector2`
 - `func hull_dist(p: Vector2) -> float`
 - `func hit_t(a: Vector2, b: Vector2, pad: float) -> float`
 - `func dock_radius() -> float`

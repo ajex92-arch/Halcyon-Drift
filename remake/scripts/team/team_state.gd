@@ -45,7 +45,7 @@ extends RefCounted
 
 # --- who we are -----------------------------------------------------------------
 
-## Which side this is: 0 = Halcyon, 1 = Cinder (Rules.TEAM_NAMES).
+## Which side this is: 0 = Aurelian, 1 = Cinder (Rules.TEAM_NAMES holds the internal labels).
 var team := 0
 ## The game world (ships, motherships, ore nodes, the match clock).
 var world: World = null

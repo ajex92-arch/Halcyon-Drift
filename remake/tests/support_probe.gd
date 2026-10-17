@@ -11,7 +11,7 @@ extends Node
 ##   and a killed bay drone is rebuilt.
 ## Prints PASS / FAIL lines.
 ##
-## HOW IT WORKS: setup() gives Halcyon (team 0) 20,000 credits, the repair
+## HOW IT WORKS: setup() gives Aurelian (team 0) 20,000 credits, the repair
 ## bay research and 4 bay drones, and orders a bay to the test spot P.
 ## Then _physics_process() runs numbered steps (`step`), one after
 ## another. Each step waits for something to happen (the bay anchors, 25
@@ -65,13 +65,13 @@ const P := Vector2(9000, 13000)
 
 
 ## main.gd calls this once, right after the World is built. Stop the minion
-## waves, give Halcyon money and the repair bay research, and order a bay
+## waves, give Aurelian money and the repair bay research, and order a bay
 ## to P.
 func setup(w: World) -> void:
 	world = w
 	# No minion waves: the next wave is "never" (INF = infinity).
 	world.minion_director.next_wave = INF
-	# Halcyon: rich, with repair bays researched and 4 drones per bay.
+	# Aurelian: rich, with repair bays researched and 4 drones per bay.
 	var ts := world.teams[0]
 	ts.treasury = 20000.0
 	ts.repair_bays = true
@@ -90,7 +90,7 @@ func _check(name: String, ok: bool, detail: String = "") -> void:
 		fails += 1
 
 
-## Launch a Halcyon test ship of hull `hid` at `at`, standing still and
+## Launch an Aurelian test ship of hull `hid` at `at`, standing still and
 ## with no brain (controller = null), so it doesn't move. The pilot is
 ## named "Test-<hull>". Returns the ship.
 func _spawn(hid: String, at: Vector2) -> Ship:
@@ -212,7 +212,7 @@ func _physics_process(dt: float) -> void:
 				mark_t = t
 				step = 6
 		# Wait for our ward to anchor (give up after 30 s). Then refresh
-		# Halcyon's fog of war at once and check the ward sees 900 units
+		# Aurelian's fog of war at once and check the ward sees 900 units
 		# past its spot. Then kill one bay drone.
 		6:
 			var w: Ward = null

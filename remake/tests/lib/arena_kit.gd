@@ -8,7 +8,7 @@ extends RefCounted
 ## per hull, launches the ships and lines them up in a column 300 world
 ## units apart, 1,000 units to one side of CENTER, all facing the middle.
 ## Every pilot is told to hold a spot 500 units from CENTER on its own side,
-## so both squads want the same ground and must fight for it. Halcyon starts
+## so both squads want the same ground and must fight for it. Aurelian starts
 ## west and Cinder east; `swap` turns that round (this tells "which side of
 ## the map" apart from "which team"). keep_in_fight(), called every tick,
 ## stops pilots from flying home to shop, and takes any pilot that docks
@@ -24,9 +24,9 @@ extends RefCounted
 ## The middle of the arena (world units): open space on the north-south
 ## connector, the same distance from both motherships (not on a resource
 ## node: its ore rocks block beams and sight).
-## Playtest: it used to sit in Halcyon's base clearing. Damaged Halcyon
+## Playtest: it used to sit in Aurelian's base clearing. Damaged Aurelian
 ## ships flew back and docked there within seconds (counted as out), and
-## Cinder ships that drifted west met Halcyon's mothership guns, so two
+## Cinder ships that drifted west met Aurelian's mothership guns, so two
 ## identical squads finished 11-2 for Cinder.
 const CENTER := Vector2(20000, 8600)
 ## How far from CENTER each squad starts (world units).
@@ -41,7 +41,7 @@ const OUT_FOR_GOOD := 9999.0
 
 
 ## Which side of CENTER team `team` fights on: -1 = west, +1 = east.
-## Halcyon is west and Cinder east, unless `swap`.
+## Aurelian is west and Cinder east, unless `swap`.
 static func side(team: int, swap: bool) -> float:
 	var s := -1.0 if team == Rules.HALCYON else 1.0
 	return -s if swap else s

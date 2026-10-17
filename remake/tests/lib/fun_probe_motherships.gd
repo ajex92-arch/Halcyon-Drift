@@ -65,7 +65,7 @@ const BITE := 0.10
 var first_hull_hit := [-1.0, -1.0]
 ## The match times (seconds) of the 5-s hull samples.
 var hull_t: Array = []
-## The hull fractions at those samples: [Halcyon's list, Cinder's list].
+## The hull fractions at those samples: [Aurelian's list, Cinder's list].
 var hull_f: Array = [[], []]
 ## Match time (seconds) when either hull first fell below 0.95; -1 = never.
 var onset_t := -1.0
@@ -81,7 +81,7 @@ var short_assaults := 0
 ## Assaults still running at the end without a bite yet (dropped).
 var undecided := 0
 ## Hull damage taken by each mothership, by who dealt it:
-## [Halcyon's, Cinder's], each "big_pilot"/"medium_pilot"/"small_pilot"/
+## [Aurelian's, Cinder's], each "big_pilot"/"medium_pilot"/"small_pilot"/
 ## "minion"/"other" -> hull points.
 var dmg_by: Array = [{}, {}]
 
@@ -234,7 +234,7 @@ func results(winner: int, ended: bool, start_t: float, end_t: float) -> Dictiona
 		for k in by:
 			loser_total += float(by[k])
 		loser_big = float(by.get("big_pilot", 0.0))
-	# Step 4: the hull every 60 s, [time, Halcyon, Cinder], for plotting.
+	# Step 4: the hull every 60 s, [time, Aurelian, Cinder], for plotting.
 	var every := int(round(60.0 / HULL_STEP))
 	var hull_minutes: Array = []
 	for i in range(every - 1, hull_t.size(), every):

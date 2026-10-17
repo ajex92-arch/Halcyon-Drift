@@ -11,7 +11,7 @@ extends RefCounted
 ##   of ore its drones delivered. The leader is the team with more, once the
 ##   gap is over 5% of the average. Flips of the leader are counted, and the
 ##   leader at 10, 15 and 20 minutes is remembered.
-##   New (v2): A and its lead L (+1 Halcyon ahead, 0 even, -1 Cinder ahead).
+##   New (v2): A and its lead L (+1 Aurelian ahead, 0 even, -1 Cinder ahead).
 ##   A lead change is counted when L takes the opposite non-zero sign and
 ##   keeps it for 2 samples in a row (a one-sample blip is not a change).
 ##   We keep every sample, L at 15:00 (comeback and "even at 15"), A at 15,
@@ -42,13 +42,13 @@ var leader_at := {}
 ## The biggest "richer team's worth / poorer team's worth" after 5:00
 ## (1.0 = always even).
 var max_worth_ratio := 1.0
-## Every check as [match seconds, Halcyon worth, Cinder worth] (credits).
+## Every check as [match seconds, Aurelian worth, Cinder worth] (credits).
 var worth_samples: Array = []
 
 # --- v2: the advantage index -------------------------------------------------
 
 ## Match times (seconds) of the pilot kills made by each team's pilots,
-## [Halcyon's list, Cinder's list], for K5 (kills in the last 300 s).
+## [Aurelian's list, Cinder's list], for K5 (kills in the last 300 s).
 var kill_times: Array = [[], []]
 ## Every sample as [match seconds, A] (A rounded to 0.01 points).
 var adv_samples: Array = []
@@ -62,7 +62,7 @@ var _run_len := 0
 var _confirmed := 0
 ## Lead changes of the index: L took the opposite sign for 2 samples.
 var adv_lead_changes := 0
-## L at 15:00 (Halcyon's view), or null if the probe didn't watch 15:00.
+## L at 15:00 (Aurelian's view), or null if the probe didn't watch 15:00.
 var l15: Variant = null
 ## A at 15, 20 and 25 minutes: "15"/"20"/"25" -> A (only those watched).
 var adv_at := {}

@@ -165,6 +165,9 @@ func _add(p: Vector2, r: float, is_node: bool, rng: Mulberry) -> void:
 		var c := AsteroidFieldChunk.new()
 		c.field = self
 		c.z_index = -2
+		# --sim-only: nothing is drawn, so the chunk is hidden (it then never
+		# draws, not even when a rock in it is destroyed).
+		c.visible = not Game.sim_only
 		add_child(c)
 		chunks[key] = c
 	var ch: AsteroidFieldChunk = chunks[key]

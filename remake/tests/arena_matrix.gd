@@ -21,7 +21,7 @@ extends Node
 ## their pilot records are deleted, and after an 8-second pause (so shots
 ## still in flight run out) the next fight starts. Sides are alternated so
 ## neither team nor map side favours anyone: run i puts the focus side
-## (the skilled pilot, or the small ships) on Halcyon when i is even and on
+## (the skilled pilot, or the small ships) on Aurelian when i is even and on
 ## Cinder when i is odd, and swaps the map sides (east/west) every second
 ## pair of runs, so all four team/side combinations come up equally.
 ## A win rate counts a draw (both sides alive at the time limit, or both
@@ -75,7 +75,7 @@ const GAP := 8.0
 ## The running match (set by setup()).
 var world: World
 ## Every fight to run, in order. Each is {"kind": "duel" or "matrix", "m":
-## match-up number (-1 for duels), "a"/"b": Halcyon's/Cinder's hull ids,
+## match-up number (-1 for duels), "a"/"b": Aurelian's/Cinder's hull ids,
 ## "ska"/"skb": their skills, "swap": map sides swapped, "focus": "a" or
 ## "b", the side whose win rate we report}.
 var plan: Array = []
@@ -83,7 +83,7 @@ var plan: Array = []
 var cur := -1
 ## The number of the next fight to start.
 var next := 0
-## Halcyon's ships in the fight running now.
+## Aurelian's ships in the fight running now.
 var a: Array = []
 ## Cinder's ships in the fight running now.
 var b: Array = []
@@ -107,7 +107,7 @@ func setup(w: World) -> void:
 	world.minion_director.next_wave = INF
 	limit = float(Game.opt("limit", 180.0))
 	var only := str(Game.opt("only", ""))
-	# Step 1: the duels: the skilled pilot on Halcyon for even runs, on
+	# Step 1: the duels: the skilled pilot on Aurelian for even runs, on
 	# Cinder for odd ones; map sides swapped every second pair.
 	if only != "matrix":
 		for i in int(Game.opt("duels", 20)):
@@ -115,7 +115,7 @@ func setup(w: World) -> void:
 			plan.append({"kind": "duel", "m": -1, "a": [DUEL_HULL], "b": [DUEL_HULL],
 				"ska": SKILL_HI if hi_on_a else SKILL_LO, "skb": SKILL_LO if hi_on_a else SKILL_HI,
 				"swap": i % 4 >= 2, "focus": "a" if hi_on_a else "b"})
-	# Step 2: the matrix: the small side on Halcyon for even runs, on Cinder
+	# Step 2: the matrix: the small side on Aurelian for even runs, on Cinder
 	# for odd ones; map sides swapped every second pair.
 	if only != "duel":
 		for m in MATCHUPS.size():
@@ -169,7 +169,7 @@ func _start_fight(i: int) -> void:
 	cur = i
 
 
-## The fight running now is over, with `na` Halcyon and `nb` Cinder ships
+## The fight running now is over, with `na` Aurelian and `nb` Cinder ships
 ## alive. Note the result, print a line, clear the arena, start the pause.
 func _end_fight(na: int, nb: int) -> void:
 	var f: Dictionary = plan[cur]

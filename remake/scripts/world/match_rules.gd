@@ -116,5 +116,5 @@ func on_mothership_destroyed(ms: Mothership, _info: DamageInfo) -> void:
 	world.winner = winner
 	# Announce it: a news-feed line and the match_over event.
 	var reason := "The %s mothership was destroyed." % Rules.TEAM_NAMES[ms.team]
-	Events.feed.emit(reason, "info", -1)
+	Events.feed.emit(Rules.display_label(reason), "info", -1)
 	Events.match_over.emit(winner, reason)

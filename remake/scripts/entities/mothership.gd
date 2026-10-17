@@ -8,7 +8,9 @@ extends Unit
 ##   - Long hull: it is a capsule (picture a thick line with round ends),
 ##     not a circle, so "how far away is it?" and "did that shot hit it?"
 ##     are measured from the line down its middle, the keel
-##     (MothershipHull).
+##     (MothershipHull). The arrow from the centre to the bow end of the keel
+##     is asked for all the time and only changes when the ship turns, so
+##     keel_arrow() keeps it.
 ##   - Guns: point defense and medium cannons from the start; Flagship
 ##     research adds more point defense, flak, heavy batteries and an ion
 ##     lance, and grows its hull and shield (MothershipGuns, through
@@ -49,6 +51,13 @@ var def: Dictionary = Structures.MOTHERSHIP
 ## end. The hull reaches beam / 2 further. setup() sets it to
 ## length / 2 - beam / 2 (630 with the current data).
 var half_len := 630.0
+## The rotation that keel_arrow() last worked out its answer for (INF = none
+## yet).
+var _keel_rot := INF
+## The half_len that keel_arrow() last worked out its answer for.
+var _keel_len := -1.0
+## The answer keel_arrow() kept: nose direction times half_len.
+var _keel_f := Vector2.ZERO
 ## The hull's width, in world units.
 var beam := 340.0
 ## All its guns (WeaponMount): the base guns first, then research guns in
@@ -100,6 +109,7 @@ func setup(w: World, t: int, at: Vector2, facing: float) -> void:
 	team = t
 	kind = Unit.K_MOTHERSHIP
 	size_class = Rules.SIZE_MOTHERSHIP
+	# Internal label: tests print it and no screen shows it; a screen that does must use Rules.display_label().
 	display_name = "%s mothership" % Rules.TEAM_NAMES[t]
 	position = at
 	rotation = facing
@@ -138,6 +148,20 @@ func setup(w: World, t: int, at: Vector2, facing: float) -> void:
 		cs.rotation = PI / 2.0
 	# Step 5: the guns we start with.
 	MothershipGuns.add_base_mounts(self)
+
+
+## The arrow from the centre to the bow end of the keel line: the nose
+## direction times half_len. It is asked for very often (every distance to
+## the hull needs it), but it only changes when the ship turns, so the
+## answer is kept and worked out again only when `rotation` or `half_len`
+## differs from the ones it was made for. The result is the very same number
+## that Vector2.from_angle(rotation) * half_len gives each time.
+func keel_arrow() -> Vector2:
+	if rotation != _keel_rot or half_len != _keel_len:
+		_keel_rot = rotation
+		_keel_len = half_len
+		_keel_f = Vector2.from_angle(rotation) * half_len
+	return _keel_f
 
 
 ## How far point `p` is from the hull's surface, in world units (negative

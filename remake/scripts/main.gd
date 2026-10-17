@@ -12,8 +12,9 @@ extends Node
 ##      window) or shows the start screen and waits for a choice.
 ##   2. start(role) builds the World for that seat, adds the HUD (the
 ##      panels drawn over the game) and the sound player when there is a
-##      window, loads a test script when --test asks for one, and prints
-##      one "match:" line about the map.
+##      window (neither with --sim-only, the speed mode of windowless test
+##      runs: see Game), loads a test script when --test asks for one, and
+##      prints one "match:" line about the map.
 ##   3. Every physics tick, the report part (MainReport) adds up how long
 ##      the simulation took, and prints a report each minute of match time.
 ##   4. When the match ends (Events.match_over) or the --max-minutes limit
@@ -153,8 +154,12 @@ func start(role: String) -> void:
 	# Step 4: the HUD is only built when there is a window to show it,
 	# unless a test asks for it with --force-hud (headless UI checks:
 	# tests/ui_tour.gd). The sound player is only made with a real window.
+	# With --sim-only (Game.sim_only) neither is built: nothing is shown or
+	# heard in that mode.
 	var headless := DisplayServer.get_name() == "headless"
-	if ResourceLoader.exists(HUD_SCENE) and (not headless or Game.opt("force-hud", false)):
+	if Game.sim_only:
+		pass
+	elif ResourceLoader.exists(HUD_SCENE) and (not headless or Game.opt("force-hud", false)):
 		var hud: Node = load(HUD_SCENE).instantiate()
 		ui_layer.add_child(hud)
 		hud.call("setup", world)

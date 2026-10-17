@@ -22,8 +22,10 @@ extends RefCounted
 ## (negative when `p` is inside the hull).
 static func dist(ms: Mothership, p: Vector2) -> float:
 	# `a` and `b` are the two ends of the keel line.
-	var a := ms.global_position + Vector2.from_angle(ms.rotation) * ms.half_len
-	var b := ms.global_position - Vector2.from_angle(ms.rotation) * ms.half_len
+	var f := ms.keel_arrow()
+	var c := ms.global_position
+	var a := c + f
+	var b := c - f
 	return p.distance_to(Util.closest_on_segment(p, a, b)) - ms.beam * 0.5
 
 

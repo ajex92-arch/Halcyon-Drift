@@ -238,8 +238,10 @@ func _shoot(dmg_mult: float, range_mult: float, aim_at: Vector2) -> void:
 		var dir := Vector2.from_angle(a + da)
 		var vel := dir * speed + owner.velocity * 0.35
 		w.projectiles.spawn(mp + dir * 4.0, vel, life, float(def["dmg"]) * dmg_mult, kind, def, owner, homing_target)
-	# Step 4: play the firing sound.
-	Events.cue.emit(_cue_name(), mp)
+	# Step 4: play the firing sound (--sim-only sends no cues: only the
+	# sound player listens to them).
+	if not Game.sim_only:
+		Events.cue.emit(_cue_name(), mp)
 
 
 ## The name of the firing sound for our weapon kind.

@@ -16,6 +16,8 @@ extends Node2D
 ##   - Lines are multiplied by `px` (world units per screen pixel) so they
 ##     keep the same thickness on screen at any zoom, and small units are
 ##     never drawn smaller than a few screen pixels.
+##   - With --sim-only (Game.sim_only) it draws nothing at all: it hides
+##     itself and does no per-frame work.
 ##
 ## WHO USES IT: Godot runs it as part of the minion, mining_drone,
 ## repair_drone, ward, turret, repair_bay, derelict, snub_fighter and
@@ -42,9 +44,15 @@ var unit: Unit
 
 
 ## Find our unit. The mothership is drawn one layer lower (z_index -1) so
-## the small ships around it are drawn on top.
+## the small ships around it are drawn on top. With --sim-only (Game.sim_only)
+## nothing is ever drawn, so we hide ourselves and stop our per-frame work
+## for good: the simulation never reads this node.
 func _ready() -> void:
 	unit = get_parent() as Unit
+	if Game.sim_only:
+		visible = false
+		set_process(false)
+		return
 	if unit is Mothership:
 		z_index = -1
 

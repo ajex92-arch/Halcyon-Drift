@@ -64,7 +64,7 @@ func print_minute(world: World) -> void:
 	print("t=%s  sim %.1f ms/sim-s  worst tick %.1f ms  units=%d ships=%d minions=%d drones=%d projectiles=%d fps=%d" % [
 		Util.clock(world.time), ms_per_sim_s, _worst / 1000.0, world.units.size(), world.ships.size(),
 		world.minions.size(), world.mining_drones.size(), world.projectiles.count(), Engine.get_frames_per_second()])
-	# Step 2: one line per team (0 = Halcyon, 1 = Cinder).
+	# Step 2: one line per team (0 = Aurelian, 1 = Cinder).
 	for t in 2:
 		var ts := world.teams[t]
 		var ms := world.mothership(t)

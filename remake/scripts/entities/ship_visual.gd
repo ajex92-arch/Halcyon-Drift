@@ -20,6 +20,11 @@ extends Node2D
 ##     same thickness on screen at any zoom.
 ##   - The flames are CPUParticles2D nodes (small dots of light fired out by
 ##     Godot): one for the main engine and one for each side thruster.
+##   - With --sim-only (Game.sim_only) it draws nothing at all: it hides
+##     itself, makes no flames and does no per-frame work. One detail keeps
+##     the match exactly the same: making a CPUParticles2D takes one number
+##     from the game's shared random sequence, so _ready() takes the same
+##     three numbers itself (see there).
 ##
 ## WHO USES IT: Godot runs it as part of ship.tscn. It reads the Ship's
 ## thrust_* values, boosting, ace_t, flash, shields, velocity and f_max,
@@ -56,9 +61,23 @@ var star_jet: CPUParticles2D
 var is_human := false
 
 
-## Find our ship and make the three flame emitters.
+## Find our ship and make the three flame emitters. With --sim-only
+## (Game.sim_only) nothing is ever drawn, so we make no flames, hide
+## ourselves and stop our per-frame work for good: the simulation never reads
+## this node. One thing must still happen: Godot's CPUParticles2D picks its
+## own random seed from the game's shared random sequence when it is made (it
+## takes one number from it), and that is the very sequence the AI and the
+## guns use. So the three flames cost three numbers of the sequence, and we
+## take the same three here, or every later dice roll would be different and
+## the match would no longer be the same match.
 func _ready() -> void:
 	ship = get_parent() as Ship
+	if Game.sim_only:
+		visible = false
+		set_process(false)
+		for _i in 3:
+			randi()
+		return
 	main_jet = _jet(Color(1.0, 0.85, 0.6))
 	port_jet = _jet(Palette.SIDE_JET)
 	star_jet = _jet(Palette.SIDE_JET)

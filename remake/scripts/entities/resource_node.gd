@@ -70,6 +70,9 @@ var rebuild_lock_until := 0.0
 ## calls this once per node.
 func setup(w: World, info: Dictionary) -> void:
 	world = w
+	# --sim-only: nothing is drawn, so the node hides its picture.
+	if Game.sim_only:
+		visible = false
 	node_id = info["id"]
 	node_name = info["name"]
 	node_kind = info["kind"]
@@ -180,12 +183,14 @@ func take_ore(i: int, amount: float) -> float:
 
 
 ## One tick of `dt` seconds: every rock grows back a little (never above
-## its maximum), and the node redraws. World calls this every tick.
+## its maximum), and the node redraws (not with --sim-only, Game.sim_only:
+## then nothing is drawn). World calls this every tick.
 func tick(dt: float) -> void:
 	var regen := MapLayout.ORE_REGEN * value * dt
 	for i in ore.size():
 		ore[i] = minf(ore_max[i], ore[i] + regen)
-	queue_redraw()
+	if not Game.sim_only:
+		queue_redraw()
 
 
 ## Godot calls this to draw the node (after queue_redraw()). Positions here

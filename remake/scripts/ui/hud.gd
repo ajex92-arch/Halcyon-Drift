@@ -146,7 +146,7 @@ func setup(w: World) -> void:
 		_open_hangar()
 		toast("Pick a ship in the hangar and launch. H explains everything.")
 	elif world.human_role == "admiral":
-		toast("You command Halcyon. Tab opens the Admiral board; H explains everything.")
+		toast("You command Aurelian. Tab opens the Admiral board; H explains everything.")
 	_refresh()
 
 
@@ -209,7 +209,7 @@ func _on_respawned(p: RefCounted) -> void:
 
 
 ## One of an Admiral's orders was carried out (`ok`) or refused. Only the
-## human Admiral (always on Halcyon) gets a pop-up: the RESULT_OK text when
+## human Admiral (always on Aurelian) gets a pop-up: the RESULT_OK text when
 ## it worked, or the reason (`message`) when it didn't.
 func _on_admiral_result(team: int, action: String, ok: bool, message: String) -> void:
 	if world.human_role != "admiral" or team != Rules.HALCYON:

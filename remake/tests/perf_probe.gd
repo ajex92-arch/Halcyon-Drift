@@ -16,6 +16,13 @@ extends Node
 ## --headless runs with no window; --fixed-fps 60 makes every tick (one
 ## small step of game time) exactly 1/60 of a game second.
 ##
+## --noprof leaves the profiling off (the timing code itself costs a little),
+## so the plain "sim ms/sim-s" line of main.gd is the cleanest speed number.
+##
+## --late starts the match at 25:00 with both sides fully teched and rich
+## (LateGame.apply, as in tests/det_hash.gd --late); --secs then counts from
+## 25:00. This measures the heavy late game (sieges, capital ships).
+##
 ## HOW TO READ THE OUTPUT: main.gd prints each minute a line like
 ## "  prof ms/sim-s: directors=0.4, hash=1.2, vision=2.0, units=9.1, ..."
 ## Main prints the per-system ms per sim-second each minute (keys:
@@ -41,8 +48,13 @@ var secs := 300.0
 ## on and read --secs.
 func setup(w: World) -> void:
 	world = w
-	world.profiling = true
+	world.profiling = not Game.opt("noprof", false)
 	secs = float(Game.opt("secs", 300.0))
+	# With --late: the late-game setup (tests/lib/late_game.gd); --secs then
+	# counts from 25:00.
+	if Game.opt("late", false):
+		LateGame.apply(world)
+		secs += LateGame.START
 
 
 ## Godot calls this every tick. Quit once --secs of game time have passed.

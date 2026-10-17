@@ -1,7 +1,7 @@
 class_name StartScreen
 extends Control
 ## WHAT THIS IS: the first screen of the game, where the human picks their
-## seat: command Halcyon as its Admiral, or fly as one of its 12 pilots
+## seat: command Aurelian as its Admiral, or fly as one of its 12 pilots
 ## (then an AI admiral commands). The choice is locked for the whole match.
 ## DESIGN.md A3.
 ##

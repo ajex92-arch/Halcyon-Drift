@@ -57,7 +57,7 @@ func tick(dt: float) -> void:
 		if ts.free_drone_t <= 0.0:
 			ts.free_drone_t = float(Structures.MINING_DRONE["free_every"])
 			world.spawn_mining_drone(team, "")
-			Events.feed.emit("The %s mothership built a free mining drone." % Rules.TEAM_NAMES[team], "info", team)
+			Events.feed.emit("The %s mothership built a free mining drone." % Rules.TEAM_DISPLAY[team], "info", team)
 	else:
 		# Enough drones: keep the free-drone clock full.
 		ts.free_drone_t = float(Structures.MINING_DRONE["free_every"])

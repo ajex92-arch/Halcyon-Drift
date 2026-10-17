@@ -67,7 +67,7 @@ var time := 0.0
 ## "play" while the match runs, "end" once a mothership is destroyed (the
 ## tick then stops moving anything).
 var phase := "play"
-## The team that won (0 = Halcyon, 1 = Cinder), or -1 while still playing.
+## The team that won (0 = Aurelian, 1 = Cinder), or -1 while still playing.
 var winner := -1
 ## What the human at the keyboard plays: "pilot" | "admiral" | "spectator".
 var human_role := "pilot"
@@ -101,7 +101,7 @@ var minion_director: MinionDirector
 var jungle_director: JungleDirector
 ## The admiral's order desk (a human admiral and the AI admirals both use it).
 var command: AdmiralCommand
-## The computer admiral of each team, [Halcyon, Cinder]. null where a human
+## The computer admiral of each team, [Aurelian, Cinder]. null where a human
 ## is admiral (or with the "no-admiral-ai" test switch).
 var admiral_ai: Array = [null, null]
 ## The AI pilot brains: PilotProfile -> PilotAI (no entry for the human).

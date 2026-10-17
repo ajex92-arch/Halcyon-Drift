@@ -58,7 +58,7 @@ const FLEET_MIX := AdmiralFleetCommand.FLEET_MIX
 
 ## The game world (all ships, nodes, teams and the AdmiralCommand).
 var world: World
-## Which team this admiral runs: 0 = Halcyon, 1 = Cinder.
+## Which team this admiral runs: 0 = Aurelian, 1 = Cinder.
 var team := 0
 ## Seconds until the next think. The two teams start half a second apart
 ## (0.5 s and 1.0 s) so they don't think on the same frame, then each

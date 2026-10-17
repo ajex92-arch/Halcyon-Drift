@@ -28,7 +28,7 @@ const FLEET_MIX := ["fighter", "fighter", "bomber", "fighter", "bomber", "corvet
 
 ## The game world (minions, the MinionDirector, the AdmiralCommand).
 var world: World
-## Our team: 0 = Halcyon, 1 = Cinder.
+## Our team: 0 = Aurelian, 1 = Cinder.
 var team := 0
 ## The admiral's lane helper (for the lane we're pushing).
 var lanes: AdmiralLanes

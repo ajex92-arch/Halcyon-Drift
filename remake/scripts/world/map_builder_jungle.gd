@@ -7,7 +7,7 @@ extends RefCounted
 ##
 ## HOW IT WORKS: the map is split into four quarters: "tl" (top-left),
 ## "bl" (bottom-left), "tr" (top-right) and "br" (bottom-right). MapLayout
-## only lists Halcyon's two quarters (tl and bl); the right-hand ones are
+## only lists Aurelian's two quarters (tl and bl); the right-hand ones are
 ## mirror copies.
 ##   1. Camps: every camp in MapLayout.CAMPS is written into the map twice
 ##      (as authored, and mirrored into tr or br), and fill rocks must stay
@@ -16,7 +16,7 @@ extends RefCounted
 ##      corridor it opens from, note a gate for the lane wall step
 ##      (MapBuilder.gates), write the entrance into the map twice, and add
 ##      a short path from just inside the corridor to the jungle side.
-##   3. Winding paths: in each of Halcyon's quarters we join up all the
+##   3. Winding paths: in each of Aurelian's quarters we join up all the
 ##      entrance and camp points with the shortest set of straight links
 ##      that connects them all (a "minimum spanning tree"), plus the one
 ##      shortest extra link, so there is a loop to run around. Each link

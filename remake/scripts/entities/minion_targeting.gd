@@ -18,6 +18,10 @@ extends RefCounted
 ##     The enemy mothership is checked on its own at the end (it isn't in
 ##     the spatial hash) and scored like a structure, by the distance to
 ##     its hull.
+##     (Speed: the rock check is the costly part, so it is asked only of an
+##     enemy that would become the best one so far; a hidden enemy never wins
+##     and one that would not win anyway changes nothing, so the answer is the
+##     same as checking every enemy.)
 ##     The current target is not dropped just because the scores changed: it
 ##     stays while it is still close, visible, near our lane and not hidden
 ##     behind a rock, unless something else scores at least RETARGET_MARGIN
@@ -77,12 +81,16 @@ static func pick_target(m: Minion) -> void:
 		var d := m.position.distance_to(u.position)
 		if d > m.aggro + u.radius or u.position.distance_to(anchor) > Minion.LEASH:
 			continue
-		# No targets behind asteroids (turrets pick theirs the same way).
-		if m.world.asteroids.segment_blocked(m.position, u.position):
-			continue
 		# Step 3: the score (lower is better), see score_of().
 		var score := score_of(m, u, now)
-		if score < best_score:
+		# No targets behind asteroids (turrets pick theirs the same way). The
+		# rock check is the costly part, so it is asked only of an enemy that
+		# would become the best one: a hidden enemy never wins, and one that
+		# would not win anyway changes nothing whether it is hidden or not. The
+		# target we keep (step 1) was already found clear along this very
+		# line (same two points, rocks only ever disappear), so it is not
+		# asked again.
+		if score < best_score and (u == keep or not m.world.asteroids.segment_blocked(m.position, u.position)):
 			best_score = score
 			best = u
 	# Step 4: the enemy mothership isn't in the spatial hash (its hull is

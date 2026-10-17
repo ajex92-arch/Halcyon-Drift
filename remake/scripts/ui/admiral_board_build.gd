@@ -162,7 +162,7 @@ static func _refresh_node_line(b: AdmiralBoard, node_id: String, l: Label) -> vo
 	elif holder >= 0:
 		who = "ENEMY"
 	# Step 2: the line and its colour.
-	l.text = "%s  ·  %s  ·  turrets %d/%d  ·  ore %d%%" % [n.node_name, who, maxi(n.turret_count(0), n.turret_count(1)), n.slots.size(), int(100.0 * n.total_ore() / maxf(1.0, n.total_ore_max()))]
+	l.text = "%s  ·  %s  ·  turrets %d/%d  ·  ore %d%%" % [Rules.display_label(n.node_name), who, maxi(n.turret_count(0), n.turret_count(1)), n.slots.size(), int(100.0 * n.total_ore() / maxf(1.0, n.total_ore_max()))]
 	l.add_theme_color_override("font_color", Palette.CINDER if holder >= 0 and holder != b.team else Palette.ICE)
 
 

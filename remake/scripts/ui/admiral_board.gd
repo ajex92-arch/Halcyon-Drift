@@ -69,7 +69,7 @@ var world: World
 ## The Admiral's map layer: map tools, the minion selection, and whether
 ## the human may give orders right now (can_command). Set by setup().
 var overlay: CommandOverlay
-## The team this board commands: Halcyon (team 0). Nothing changes it.
+## The team this board commands: Aurelian (team 0). Nothing changes it.
 var team := Rules.HALCYON
 ## The tab being shown (one tab button's text: "Research", "Build",
 ## "Mothership", "Fleet" or "Pilots"). The HUD reads it to rebuild the same

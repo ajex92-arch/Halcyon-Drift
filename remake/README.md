@@ -1,10 +1,11 @@
 # Halcyon Drift (remake)
 
 A top-down space MOBA at Homeworld scale, built in Godot 4.7 with GDScript
-only. Two motherships face each other across three lanes joined by a
-crossing down the middle. Minion waves push every lane, Admirals build
-turrets at the asteroid resource nodes, and an asteroid jungle full of
-derelict monsters sits between the lanes. It is 13 vs 13: 12 pilots and 1
+only. The battle is fought in the Halcyon Drift, an asteroid belt. Two
+motherships face each other across three lanes joined by a crossing down
+the middle. Minion waves push every lane, Admirals build turrets at the
+asteroid resource nodes, and an asteroid jungle full of derelict monsters
+sits between the lanes. It is 13 vs 13: 12 pilots and 1
 Admiral per side, with AI filling every seat you don't take. The match ends
 only when a mothership is destroyed.
 

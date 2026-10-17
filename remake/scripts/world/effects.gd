@@ -19,6 +19,12 @@ extends Node2D
 ## in the fog) never changes the match: each viewer sees different effects,
 ## but the match plays out the same.
 ##
+## With --sim-only (Game.sim_only) nothing is ever drawn, so Effects does
+## nothing: it hides itself, stops its per-frame work, and puff(), spark(),
+## explosion(), flak_burst() and pulse() return at once (explosion() also
+## sends no sound cue). Because of the separate random numbers, the match is
+## exactly the same.
+##
 ## WHO USES IT: World owns it (the "Effects" child node, World.effects);
 ## WorldSetup calls setup() and sets viewer_team. Projectiles (with its
 ## part ProjectilesImpact) makes sparks, flak bursts and the puff of a
@@ -49,11 +55,16 @@ var rng := RandomNumberGenerator.new()
 
 
 ## Remember the world, draw above the projectiles (z_index 6) and seed our
-## random numbers. WorldSetup calls this once.
+## random numbers. WorldSetup calls this once. With --sim-only
+## (Game.sim_only) nothing is ever drawn: we hide ourselves, stop the
+## per-frame work, and every effect function below returns at once.
 func setup(w: World) -> void:
 	world = w
 	z_index = 6
 	rng.seed = 1
+	if Game.sim_only:
+		visible = false
+		set_process(false)
 
 
 ## True if the viewer may see point `p`: a spectator (viewer_team -1) sees
@@ -67,7 +78,9 @@ func _seen(p: Vector2) -> bool:
 ## 0.4 to 0.9 s and is 2 to 4 screen pixels big. Skipped in the viewer's
 ## fog. Uses `rng` four times per particle.
 func puff(p: Vector2, color: Color, n: int, speed: float = 120.0) -> void:
-	if not _seen(p):
+	# --sim-only: nothing is drawn, so make nothing (the effects have their
+	# own random numbers, so this changes nothing in the match).
+	if Game.sim_only or not _seen(p):
 		return
 	for i in n:
 		# Make room: drop the oldest particle when the list is full.
@@ -82,6 +95,8 @@ func puff(p: Vector2, color: Color, n: int, speed: float = 120.0) -> void:
 ## A hit spark at `p`: 2 slow particles, or 6 faster ones when `heavy`
 ## (torpedo and shell hits).
 func spark(p: Vector2, color: Color, heavy: bool) -> void:
+	if Game.sim_only:
+		return
 	puff(p, color, 6 if heavy else 2, 160.0 if heavy else 90.0)
 
 
@@ -91,6 +106,9 @@ func spark(p: Vector2, color: Color, heavy: bool) -> void:
 ## 0.6 s, and the "boom" sound cue. The cue is sent even in fog (Sfx
 ## decides itself whether it can be heard).
 func explosion(p: Vector2, size: float, color: Color) -> void:
+	# --sim-only: neither the picture nor the sound cue is needed.
+	if Game.sim_only:
+		return
 	puff(p, color, clampi(int(size / 6.0), 8, 40), 120.0 + size * 0.8)
 	puff(p, Palette.BOOST, clampi(int(size / 12.0), 4, 16), 80.0 + size * 0.4)
 	pulse(p, size * 2.2, 0.6, color)
@@ -100,7 +118,7 @@ func explosion(p: Vector2, size: float, color: Color) -> void:
 ## A flak burst at `p`: a quick ring of radius `r` (world units, 0.25 s)
 ## and 3 particles. Skipped in the viewer's fog.
 func flak_burst(p: Vector2, r: float, color: Color) -> void:
-	if not _seen(p):
+	if Game.sim_only or not _seen(p):
 		return
 	pulse(p, r, 0.25, color)
 	puff(p, color, 3, 90.0)
@@ -110,7 +128,7 @@ func flak_burst(p: Vector2, r: float, color: Color) -> void:
 ## `life` seconds while it fades. Skipped in the viewer's fog; drops the
 ## oldest ring when the list is full.
 func pulse(p: Vector2, r: float, life: float, color: Color) -> void:
-	if not _seen(p):
+	if Game.sim_only or not _seen(p):
 		return
 	if pulses.size() >= MAX_PULSES:
 		pulses.pop_front()

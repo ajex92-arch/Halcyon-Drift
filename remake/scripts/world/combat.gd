@@ -112,11 +112,13 @@ func apply_damage(target: Unit, info: DamageInfo) -> float:
 		info.source.aggro_time = world.time
 		info.source.aggro_victim_pos = target.global_position
 	# The sound cue (Sfx plays it): "hit" when the hull was hurt,
-	# "shield_hit" when the shields took it all.
-	if hull_dmg > 0.0:
-		Events.cue.emit("hit", target.global_position)
-	else:
-		Events.cue.emit("shield_hit", target.global_position)
+	# "shield_hit" when the shields took it all. (--sim-only sends no cues:
+	# only the sound player listens to them.)
+	if not Game.sim_only:
+		if hull_dmg > 0.0:
+			Events.cue.emit("hit", target.global_position)
+		else:
+			Events.cue.emit("shield_hit", target.global_position)
 	# Measurement only (probes): announce the applied hit, before any death.
 	if emit_damage_events:
 		Events.damage_applied.emit(target, info, amount, hull_dmg)

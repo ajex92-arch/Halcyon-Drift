@@ -70,6 +70,15 @@ extends Node
 ##                                    spectate_shots)
 ##   --speed=N                        tests: run the game N times as fast
 ##                                    (Engine.time_scale). (main.gd)
+##   --sim-only                       tests: a speed mode for windowless runs.
+##                                    Everything that only draws or sounds
+##                                    is skipped (unit pictures, shot and
+##                                    effect drawing, sound cues, HUD,
+##                                    camera); the match is exactly the same
+##                                    as without it (tests/det_hash.gd proves
+##                                    it). Read into Game.sim_only. (main.gd,
+##                                    Effects, UnitVisual, ShipVisual and
+##                                    others)
 ##   --profile                        print the cost of each part of the
 ##                                    simulation every minute. (main.gd)
 ##   --report=<path>                  also write the end-of-match summary
@@ -110,6 +119,12 @@ var tunables := {}
 ## the AI never used proves nothing. WorldSetup empties it when a match is
 ## built.
 var usage := {}
+## True when --sim-only was given: a speed mode for windowless test runs. The
+## game then skips everything that only draws or sounds (the unit pictures,
+## the shot and ring drawing, the sound cues, the HUD, the camera), because
+## the simulation never reads any of it. The match plays out exactly the
+## same, only faster. Read once from the options by _parse_options().
+var sim_only := false
 
 
 ## Godot calls this once at startup: read the options, then set up the
@@ -133,6 +148,11 @@ func _parse_options() -> void:
 			options[body] = true
 		else:
 			options[body.substr(0, eq)] = body.substr(eq + 1)
+	# Step 1b: --sim-only (a bare switch; "--sim-only=0" or "=false" turns it
+	# off again) is read here once, into the plain variable `sim_only`, so
+	# the many places that check it need no lookup in `options`.
+	var so: String = str(options.get("sim-only", "false"))
+	sim_only = so != "false" and so != "0"
 	# Step 2: the variants: start from the defaults, then apply each
 	# "name:value" pair of --variant (pairs split by commas; a pair that
 	# isn't exactly name:value is skipped).

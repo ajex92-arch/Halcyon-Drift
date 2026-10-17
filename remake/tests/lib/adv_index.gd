@@ -19,11 +19,11 @@ extends RefCounted
 ##   FV  its "fleet value": the summed Ship.bounty_value() (hull + module
 ##       prices, in credits) of its pilot ships flying right now
 ##   MS  its mothership's hull left, as a 0..1 fraction (0 once destroyed)
-## and combine them, always as Halcyon minus Cinder:
+## and combine them, always as Aurelian minus Cinder:
 ##   A = (TA_H - TA_C)/3 + (K5_H - K5_C)/6 + (FV_H - FV_C)/4000
 ##       + 6 x (MS_H - MS_C)
 ## So 3 turrets, 6 recent kills, 4,000 credits of ships, or a sixth of a
-## mothership's hull are each worth 1 point. The lead L is +1 (Halcyon is
+## mothership's hull are each worth 1 point. The lead L is +1 (Aurelian is
 ## ahead) when A >= 1, -1 (Cinder is ahead) when A <= -1, and 0 (even)
 ## otherwise. The weights and the threshold were fixed before any results
 ## ("pre-registered") and must not be tuned to make the numbers look good.
@@ -73,8 +73,8 @@ static func team_parts(world: World, team: int, k5: int) -> Dictionary:
 	return {"ta": ta, "k5": k5, "fv": fv, "ms": frac}
 
 
-## The advantage index A from Halcyon's counts `h` and Cinder's counts `c`
-## (both from team_parts()). Positive = Halcyon ahead. `alt` = the
+## The advantage index A from Aurelian's counts `h` and Cinder's counts `c`
+## (both from team_parts()). Positive = Aurelian ahead. `alt` = the
 ## pre-registered alternative (no fleet value, recent kills doubled).
 static func value(h: Dictionary, c: Dictionary, alt: bool = false) -> float:
 	var a := float(int(h["ta"]) - int(c["ta"])) / TA_PER_POINT
@@ -85,7 +85,7 @@ static func value(h: Dictionary, c: Dictionary, alt: bool = false) -> float:
 	return a
 
 
-## The lead L for an index value `a`: +1 (Halcyon clearly ahead), -1
+## The lead L for an index value `a`: +1 (Aurelian clearly ahead), -1
 ## (Cinder clearly ahead) or 0 (too close to call).
 static func lead(a: float) -> int:
 	if a >= LEAD_AT:

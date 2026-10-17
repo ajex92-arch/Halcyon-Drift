@@ -1,7 +1,8 @@
-# Fleet Command 2: Halcyon Drift
+# Halcyon Drift
 
-A space MOBA built in Godot 4.7.2 (GDScript). This repository holds the game
-and the tools and notes used to test and improve it.
+A space MOBA built in Godot 4.7.2 (GDScript), fought in the Halcyon Drift, an
+asteroid belt. This repository holds the game and the tools and notes used to
+test and improve it.
 
 ## Layout
 

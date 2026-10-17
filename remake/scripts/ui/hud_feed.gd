@@ -110,7 +110,7 @@ func on_unit_killed(u: Node, info: RefCounted) -> void:
 			if victim != null and victim == world.human:
 				last_cause = cause
 		Unit.K_BAY:
-			add_line("%s repair bay at %s destroyed" % [Rules.TEAM_NAMES[unit.team], world.place_name(unit.global_position)], _good_bad(1 - unit.team))
+			add_line("%s repair bay at %s destroyed" % [Rules.TEAM_DISPLAY[unit.team], Rules.display_label(world.place_name(unit.global_position))], _good_bad(1 - unit.team))
 		Unit.K_MONSTER:
 			if killer != null and (_vt() < 0 or killer.team == _vt()):
 				add_line("%s cleared a derelict %s" % [killer.callsign, (unit as Derelict).ctype], Palette.VEIL)
@@ -130,15 +130,16 @@ func _ship_cause(s: Ship, d: DamageInfo, killer: PilotProfile) -> String:
 	elif d.kind == Rules.W_COLLISION:
 		cause = "%s's %s crashed into an asteroid" % [vname, hull]
 	elif d.source != null and is_instance_valid(d.source):
-		# Name the thing that fired, with its team: "a Cinder turret",
-		# "the Halcyon mothership" or "a derelict gunship".
+		# Name the thing that fired, with its team: "a Cinder turret", "an Aurelian minion",
+		# "the Aurelian mothership" or "a derelict gunship".
 		var what: String = Unit.KIND_NAMES[d.source.kind]
 		if d.source.kind == Unit.K_MOTHERSHIP:
-			what = "the %s mothership" % Rules.TEAM_NAMES[d.source.team]
+			what = "the %s mothership" % Rules.TEAM_DISPLAY[d.source.team]
 		elif d.source.team == Rules.NEUTRAL:
 			what = "a derelict " + what
 		else:
-			what = "a %s %s" % [Rules.TEAM_NAMES[d.source.team], what]
+			var tn: String = Rules.TEAM_DISPLAY[d.source.team]
+			what = "%s %s %s" % ["an" if "AEIOU".contains(tn.left(1)) else "a", tn, what]
 		cause = "%s's %s was destroyed by %s" % [vname, hull, what]
 	else:
 		cause = "%s's %s was destroyed" % [vname, hull]
@@ -152,8 +153,8 @@ func on_turret_destroyed(t: Node, by_team: int) -> void:
 	var tu := t as Turret
 	if tu == null:
 		return
-	var where := tu.node.node_name if tu.node != null else world.place_name(tu.global_position)
-	add_line("%s destroyed the %s %s at %s" % [Rules.TEAM_NAMES[by_team] if by_team >= 0 else "Someone", Rules.TEAM_NAMES[tu.team], String(tu.tdef["label"]), where], _good_bad(by_team))
+	var where := Rules.display_label(tu.node.node_name if tu.node != null else world.place_name(tu.global_position))
+	add_line("%s destroyed the %s %s at %s" % [Rules.TEAM_DISPLAY[by_team] if by_team >= 0 else "Someone", Rules.TEAM_DISPLAY[tu.team], String(tu.tdef["label"]), where], _good_bad(by_team))
 
 
 ## Team `team` finished research `id` (Events.research_done). Only our

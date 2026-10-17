@@ -5,6 +5,14 @@ follow this document plus the code contract (the foundation code and the
 documented stub classes in `remake/scripts`). If code and this document
 disagree, raise it; do not silently diverge.
 
+**Setting.** The battle is fought in the Halcyon Drift, an asteroid belt,
+and the project is named after it (user decision, 2026-10-16; see C20 in
+A2). The three lanes, the asteroid resource nodes and the asteroid jungle
+described below are all inside the belt. That is all that is decided about
+it: no history, factions or other places are invented. The two teams are
+Aurelian (team 0, amber; the user's name for it since 2026-10-16, see C21
+in A2 and A16) and Cinder (team 1, red).
+
 Requirement sources, in priority order (later overrides earlier):
 
 1. `prompt1_original_brief.txt` — the original brief.
@@ -84,14 +92,16 @@ Pillars:
 | C17 | P1 "Use CharacterBody2D or kinematic" | Pilot ships are CharacterBody2D using move_and_slide (asteroid collisions, forgiving damage). Light units (minions, drones, wards, bays in flight) use custom kinematics for performance. |
 | C18 | P1 modules (CS-style per ship) + new pilot items | Both: ship modules (2 per ship, lost when the ship dies, swappable at mothership or a repair bay) and pilot gear (6 slots, persists through death). |
 | C19 | "mothership can be moved by a docked admiral from 20:00" — how should the AI admiral use it? | Humans can always move it. AI variants (`ai_ms`): advance (up the push/siege lane when at least even; since 2026-10-16 always up the mid lane), siege (only up its own siege lane, home otherwise), home (never). **Decided: advance.** Full 60-minute AI matches, 2 per variant: advance ended both (43:49, 47:48), siege 1 of 2, home 0 of 2. (2026-10-15: `siege` and `home` were taken out of the code, and with them the `ai_ms` switch. 2026-10-16: the advance lane is now always the mid lane, also during a siege. Following the push or siege lane parked the two motherships on different lanes, top against bottom some 30,000 units apart, and no 30-minute AI match ended; parked on the shortest lane they meet, and two test matches ended after about 24 and 25 minutes. That was on the AI before the pass 1-3 fixes; with them, 0 of 3 normal 30-minute AI matches ended, see docs/AI_DEEP_DIVE.md.) |
+| C20 | Project name and world: the project (repo) was still called Fleet Command 2, and the world had no name. | **Decided by the user, 2026-10-16:** "Lets change the project name to Halcyon Drift, which we shall say is the name of the asteroid belt we are fighting in." So Halcyon Drift is both the project and the asteroid belt the battle is fought in; the lanes, nodes and jungle are inside it. Nothing else about the belt is decided. Unchanged on purpose: "Fleet Command" as the late-game admiral module (A13), the team names Halcyon and Cinder (open question in A16, answered in C21), folder and repo names, and the user's verbatim documents. Text-only change; no game logic touched. |
+| C21 | Team name: the good-guy team (team 0, amber) was called Halcyon, the same word as the Halcyon Drift (the open question in A16). | **Decided by the user, 2026-10-16:** rename the team to **Aurelian**, the user's own pick for an uncommon good-guy name. Cinder (team 1, red) keeps its name, and Halcyon Drift stays the name of the project and of the asteroid belt. Aurelian is the name in all player-facing text, docs and comments. Done as a split between what the player sees and the internal label: `Rules.TEAM_DISPLAY` holds the player-facing names, and `Rules.display_label()` swaps the label in text that was built from an internal one (the place names "Halcyon Top/Mid/Bottom", the end screen's reason). `Rules.TEAM_NAMES` stays the internal label "Halcyon", together with `Rules.HALCYON`, the scene node names (and the node names themselves), logs, JSON, test output and the tools, so every past research log and baseline stays comparable (docs/CODE_GUIDE.md, "Team names"). Unchanged on purpose: the user's verbatim documents and older log entries. Display only: no game logic touched. |
 
 ### A3. Roles and the core loop
 
 **Start screen.** The human picks once:
-- **Command as Admiral** — plays Halcyon's Admiral (command UI, free
-  camera; can also launch a ship). 12 AI pilots fly for Halcyon.
-- **Fly as a Pilot** — joins Halcyon as one of the 12 field pilots. The
-  Halcyon Admiral is AI. The choice is locked for the match.
+- **Command as Admiral** — plays Aurelian's Admiral (command UI, free
+  camera; can also launch a ship). 12 AI pilots fly for Aurelian.
+- **Fly as a Pilot** — joins Aurelian as one of the 12 field pilots. The
+  Aurelian Admiral is AI. The choice is locked for the match.
 Cinder is always 12 AI pilots + an AI Admiral.
 
 **Pilot loop.** Spawn docked at the mothership → Hangar (CS-style): buy a
@@ -110,7 +120,8 @@ upgrades, team upgrades, waypoint, late-game direct minion control, and
 ### A4. Map
 
 Theater 40,000 × 26,000 world units, mirror-symmetric about x = 20,000
-(Halcyon left, amber; Cinder right, red). Coordinates below are Halcyon's;
+(Aurelian left, amber; Cinder right, red). Coordinates below are Aurelian's
+(H = its mothership, short for the internal label Halcyon; C = Cinder's);
 Cinder mirrors x → 40,000 − x.
 
 - **Motherships:** H at (3,600, 13,000) facing +x. Base clearing radius
@@ -122,7 +133,7 @@ Cinder mirrors x → 40,000 − x.
   - Bot: H → (8,200, 22,200) → (31,800, 22,200) → C.
   - Connector (the perpendicular lane): x = 20,000 from (20,000, 3,800)
     to (20,000, 22,200), half-width 1,600.
-- **Jungle:** four quadrants between the lanes (TL, BL Halcyon side; TR, BR
+- **Jungle:** four quadrants between the lanes (TL, BL Aurelian side; TR, BR
   Cinder side), each ≈ 9,600 × 5,400, densely packed with asteroids
   (radius 70–260). Inside: winding paths 220–320 wide joining clearings
   (radius 650) for monster camps. Every entrance from a lane or base is a
@@ -488,6 +499,17 @@ Pacing target in AI matches: bombers ~3–4 min, corvettes ~6–8, frigates
   Admiral: free camera anywhere, any zoom.
 - Wording conventions from v1's clarity pass.
 
+### A16. Open questions (user decisions)
+
+No question is open now. Answered:
+
+- **Team name (answered 2026-10-16).** The first team shared its name,
+  Halcyon, with the Halcyon Drift: keep it (e.g. the belt's home fleet) or
+  rename the team? **The user's answer: rename it to Aurelian**, the user's
+  own pick for an uncommon good-guy name. Team 0 (amber) is Aurelian and
+  team 1 (red) stays Cinder; see C21 in A2. The old name survives only as
+  the internal label (see docs/CODE_GUIDE.md, "Team names").
+
 ---------------------------------------------------------------------------
 
 ## PART B — ARCHITECTURE
@@ -564,7 +586,7 @@ remake/
 ### B3. Core types (contract summary — exact signatures live in code)
 
 - `Unit extends CharacterBody2D` — base for every combat entity: `uid`,
-  `team` (0 Halcyon, 1 Cinder, 2 neutral), `kind`, `size_class`, `radius`,
+  `team` (0 Aurelian = `Rules.HALCYON`, 1 Cinder, 2 neutral), `kind`, `size_class`, `radius`,
   `hull`, `hull_max`, `hull_resist`, `shields: ShieldZones` (nullable),
   `vision_radius`, `alive`, `facing()`; `take_hit(info) -> void` (only
   called by Combat); `on_killed(info)`; damage log for assists;

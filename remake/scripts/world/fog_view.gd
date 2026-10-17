@@ -35,9 +35,15 @@ var _t := 0.0
 
 ## Make the picture (all dark at first), stretch it over the map (each
 ## pixel as big as one Vision cell) and draw it above the effects
-## (z_index 8). Hidden for a spectator. WorldSetup calls this once.
+## (z_index 8). Hidden for a spectator. WorldSetup calls this once. With
+## --sim-only (Game.sim_only) nothing is drawn, so no picture is made at all:
+## we hide ourselves and stop the per-frame work.
 func setup(w: World) -> void:
 	world = w
+	if Game.sim_only:
+		visible = false
+		set_process(false)
+		return
 	z_index = 8
 	centered = false
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR

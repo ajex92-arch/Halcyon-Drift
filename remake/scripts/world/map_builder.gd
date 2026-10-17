@@ -26,7 +26,7 @@ extends RefCounted
 ##      copy (see below).
 ##   7. Route graph (MapBuilderRoute): the road map for AI ships and drones.
 ##
-## Fair for both sides: everything is made on Halcyon's half of the map
+## Fair for both sides: everything is made on Aurelian's half of the map
 ## (x < CX, the left half) and then mirrored onto Cinder's half, so the two
 ## sides are exactly the same. "Mirrored" means flipped left-to-right
 ## across the centre line x = CX, like a reflection (MapLayout.mirror()).
@@ -102,7 +102,7 @@ var keep_out: Array = []
 ## Circles that lane wall rocks must stay out of, as [{c, r}]: the area of
 ## every ore node (MapLayout.NODE_RADIUS).
 var node_keep: Array = []
-## The jungle gates on Halcyon's half, as [{corridor, s, dir, edge}]:
+## The jungle gates on Aurelian's half, as [{corridor, s, dir, edge}]:
 ## corridor = which corridor's wall it is in, s = how far along that
 ## corridor's centre line (world units), dir = the direction from the lane
 ## into the jungle (length 1), edge = where the entrance meets the
@@ -145,7 +145,7 @@ func _run() -> MapInfo:
 ## and list the lanes and the connector as corridors for the later steps.
 func _bases_and_lanes() -> void:
 	# Where each team's mothership sits and which way it faces (team 0 is
-	# Halcyon, team 1 is Cinder).
+	# Aurelian, team 1 is Cinder).
 	for t in 2:
 		info.mothership_pos.append(MapLayout.MOTHERSHIPS[t]["pos"])
 		info.mothership_facing.append(float(MapLayout.MOTHERSHIPS[t]["facing"]))

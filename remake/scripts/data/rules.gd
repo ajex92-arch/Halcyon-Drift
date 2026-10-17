@@ -38,8 +38,8 @@ extends RefCounted
 # --- teams -------------------------------------------------------------------
 # Every unit belongs to a team, stored as a number.
 
-## Team number 0: Halcyon, the amber team. Its mothership starts on the left
-## (west) side of the map. A human player always plays for Halcyon.
+## Team number 0: Aurelian, the amber team (internal label: Halcyon). Its mothership starts on the left
+## (west) side of the map. A human player always plays for Aurelian.
 const HALCYON := 0
 ## Team number 1: Cinder, the red team. Its mothership starts on the right
 ## (east) side of the map.
@@ -47,14 +47,30 @@ const CINDER := 1
 ## Team number 2: neutral. The derelict monsters of the jungle and their
 ## snub fighters belong to no side.
 const NEUTRAL := 2
-## Team names for messages and screens, by team number (team 2 is shown as
-## "Derelict").
+## Internal team labels, by team number (team 2 is "Derelict"): logs, JSON, tools and node names use
+## them, so team 0 stays "Halcyon" here. The names the player sees are in TEAM_DISPLAY.
 const TEAM_NAMES := ["Halcyon", "Cinder", "Derelict"]
+## Player-facing team names, by team number (same order as TEAM_NAMES): what every screen says, so team 0
+## is "Aurelian". TEAM_NAMES stays the internal label for logs, JSON, tools and node names; text built from
+## it (a place name) goes through display_label() on its way to the screen.
+const TEAM_DISPLAY := ["Aurelian", "Cinder", "Derelict"]
 
 ## The enemy team of `team`: 0 gives 1, and 1 gives 0. The neutral team (2)
 ## has no enemy team, so it gives -1, which means "none".
 static func enemy_of(team: int) -> int:
 	return 1 - team if team < 2 else -1
+
+
+## `text` with every internal team label (TEAM_NAMES) swapped for the player-facing name
+## (TEAM_DISPLAY). Use it on text that is about to be shown on screen and was built from an
+## internal label, such as the place name "Halcyon Mid" or a match-over reason. Logs, JSON and
+## tools never use it, so they keep the internal label. The name "Halcyon Drift" is never swapped.
+static func display_label(text: String) -> String:
+	const KEEP := "Halcyon Drift"
+	var out := text.replace(KEEP, "\u0001")
+	for i in TEAM_NAMES.size():
+		out = out.replace(TEAM_NAMES[i], TEAM_DISPLAY[i])
+	return out.replace("\u0001", KEEP)
 
 
 # --- size / target classes (columns of the damage table) ----------------------

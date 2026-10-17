@@ -31,6 +31,10 @@ extends Node2D
 ## Combat.beam(). WeaponMount then registers the beam line here with
 ## add_beam(), only so that it gets drawn.
 ##
+## With --sim-only (Game.sim_only) nothing is ever drawn: the node hides
+## itself, has no per-frame redraw, and add_beam() keeps no lines. The rounds
+## themselves move and hit exactly as before.
+##
 ## WHO USES IT: World owns it (the "Projectiles" child node,
 ## World.projectiles) and calls tick() every tick; WorldSetup calls setup()
 ## and sets viewer_team. WeaponMount fires rounds (spawn) and beams
@@ -141,11 +145,16 @@ var _no_rock := {}
 
 
 ## Remember the world, draw above most things (z_index 5) and make the
-## hit-scan part. WorldSetup calls this once, before the match starts.
+## hit-scan part. WorldSetup calls this once, before the match starts. With
+## --sim-only (Game.sim_only) nothing is ever drawn, so we hide ourselves and
+## stop the per-frame redraw; the rounds themselves are not affected.
 func setup(w: World) -> void:
 	world = w
 	z_index = 5
 	hit_scan = ProjectilesHitScan.new(w)
+	if Game.sim_only:
+		visible = false
+		set_process(false)
 
 
 ## How many slots are in use (rounds in flight).
@@ -270,6 +279,9 @@ func nearest_enemy_torp(p: Vector2, r: float, my_team: int) -> int:
 ## weapon kind `k`) so it is drawn. WeaponMount calls this after
 ## Combat.beam() has done the beam's damage.
 func add_beam(a: Vector2, b: Vector2, t: int, width: float, k: int) -> void:
+	# --sim-only: the lines are only ever drawn, so keep none.
+	if Game.sim_only:
+		return
 	beams.append([a, b, t, width, k])
 
 

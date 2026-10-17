@@ -5,7 +5,7 @@ extends RefCounted
 ## is not a lane, a base, an ore node, a camp or a jungle path gets rocks.
 ##
 ## HOW IT WORKS: we lay a grid of squares MapBuilder.FILL_SPACING (440
-## world units) wide over Halcyon's half of the map (one extra row at the
+## world units) wide over Aurelian's half of the map (one extra row at the
 ## bottom). Row by row from the top, and left to right in each row, every
 ## square gets one try:
 ##   1. Take the square's middle, nudge it by a random amount (up to
@@ -35,7 +35,7 @@ func _init(builder: MapBuilder) -> void:
 
 ## Try one fill rock per grid square (see HOW IT WORKS).
 func run() -> void:
-	# The grid: enough columns to cover Halcyon's half, enough rows (plus
+	# The grid: enough columns to cover Aurelian's half, enough rows (plus
 	# one) to cover the map's height.
 	var nx := int(ceil(MapLayout.CX / MapBuilder.FILL_SPACING))
 	var ny := int(ceil(MapLayout.H / MapBuilder.FILL_SPACING)) + 1
@@ -75,7 +75,7 @@ func _fill_ok(p: Vector2, r: float) -> bool:
 	for k: Dictionary in mb.keep_out:
 		if p.distance_to(k["c"]) < float(k["r"]) + r:
 			return false
-	# Jungle paths (Halcyon's and Cinder's copies alike).
+	# Jungle paths (Aurelian's and Cinder's copies alike).
 	for pl: PackedVector2Array in mb.info.jungle_paths:
 		if Util.dist_to_polyline(p, pl) < MapLayout.PATH_HALF + r + 20.0:
 			return false

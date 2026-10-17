@@ -104,7 +104,7 @@ static func refresh(b: AdmiralBoard) -> void:
 	# Step 1: "Active at <place> for <seconds>s", or "No waypoint set".
 	if b._cards.has("wp"):
 		var wl: Label = b._cards["wp"]
-		wl.text = ("Active at %s for %ds" % [b.world.place_name(ts.waypoint), int(ts.waypoint_until - b.world.time)]) if ts.has_waypoint() else "No waypoint set"
+		wl.text = ("Active at %s for %ds" % [Rules.display_label(b.world.place_name(ts.waypoint)), int(ts.waypoint_until - b.world.time)]) if ts.has_waypoint() else "No waypoint set"
 	# Step 2: the status line: online, being built, or how to get it.
 	if b._cards.has("fleet_status"):
 		var fl: Label = b._cards["fleet_status"]

@@ -30,7 +30,7 @@ static func update(ms: Mothership, dt: float) -> void:
 	if ms.failure_t > 0.0:
 		ms.failure_t = maxf(0.0, ms.failure_t - dt)
 		if ms.failure_t == 0.0:
-			Events.feed.emit("The %s mothership's systems are back online." % Rules.TEAM_NAMES[ms.team], "info", ms.team)
+			Events.feed.emit("The %s mothership's systems are back online." % Rules.TEAM_DISPLAY[ms.team], "info", ms.team)
 	# Step 2: should the emergency start now?
 	check(ms)
 
@@ -50,6 +50,6 @@ static func check(ms: Mothership) -> void:
 	# while.
 	ms.hull = maxf(ms.hull, ms.hull_max * float(ms.def["retreat_threshold"]))
 	ms.failure_t = float(ms.def["retreat_time"])
-	Events.feed.emit("The %s mothership's systems are failing: no launches or respawns there for %ds." % [Rules.TEAM_NAMES[ms.team], int(ms.failure_t)], "info", ms.team)
+	Events.feed.emit("The %s mothership's systems are failing: no launches or respawns there for %ds." % [Rules.TEAM_DISPLAY[ms.team], int(ms.failure_t)], "info", ms.team)
 	# Step 3: a warning sound at the mothership.
 	Events.cue.emit("warn", ms.global_position)

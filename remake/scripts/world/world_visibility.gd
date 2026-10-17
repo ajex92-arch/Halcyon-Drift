@@ -18,7 +18,7 @@ extends RefCounted
 ## unit close by (Structures.WARD "stealth_radius" = 500).
 ##
 ## A unit remembers who sees it in a "bitmask": one whole number used as a
-## row of on/off switches, one per team. Switch 0 (value 1) is Halcyon,
+## row of on/off switches, one per team. Switch 0 (value 1) is Aurelian,
 ## switch 1 (value 2) is Cinder; `1 << team` makes the switch for one team.
 ## Unit.visible_mask = seen right now; Unit.seen_mask = ever seen.
 ##
@@ -30,7 +30,7 @@ extends RefCounted
 var world: World
 ## Seconds until the next vision update (counts down every tick).
 var vision_t := 0.0
-## Whose turn it is next: 0 = Halcyon, 1 = Cinder.
+## Whose turn it is next: 0 = Aurelian, 1 = Cinder.
 var vision_team := 0
 ## A reusable list the spatial hash fills with nearby units.
 var scratch: Array = []
@@ -106,7 +106,8 @@ func refresh(team: int) -> void:
 				u.seen_mask |= bit
 			else:
 				u.visible_mask &= ~bit
-		if team == world.viewer_team or world.viewer_team < 0:
+		# (--sim-only draws nothing, so it needs no on-screen state.)
+		if (team == world.viewer_team or world.viewer_team < 0) and not Game.sim_only:
 			apply_draw_visibility(u)
 
 

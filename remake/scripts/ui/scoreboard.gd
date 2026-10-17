@@ -29,7 +29,7 @@ var world: World
 var embedded := false
 ## Seconds until the next refresh (counts down from 0.5).
 var _t := 0.0
-## One grid per team (index = team: 0 Halcyon, 1 Cinder). Its first row is
+## One grid per team (index = team: 0 Aurelian, 1 Cinder). Its first row is
 ## the column titles.
 @onready var _grids: Array[GridContainer] = [$Col/Halcyon, $Col/Cinder]
 ## One heading label per team.
@@ -72,7 +72,7 @@ func _refresh() -> void:
 		# Step 1: the heading.
 		var ts := world.teams[t]
 		var ms := world.mothership(t)
-		UiKit.set_text(_heads[t], "%s  ·  %d kills  ·  %d turrets destroyed  ·  mothership %d%%" % [Rules.TEAM_NAMES[t], ts.kills, ts.turrets_destroyed, int(ms.hull_frac() * 100.0)])
+		UiKit.set_text(_heads[t], "%s  ·  %d kills  ·  %d turrets destroyed  ·  mothership %d%%" % [Rules.TEAM_DISPLAY[t], ts.kills, ts.turrets_destroyed, int(ms.hull_frac() * 100.0)])
 		# Step 2: this team's pilots, best score first.
 		var rows: Array = []
 		for p: PilotProfile in world.profiles:

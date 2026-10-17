@@ -18,7 +18,7 @@ extends RefCounted
 
 ## The game world (we read its minions and ships).
 var world: World
-## Our team: 0 = Halcyon, 1 = Cinder.
+## Our team: 0 = Aurelian, 1 = Cinder.
 var team := 0
 
 

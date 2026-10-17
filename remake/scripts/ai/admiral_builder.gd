@@ -24,7 +24,7 @@ extends RefCounted
 
 ## The game world (nodes, bays, wards, the map and the AdmiralCommand).
 var world: World
-## Our team: 0 = Halcyon, 1 = Cinder.
+## Our team: 0 = Aurelian, 1 = Cinder.
 var team := 0
 ## The admiral's lane helper (for points along a lane).
 var lanes: AdmiralLanes
@@ -125,7 +125,7 @@ func place_ward() -> void:
 	if mine >= int(Structures.WARD["max_per_team"]):
 		return
 	# Step 2: go through the jungle entrances. Which side owns an entrance
-	# goes by its quarter of the map ("tl"/"bl" = Halcyon's left half,
+	# goes by its quarter of the map ("tl"/"bl" = Aurelian's left half,
 	# "tr"/"br" = Cinder's right half). Some entrances sit exactly on the
 	# centre line, and each side has its own copy of those, so judging by
 	# the x position alone would hand all of them to one team.
