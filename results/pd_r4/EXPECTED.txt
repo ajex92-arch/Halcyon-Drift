@@ -1,0 +1,49 @@
+# cloud results of batch pd_r4: the files this batch leaves in this folder
+# runs: 1
+# jobs: 5
+# files: 45
+combo_A12_seed101.txt
+combo_A12_seed101_err.txt
+combo_A12_seed102.txt
+combo_A12_seed102_err.txt
+combo_A12_seed103.txt
+combo_A12_seed103_err.txt
+combo_A12_seed104.txt
+combo_A12_seed104_err.txt
+runner_combo_A12_0.txt
+combo_A12_seed105.txt
+combo_A12_seed105_err.txt
+combo_A12_seed106.txt
+combo_A12_seed106_err.txt
+combo_A12_seed107.txt
+combo_A12_seed107_err.txt
+combo_A12_seed108.txt
+combo_A12_seed108_err.txt
+runner_combo_A12_1.txt
+combo_A12_seed109.txt
+combo_A12_seed109_err.txt
+combo_A12_seed110.txt
+combo_A12_seed110_err.txt
+combo_A12_seed111.txt
+combo_A12_seed111_err.txt
+combo_A12_seed112.txt
+combo_A12_seed112_err.txt
+runner_combo_A12_2.txt
+combo_A12_seed113.txt
+combo_A12_seed113_err.txt
+combo_A12_seed114.txt
+combo_A12_seed114_err.txt
+combo_A12_seed115.txt
+combo_A12_seed115_err.txt
+combo_A12_seed116.txt
+combo_A12_seed116_err.txt
+runner_combo_A12_3.txt
+combo_A12_seed117.txt
+combo_A12_seed117_err.txt
+combo_A12_seed118.txt
+combo_A12_seed118_err.txt
+combo_A12_seed119.txt
+combo_A12_seed119_err.txt
+combo_A12_seed120.txt
+combo_A12_seed120_err.txt
+runner_combo_A12_4.txt
