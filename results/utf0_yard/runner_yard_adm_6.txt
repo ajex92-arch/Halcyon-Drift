@@ -1,0 +1,6 @@
+cores: 4
+setup: os=Linux image=ubuntu24-20261012.334.1 cpu="Intel(R) Xeon(R) 6973P-C" godot=4.7.2 cache=on godot_cache=hit import_cache=miss godot_s=0 import_s=7 setup_s=12 timeout=timeout
+seed 302 exit 0 wall_s 370
+seed 301 exit 0 wall_s 389
+seed 304 exit 0 wall_s 538
+seed 303 exit 0 wall_s 636
