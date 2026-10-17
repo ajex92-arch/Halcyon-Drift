@@ -1,0 +1,12 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+arena: ["fighter", "fighter", "fighter"] vs ["lance", "lance", "lance"]
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra" } rocks=2676 nodes=9 camps=12 route_nodes=347
+  t=  0s A ["fighter 100%", "fighter 100%", "fighter 100%"] | B ["lance 100%", "lance 100%", "lance 100%"]
+  t= 10s A ["fighter 75%", "fighter 100%", "fighter 100%"] | B ["lance 100%", "lance 100%", "lance 76%"]
+  t= 20s A ["fighter 66%", "fighter 100%", "fighter 55%"] | B ["lance 73%", "lance 67%"]
+  t= 30s A ["fighter 20%", "fighter 100%", "fighter 55%"] | B ["lance 7%", "lance 67%"]
+  t= 40s A ["fighter 20%", "fighter 100%", "fighter 55%"] | B ["lance 7%", "lance 67%"]
+  t= 49s Halcyon fighter-0 DOCKED (counts as out)
+  t= 50s A ["fighter 100%", "fighter 55%"] | B ["lance 7%", "lance 21%"]
+  t= 54s Cinder lance-1 DOCKED (counts as out)
+ARENA RESULT after 54s: A alive 2, B alive 0, first kill at 16s
