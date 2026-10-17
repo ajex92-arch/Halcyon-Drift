@@ -1,0 +1,12 @@
+batch: cr_final3
+run: 39007226758
+finished: 2026-10-17T09:21:10Z
+runs: 1
+jobs: 10
+expected: 90
+present: 90
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
