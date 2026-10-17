@@ -1,0 +1,12 @@
+batch: tn_s4
+run: 39007043607
+finished: 2026-10-17T09:31:03Z
+runs: 12
+jobs: 36
+expected: 276
+present: 276
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
