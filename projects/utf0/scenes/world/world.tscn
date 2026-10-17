@@ -1,0 +1,34 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
+[ext_resource type="Script" path="res://scripts/world/map_decor.gd" id="2_decor"]
+[ext_resource type="Script" path="res://scripts/world/asteroid_field.gd" id="3_rocks"]
+[ext_resource type="Script" path="res://scripts/world/projectiles.gd" id="4_proj"]
+[ext_resource type="Script" path="res://scripts/world/effects.gd" id="5_fx"]
+[ext_resource type="Script" path="res://scripts/world/fog_view.gd" id="6_fog"]
+[ext_resource type="Script" path="res://scripts/camera/camera_rig.gd" id="7_cam"]
+
+[node name="World" type="Node2D"]
+script = ExtResource("1_world")
+
+[node name="MapDecor" type="Node2D" parent="."]
+script = ExtResource("2_decor")
+
+[node name="Asteroids" type="Node2D" parent="."]
+script = ExtResource("3_rocks")
+
+[node name="Nodes" type="Node2D" parent="."]
+
+[node name="Units" type="Node2D" parent="."]
+
+[node name="Projectiles" type="Node2D" parent="."]
+script = ExtResource("4_proj")
+
+[node name="Effects" type="Node2D" parent="."]
+script = ExtResource("5_fx")
+
+[node name="FogView" type="Sprite2D" parent="."]
+script = ExtResource("6_fog")
+
+[node name="CameraRig" type="Camera2D" parent="."]
+script = ExtResource("7_cam")

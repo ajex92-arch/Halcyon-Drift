@@ -1,0 +1,7 @@
+# Godot writes its *.import files with LF line endings whenever it imports a
+# project. On this PC git would give them CRLF in an export (git archive follows
+# core.autocrlf), so the first import of an export would change icon.svg.import,
+# and an export that has changed no longer matches its stamp (SP\vc_lib.ps1,
+# Resolve-VcProject) and is refused by run_batch. Keeping them LF makes an import
+# change nothing.
+*.import text eol=lf
