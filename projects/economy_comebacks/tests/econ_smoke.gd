@@ -19,7 +19,11 @@ extends Node
 ##   +67 s    two Halcyon pilot ships are destroyed by Cinder (an accrued
 ##            bounty is paid; the Halcyon mothership is set to 55% hull so
 ##            the AI buys back);
-##   +70 s    Halcyon spends 2,500 from its treasury (ms_spend_weak).
+##   +70 s    Halcyon spends 2,500 from its treasury (ms_spend_weak);
+##   +100 s   (only with pilot_mining:extractor and --secs above 105) a
+##            healthy AI pilot of the other team is moved 700 world units
+##            from a standing extractor, so the AI can hunt it
+##            (extractor_hunts).
 ## At the end it prints one line  ECON_SMOKE {usage json}  and, for every
 ## name in --expect=a,b,c, PASS or FAIL; the last line is
 ## "econ_smoke: N failures".
@@ -39,7 +43,7 @@ var secs := 100.0
 var expect := PackedStringArray()
 ## The match clock at the start (25:00).
 var t0 := 0.0
-## Which nudge comes next (0..5).
+## Which nudge comes next (0..6).
 var stage := 0
 ## The Halcyon turret destroyed at +66 s.
 var target_turret: Turret = null
@@ -80,8 +84,45 @@ func _physics_process(_dt: float) -> void:
 	elif stage == 5 and t >= 70.0:
 		stage = 6
 		world.teams[0].spend(2500.0)
+	elif stage == 6 and t >= 100.0:
+		stage = 7
+		_move_hunter_next_to_extractor()
 	if t >= secs or world.phase != "play":
 		_finish()
+
+
+## With pilot_mining:extractor on: find a standing extractor and move a
+## healthy AI pilot of the OTHER team (in the lane or jungle state) to 700
+## world units from it, on a side where no rock blocks the line, so the
+## AI's extractor hunt (PilotMiningFeature) has something to see. Does
+## nothing when the feature is off or no extractor stands.
+func _move_hunter_next_to_extractor() -> void:
+	var pm = world.features.get("pilot_mining")
+	if pm == null:
+		return
+	for e in pm.extractors.values():
+		if not is_instance_valid(e) or not (e as Unit).alive:
+			continue
+		var x := e as PilotExtractor
+		var moved := 0
+		for s: Ship in world.ships:
+			if moved >= 2:
+				return
+			if s.team == x.team or not s.alive or s.profile == null or s.profile.is_human or s.hull_frac() < 0.9:
+				continue
+			var brain = world.pilot_ai.get(s.profile)
+			if brain == null or (brain.state != "lane" and brain.state != "jungle"):
+				continue
+			# Pick the first of eight sides with a clear line to the extractor.
+			for k in 8:
+				var spot: Vector2 = x.global_position + Vector2(700.0, 0.0).rotated(float(k) * TAU / 8.0)
+				if not world.asteroids.segment_blocked(spot, x.global_position):
+					s.global_position = spot
+					moved += 1
+					print("ECON_SMOKE hunter nudge: %s moved next to %s" % [s.profile.callsign, x.display_name])
+					break
+		if moved > 0:
+			return
 
 
 ## Remove `n` built Cinder turrets without any reward or news.
