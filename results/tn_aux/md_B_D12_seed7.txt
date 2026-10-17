@@ -1,0 +1,14 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+tune: ms_durability=1.2
+features: tune
+ms_duel B: mothership upgraded=true hull=27840 shields=10800 guns=21 vs ["flak", "flak", "ion"]
+match: role=spectator variants={ "retreat": "none", "escort_wing": "extra", "tune": "on" } rocks=2676 nodes=9 camps=12 route_nodes=347
+  t=  0s  mothership hull 100% shields 100%  attackers alive 3: flak 100%, flak 100%, ion 100%
+  t= 15s  mothership hull 100% shields 85%  attackers alive 3: flak 100%, flak 100%, ion 100%
+  t= 30s  mothership hull 100% shields 55%  attackers alive 3: flak 53%, flak 88%, ion 100%
+  t= 45s  mothership hull 100% shields 29%  attackers alive 2: flak 41%, ion 100%
+  t= 60s  mothership hull 100% shields 5%  attackers alive 1: ion 85%
+t=1:00  sim 47.7 ms/sim-s  worst tick 61.1 ms  units=11 ships=1 minions=0 drones=8 projectiles=40 fps=699
+  Halcyon tr=2220 ore=899 fac=2 tech=14 turrets=0 killed_turrets=0 K/D=0/0 avg_cr=0 ms=100% sh=5% flying={  }
+  Cinder tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/2 avg_cr=227 ms=100% sh=100% flying={ "ion": 1 }
+RESULT B ATTACKERS DESTROYED after 70s: mothership 96% hull (69% of total HP left), attackers alive 0
