@@ -1,0 +1,50 @@
+# cloud results of batch ad_w3: the files this batch leaves in this folder
+# runs: 2
+# jobs: 6
+# files: 46
+wC_c_seed101.txt
+wC_c_seed101_err.txt
+wC_c_seed102.txt
+wC_c_seed102_err.txt
+wC_c_seed103.txt
+wC_c_seed103_err.txt
+wC_c_seed104.txt
+wC_c_seed104_err.txt
+runner_wC_c_0.txt
+wC_c_seed105.txt
+wC_c_seed105_err.txt
+wC_c_seed106.txt
+wC_c_seed106_err.txt
+wC_c_seed107.txt
+wC_c_seed107_err.txt
+wC_c_seed108.txt
+wC_c_seed108_err.txt
+runner_wC_c_1.txt
+wC_c_seed109.txt
+wC_c_seed109_err.txt
+wC_c_seed110.txt
+wC_c_seed110_err.txt
+runner_wC_c_2.txt
+wC_h_seed101.txt
+wC_h_seed101_err.txt
+wC_h_seed102.txt
+wC_h_seed102_err.txt
+wC_h_seed103.txt
+wC_h_seed103_err.txt
+wC_h_seed104.txt
+wC_h_seed104_err.txt
+runner_wC_h_3.txt
+wC_h_seed105.txt
+wC_h_seed105_err.txt
+wC_h_seed106.txt
+wC_h_seed106_err.txt
+wC_h_seed107.txt
+wC_h_seed107_err.txt
+wC_h_seed108.txt
+wC_h_seed108_err.txt
+runner_wC_h_4.txt
+wC_h_seed109.txt
+wC_h_seed109_err.txt
+wC_h_seed110.txt
+wC_h_seed110_err.txt
+runner_wC_h_5.txt
