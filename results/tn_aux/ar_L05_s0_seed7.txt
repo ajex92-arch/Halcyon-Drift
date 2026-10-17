@@ -1,0 +1,9 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+tune: lance_mult=0.5
+features: tune
+arena: ["fighter", "fighter", "fighter"] vs ["lance", "lance", "lance"]
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra", "tune": "on" } rocks=2676 nodes=9 camps=12 route_nodes=347
+  t=  0s A ["fighter 100%", "fighter 100%", "fighter 100%"] | B ["lance 100%", "lance 100%", "lance 100%"]
+  t= 10s A ["fighter 100%", "fighter 100%", "fighter 100%"] | B ["lance 100%", "lance 22%", "lance 100%"]
+  t= 20s A ["fighter 100%", "fighter 100%", "fighter 100%"] | B ["lance 88%"]
+ARENA RESULT after 22s: A alive 3, B alive 0, first kill at 11s
