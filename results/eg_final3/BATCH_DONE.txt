@@ -1,0 +1,12 @@
+batch: eg_final3
+run: 39007075829
+finished: 2026-10-17T08:52:41Z
+runs: 1
+jobs: 10
+expected: 90
+present: 90
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
