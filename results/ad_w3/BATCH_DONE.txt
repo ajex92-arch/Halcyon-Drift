@@ -1,0 +1,12 @@
+batch: ad_w3
+run: 39007284257
+finished: 2026-10-17T09:23:10Z
+runs: 2
+jobs: 6
+expected: 46
+present: 46
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
