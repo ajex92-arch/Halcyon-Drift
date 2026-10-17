@@ -1,0 +1,12 @@
+batch: council80_core
+run: 39046673157
+finished: 2026-10-17T16:38:10Z
+runs: 3
+jobs: 60
+expected: 540
+present: 540
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
