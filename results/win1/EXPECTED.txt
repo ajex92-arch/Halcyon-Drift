@@ -1,0 +1,10 @@
+# cloud results of batch win1: the files this batch leaves in this folder
+# runs: 2
+# jobs: 2
+# files: 6
+w_n900_seed7.txt
+w_n900_seed7_err.txt
+runner_w_n900_0.txt
+w_l300_seed7.txt
+w_l300_seed7_err.txt
+runner_w_l300_1.txt
