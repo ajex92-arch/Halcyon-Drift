@@ -35,7 +35,9 @@ extends RefCounted
 ##      human corvette or frigate through with no further change.
 ## Usage counters in Game.usage: "big_jungle_seconds" (seconds that
 ## MEDIUM-or-bigger pilot ships spend inside the jungle), "big_jungle_routes"
-## (routes planned through the jungle for them) and, to see who farms the
+## (routes planned through the jungle for them), "big_route_choices" (routes
+## planned for them where the jungle-allowed route differed from the
+## lane-only one, so picks / choices says how often the jungle won) and, to see who farms the
 ## camps, "camp_kills_small", "camp_kills_medium" and "camp_kills_big"
 ## (jungle camps destroyed, by the size of the ship that made the last hit).
 ##
@@ -124,6 +126,10 @@ static func plan_route(route: RouteGraph, ship: Ship, from: Vector2, to: Vector2
 	var jungle := route.path(from, to, true)
 	if jungle.is_empty():
 		return lanes
+	# A real choice exists when the jungle-allowed route differs from the
+	# lane-only one (count it, so a report can compare choices and picks).
+	if jungle != lanes:
+		Game.count_usage("big_route_choices")
 	if lanes.is_empty() or _flying_time(jungle, ship) < _flying_time(lanes, ship):
 		# Count the jungle routes a big ship really takes.
 		if _touches_jungle(jungle, ship):
