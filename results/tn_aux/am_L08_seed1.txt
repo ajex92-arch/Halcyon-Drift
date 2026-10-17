@@ -1,0 +1,49 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+tune: lance_mult=0.8
+features: tune
+arena_matrix: 40 fights, limit 180s
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra", "tune": "on" } rocks=2676 nodes=9 camps=12 route_nodes=347
+fight 1/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 37s (focus side: win)
+fight 2/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap no -> Cinder wins after 39s (focus side: win)
+fight 3/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap yes -> Halcyon wins after 34s (focus side: win)
+fight 4/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap yes -> Cinder wins after 35s (focus side: win)
+fight 5/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 32s (focus side: win)
+fight 6/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap no -> Cinder wins after 31s (focus side: win)
+fight 7/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap yes -> Halcyon wins after 32s (focus side: win)
+fight 8/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap yes -> Cinder wins after 33s (focus side: win)
+fight 9/40 matrix: Halcyon ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 31s (focus side: win)
+fight 10/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["fighter", "fighter", "fighter", "fighter", "fighter", "fighter", "fighter"] @0.72, swap no -> Cinder wins after 26s (focus side: win)
+fight 11/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 21s (focus side: win)
+fight 12/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 83s (focus side: win)
+fight 13/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap yes -> Halcyon wins after 84s (focus side: win)
+fight 14/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap yes -> Cinder wins after 22s (focus side: win)
+fight 15/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 18s (focus side: win)
+fight 16/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 31s (focus side: win)
+fight 17/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap yes -> Halcyon wins after 20s (focus side: win)
+fight 18/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap yes -> Cinder wins after 16s (focus side: win)
+fight 19/40 matrix: Halcyon ["bomber", "bomber", "bomber"] @0.72 vs Cinder ["flak"] @0.72, swap no -> Halcyon wins after 20s (focus side: win)
+fight 20/40 matrix: Halcyon ["flak"] @0.72 vs Cinder ["bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 16s (focus side: win)
+fight 21/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap no -> Halcyon wins after 15s (focus side: win)
+fight 22/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 13s (focus side: win)
+fight 23/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap yes -> Halcyon wins after 15s (focus side: win)
+fight 24/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap yes -> Cinder wins after 15s (focus side: win)
+fight 25/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap no -> Halcyon wins after 16s (focus side: win)
+fight 26/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 14s (focus side: win)
+fight 27/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap yes -> Halcyon wins after 15s (focus side: win)
+fight 28/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap yes -> Cinder wins after 13s (focus side: win)
+fight 29/40 matrix: Halcyon ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72 vs Cinder ["destroyer"] @0.72, swap no -> Halcyon wins after 15s (focus side: win)
+fight 30/40 matrix: Halcyon ["destroyer"] @0.72 vs Cinder ["bomber", "bomber", "bomber", "bomber", "bomber", "bomber"] @0.72, swap no -> Cinder wins after 14s (focus side: win)
+fight 31/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap no -> Halcyon wins after 118s (focus side: win)
+fight 32/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap no -> Cinder wins after 67s (focus side: win)
+fight 33/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap yes -> Cinder wins after 52s (focus side: loss)
+fight 34/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap yes -> Halcyon wins after 74s (focus side: loss)
+fight 35/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap no -> Halcyon wins after 47s (focus side: win)
+fight 36/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap no -> Halcyon wins after 65s (focus side: loss)
+fight 37/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap yes -> Cinder wins after 84s (focus side: loss)
+fight 38/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap yes -> Halcyon wins after 98s (focus side: loss)
+fight 39/40 matrix: Halcyon ["lance", "lance", "lance", "lance"] @0.72 vs Cinder ["ion"] @0.72, swap no -> Cinder wins after 67s (focus side: loss)
+t=31:00  sim 28.1 ms/sim-s  worst tick 5.5 ms  units=12 ships=2 minions=0 drones=8 projectiles=0 fps=755
+  Halcyon tr=27421 ore=33899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=2/0 avg_cr=117 ms=100% sh=100% flying={ "ion": 1 }
+  Cinder tr=27061 ore=33299 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/2 avg_cr=278 ms=100% sh=100% flying={ "lance": 1 }
+fight 40/40 matrix: Halcyon ["ion"] @0.72 vs Cinder ["lance", "lance", "lance", "lance"] @0.72, swap no -> Halcyon wins after 51s (focus side: loss)
+DUEL_JSON {"arena_small_winrate":0.825,"duel":null,"duel_skill_winrate":null,"fights":[["matrix",0,false,"a","win",37],["matrix",0,false,"b","win",39],["matrix",0,true,"a","win",34],["matrix",0,true,"b","win",35],["matrix",0,false,"a","win",32],["matrix",0,false,"b","win",31],["matrix",0,true,"a","win",32],["matrix",0,true,"b","win",33],["matrix",0,false,"a","win",31],["matrix",0,false,"b","win",26],["matrix",1,false,"a","win",21],["matrix",1,false,"b","win",83],["matrix",1,true,"a","win",84],["matrix",1,true,"b","win",22],["matrix",1,false,"a","win",18],["matrix",1,false,"b","win",31],["matrix",1,true,"a","win",20],["matrix",1,true,"b","win",16],["matrix",1,false,"a","win",20],["matrix",1,false,"b","win",16],["matrix",2,false,"a","win",15],["matrix",2,false,"b","win",13],["matrix",2,true,"a","win",15],["matrix",2,true,"b","win",15],["matrix",2,false,"a","win",16],["matrix",2,false,"b","win",14],["matrix",2,true,"a","win",15],["matrix",2,true,"b","win",13],["matrix",2,false,"a","win",15],["matrix",2,false,"b","win",14],["matrix",3,false,"a","win",118],["matrix",3,false,"b","win",67],["matrix",3,true,"a","loss",52],["matrix",3,true,"b","loss",74],["matrix",3,false,"a","win",47],["matrix",3,false,"b","loss",65],["matrix",3,true,"a","loss",84],["matrix",3,true,"b","loss",98],["matrix",3,false,"a","loss",67],["matrix",3,false,"b","loss",51]],"limit_secs":180,"matrix":[{"big":"flak","draws":0,"losses":0,"mean_secs":33.0,"n":7,"name":"7 fighters vs flak frigate","runs":10,"small":"fighter","winrate":1.0,"wins":10},{"big":"flak","draws":0,"losses":0,"mean_secs":33.1,"n":3,"name":"3 bombers vs flak frigate","runs":10,"small":"bomber","winrate":1.0,"wins":10},{"big":"destroyer","draws":0,"losses":0,"mean_secs":14.5,"n":6,"name":"6 bombers vs destroyer","runs":10,"small":"bomber","winrate":1.0,"wins":10},{"big":"ion","draws":0,"losses":7,"mean_secs":72.3,"n":4,"name":"4 lances vs ion frigate","runs":10,"small":"lance","winrate":0.3,"wins":3}],"matrix_skill":0.72,"probe":"arena_matrix","seed":1,"version":1}
