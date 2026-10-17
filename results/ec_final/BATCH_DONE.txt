@@ -1,0 +1,12 @@
+batch: ec_final
+run: 39007153875
+finished: 2026-10-17T08:59:09Z
+runs: 2
+jobs: 20
+expected: 180
+present: 180
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
