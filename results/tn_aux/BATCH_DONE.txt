@@ -1,0 +1,12 @@
+batch: tn_aux
+run: 39005535757
+finished: 2026-10-17T05:19:12Z
+runs: 41
+jobs: 41
+expected: 319
+present: 319
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
