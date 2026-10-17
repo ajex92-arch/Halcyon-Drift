@@ -1,0 +1,12 @@
+batch: fleetcap_c1
+run: 39007207518
+finished: 2026-10-17T09:17:56Z
+runs: 6
+jobs: 18
+expected: 138
+present: 138
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
