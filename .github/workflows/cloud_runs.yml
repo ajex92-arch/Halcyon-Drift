@@ -1,17 +1,94 @@
-# Cloud match runs for Halcyon Drift (headless Godot on GitHub's Linux runners).
+# Cloud match runs for Halcyon Drift (headless Godot on GitHub's runners:
+# Linux or Windows).
 #
 # HOW TO USE: put a request in cloud/request.json on the branch cloud-runs
 # and push it. The request names an id and a list of runs:
 #   {"id": "pilot1", "runs": [
 #     {"tag": "det_n300", "test": "det_hash", "seeds": [7], "extra": "--secs=300",
-#      "per_job": 1, "timeout_min": 60, "project": "remake"}]}
-# Each run is split into jobs of `per_job` seeds (a runner has 2 cores, so 2
-# matches side by side is the sweet spot). Every seed runs
+#      "per_job": 4, "timeout_min": 60, "project": "remake", "os": "ubuntu-latest"}]}
+# The fields of a run (all but tag, test and seeds are optional):
+#   tag          names the output files: <tag>_seed<N>.txt (+ <tag>_seed<N>_err.txt)
+#   test         the test script: godot ... --test=<test>
+#   seeds        the seeds, one match each
+#   extra        more game options, for example "--late --secs=900"
+#   per_job      seeds per job, run side by side on one runner (default 4: both
+#                runner kinds have 4 cores)
+#   timeout_min  limit of one match in minutes (default 120)
+#   project      the Godot project folder (default "remake"; forks live in
+#                projects/<name>)
+#   os           "ubuntu-latest" (default) or "windows-latest". The game is
+#                deterministic per platform, so Linux and Windows results differ
+#                from each other (each repeats itself exactly).
+#   compact      false = commit this run's logs whole (default: the logs are
+#                compacted, see below)
+#   keep         an extra regular expression (or a list of them): minute-report
+#                lines that match it are kept too when the logs are compacted
+#                (every other line is kept anyway)
+#   cache        false = no cache for this run's jobs: a fresh Godot download
+#                and a fresh import every time (for timing comparisons)
+# Every seed runs
 #   godot --headless --path <project> --fixed-fps 60 -- --all-ai --seed=<s> --test=<test> <extra>
-# and its output goes to <tag>_seed<s>.txt (+ _err.txt). When all jobs are
-# done, the logs are committed to the branch cloud-results under
-# results/<id>/ (the built-in job token pushes; that push starts no new run).
+# and its output goes to <tag>_seed<s>.txt (+ _err.txt). Each job commits its own
+# logs to the branch cloud-results under results/<id>/ as soon as its matches are
+# done (see PER-JOB RESULTS below; the built-in job token pushes, and that push
+# starts no new run).
 # workflow_dispatch also works (it reads cloud/request.json of the chosen ref).
+#
+# SPEED: the Godot binary (per OS and version) and the project's .godot import
+# cache (per OS, Godot version and a hash of the project's scripts, scenes and
+# assets) are cached with actions/cache; a miss falls back to a fresh download
+# and a fresh import. The first line after "cores:" in each runner_*.txt tells
+# what was cached and how long the setup took.
+#
+# PER-JOB RESULTS: a batch's results do not wait for its last job or for the collect
+# job (which only starts after every match job of the batch is done, so it can wait
+# in GitHub's queue behind other batches for hours). Instead
+#   1. the plan job commits results/<id>/EXPECTED.txt first: the header lines
+#      "# runs: N", "# jobs: N", "# files: N", then one line per file the batch will
+#      leave in the folder (<tag>_seed<N>.txt, <tag>_seed<N>_err.txt and
+#      runner_<tag>_<k>.txt, k = the job's index);
+#   2. every run job compacts its own logs (rules below) and commits them to
+#      results/<id>/, with the same file names as before, in ONE commit as soon as
+#      its matches are done. It pushes with a retry (a fresh fetch and a pause
+#      between tries, up to 30 tries); jobs write different files, so nothing is
+#      overwritten. A job whose commit fails still leaves its artifacts
+#      compact-<tag>-<k> (what it tried to commit) and logs-<tag>-<k> (the full logs);
+#   3. the collect job is the safety net. It commits every expected file that is still
+#      missing (from those artifacts; a job that left nothing gets a runner file that
+#      says NO LOGS) and then writes results/<id>/BATCH_DONE.txt: "key: value" lines
+#      (batch, run, finished, runs, jobs, expected, present, missing, failed_jobs,
+#      filled_by_collect, matches_nonzero_exit, run_jobs_result, then one
+#      missing_file: and one failed_job: line each).
+# A batch is complete when BATCH_DONE.txt exists, or when every file named in
+# EXPECTED.txt is there. A folder without EXPECTED.txt comes from the older workflow
+# versions (the folder appeared when the last job was done). Besides the logs the
+# folder holds EXPECTED.txt and BATCH_DONE.txt. Use every request id once: a reused id
+# would show the files of the first batch as if they were the second one's.
+#
+# COMPACT RESULTS: the committed logs drop only the bulk and keep every other
+# line, so any line a test prints survives (lower-case ones too: "tune: ...",
+# "arena: ...", "support_probe: 0 failures", ...). Dropped are
+#   - the minute reports: the "t=M:SS  sim ..." line and the indented team and
+#     "prof" lines under it (the LAST minute report is kept; a result line or
+#     a lower-case tag line right under a report is kept too),
+#   - blank lines,
+#   - Godot's exit-time leak warnings (ObjectDB / RID / resources ... at exit).
+# Repeated identical lines are capped: SCRIPT ERROR / ERROR / WARNING lines (and
+# every line of a stderr log) are kept 5 times each, with their location and
+# backtrace, other lines 50 times; lines with a *_JSON tag are never
+# deduplicated. The omitted copies are counted in a note line
+#   [compact] N more copies omitted (M in all) of: <the line>
+# So a tool that counts the error lines of a compact log sees about 5 + 1 per
+# distinct error, not the true total (read the note lines for that); zero
+# versus non-zero is exact. At most 20000 ordinary lines (100000 result lines:
+# the tag lines above, "hash ", END, DET_*, SUMMARY and any other line that
+# starts with an ALL-CAPS tag word, "match:", "features:", ...) are kept per
+# file; when the limit is hit, the last 40 lines are kept too.
+# The file names and the folder layout stay the same as before. The FULL logs
+# stay as the artifacts logs-<tag>-<n> of the workflow run, for 7 days, but
+# downloading an artifact needs a signed-in GitHub account or token (also for
+# a public repository): use "compact": false for a run whose complete logs
+# somebody will need.
 name: cloud-runs
 
 on:
@@ -20,8 +97,14 @@ on:
     paths: ['cloud/request.json']
   workflow_dispatch:
 
+# Read-only token by default. The jobs that push to cloud-results (plan: the batch
+# announcement, run: each job's logs, collect: the safety net) ask for contents: write
+# themselves. A checkout never persists the token, and it is handed (env GH_TOKEN) only
+# to the step that pushes, not to the step that runs the matches. (A match is code of
+# the project folder, started in the same job; the people who can push cloud-runs
+# write that code, so this is accepted.)
 permissions:
-  contents: write
+  contents: read
 
 # No concurrency group: every pushed request runs as its own workflow run, side
 # by side (a group would keep only one pending run and cancel the others).
@@ -32,113 +115,1149 @@ env:
 jobs:
   plan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       matrix: ${{ steps.mk.outputs.matrix }}
+      expect: ${{ steps.mk.outputs.expect }}
+      nruns: ${{ steps.mk.outputs.nruns }}
       id: ${{ steps.mk.outputs.id }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - id: mk
         name: Split the request into jobs
         run: |
           python3 - <<'EOF'
-          import json, os
-          req = json.load(open('cloud/request.json'))
-          jobs = []
-          for r in req['runs']:
-              seeds = [int(s) for s in r['seeds']]
-              per = max(1, int(r.get('per_job', 2)))
+          import hashlib, json, os, re, sys
+
+          DEFAULT_PER_JOB = 4
+          OS_NAMES = {
+              'ubuntu-latest': 'ubuntu-latest', 'ubuntu': 'ubuntu-latest', 'linux': 'ubuntu-latest',
+              'windows-latest': 'windows-latest', 'windows': 'windows-latest', 'win': 'windows-latest',
+          }
+          # The key of the project's import cache hashes EVERY file of the project
+          # folder (name and bytes) except these, which Godot never imports or
+          # scans: a changed file of any other kind (.gd, .tscn, assets, .gdignore,
+          # .csv translations, .cfg, .uid ...) gives a new key and a fresh import.
+          # A missed hit costs a few seconds; a stale hit would be a wrong import.
+          SKIP_DIRS = {'.godot', '.git', '__pycache__'}
+          SKIP_EXT = {'.md', '.py', '.pyc', '.txt', '.log', '.ps1', '.sh', '.bat'}
+          SKIP_NAMES = {'.gitignore', '.gitattributes', '.ds_store', 'thumbs.db'}
+
+
+          def fail(msg):
+              print('::error::' + msg)
+              sys.exit(1)
+
+
+          def project_hash(folder):
+              h = hashlib.sha256()
+              for dirpath, dirs, files in os.walk(folder):
+                  dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS)
+                  for name in sorted(files):
+                      if name.lower() in SKIP_NAMES or os.path.splitext(name)[1].lower() in SKIP_EXT:
+                          continue
+                      path = os.path.join(dirpath, name)
+                      h.update(os.path.relpath(path, folder).replace(os.sep, '/').encode() + b'\0')
+                      with open(path, 'rb') as f:
+                          h.update(f.read())
+                      h.update(b'\0')
+              return h.hexdigest()[:16]
+
+
+          with open(os.environ.get('REQUEST_FILE', 'cloud/request.json'), encoding='utf-8-sig') as f:
+              req = json.load(f)
+          rid = str(req['id'])
+          if not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9._-]{0,99}', rid):
+              fail('the request id "%s" may only use letters, digits, ".", "-" and "_" and must not start with a dot or a dash (it names the folder results/<id> on cloud-results)' % rid)
+          runs = req.get('runs') or []
+          if not runs:
+              fail('the request has no runs')
+          jobs, owner, hashes = [], {}, {}
+          for n, r in enumerate(runs):
+              tag = str(r['tag'])
+              if not tag or tag.startswith('.') or re.search(r'[\x00-\x1f"*/:<>?\\|]', tag):
+                  fail('run %d: the tag "%s" cannot be used in file and artifact names (no / \\ : * ? " < > | or control characters, no leading dot)' % (n, tag))
+              seeds = r['seeds'] if isinstance(r['seeds'], list) else [r['seeds']]
+              seeds = [int(s) for s in seeds]
+              want_os = str(r.get('os') or 'ubuntu-latest').strip().lower()
+              if want_os not in OS_NAMES:
+                  fail('run %d (%s): unknown os "%s" (use ubuntu-latest or windows-latest)' % (n, tag, want_os))
+              runner = OS_NAMES[want_os]
+              project = str(r.get('project', 'remake'))
+              if not os.path.isdir(project):
+                  fail('run %d (%s): project folder "%s" does not exist on this branch' % (n, tag, project))
+              if project not in hashes:
+                  hashes[project] = project_hash(project)
+              ikey = re.sub(r'[^A-Za-z0-9_.-]+', '_', project.strip('/')) + '-' + hashes[project]
+              for s in seeds:
+                  other = owner.get((tag, s))
+                  if other is not None and other != runner:
+                      fail('tag %s seed %d is in the request for both %s and %s: the log files would overwrite each other, use different tags' % (tag, s, other, runner))
+                  if other is not None:
+                      print('::warning::tag %s seed %d appears twice in the request: the logs overwrite each other' % (tag, s))
+                  owner[(tag, s)] = runner
+              per = max(1, int(r.get('per_job', DEFAULT_PER_JOB)))
               for i in range(0, len(seeds), per):
                   jobs.append({
-                      'tag': r['tag'], 'test': r['test'], 'extra': r.get('extra', ''),
+                      'tag': tag, 'test': r['test'], 'extra': r.get('extra', ''),
                       'seeds': ' '.join(str(s) for s in seeds[i:i + per]),
-                      'project': r.get('project', 'remake'),
+                      'project': project,
                       'timeout': int(r.get('timeout_min', 120)),
+                      'os': runner,
+                      'cache': 'off' if r.get('cache') is False else 'on',
+                      'ikey': ikey,
                   })
+          if not jobs:
+              fail('the request has no seeds')
+          if len(jobs) > 256:
+              fail('%d jobs: a matrix holds at most 256, raise per_job or split the request' % len(jobs))
+          print('%d job(s) for request %s' % (len(jobs), rid))
+          for k, j in enumerate(jobs):
+              print('  job %-3d %-15s %-14s seeds %-22s %s' % (k, j['os'], j['tag'], j['seeds'], j['project']))
+
+
+          def expected_files(items):
+              """Every file this batch leaves in results/<id>/ on cloud-results (the collect job
+              recomputes the same list from the "expect" output, with the same rules)."""
+              names = []
+              for k, (tag, _os, seeds) in enumerate(items):
+                  for s in seeds.split():
+                      for name in ('%s_seed%s.txt' % (tag, s), '%s_seed%s_err.txt' % (tag, s)):
+                          if name not in names:
+                              names.append(name)
+                  names.append('runner_%s_%d.txt' % (tag, k))
+              return names
+
+
+          def expected_text(batch, nruns, njobs, names):
+              return ('# cloud results of batch %s: the files this batch leaves in this folder\n'
+                      '# runs: %d\n# jobs: %d\n# files: %d\n' % (batch, nruns, njobs, len(names))) + ''.join(n + '\n' for n in names)
+
+
+          expect = [[j['tag'], j['os'], j['seeds']] for j in jobs]
+          exp_dir = os.environ.get('EXPECTED_DIR', 'crsrc')
+          os.makedirs(exp_dir, exist_ok=True)
+          with open(os.path.join(exp_dir, 'EXPECTED.txt'), 'w', encoding='utf-8', newline='\n') as f:
+              f.write(expected_text(rid, len(runs), len(jobs), expected_files(expect)))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-              f.write('matrix=' + json.dumps({'include': jobs}) + '\n')
-              f.write('id=' + str(req['id']) + '\n')
-          print(len(jobs), 'jobs')
+              f.write('matrix=' + json.dumps({'include': jobs}, separators=(',', ':')) + '\n')
+              # What the collect job needs to find the files of every job (and to notice a job whose logs never came back).
+              f.write('expect=' + json.dumps(expect, separators=(',', ':')) + '\n')
+              f.write('nruns=%d\n' % len(runs))
+              f.write('id=' + rid + '\n')
           EOF
+      - name: Announce the batch on cloud-results
+        id: announce
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          ID: ${{ steps.mk.outputs.id }}
+          GH_TOKEN: ${{ github.token }}
+          CR_TRIES: "10"
+          CR_SLOT: "0"
+        run: |
+          # ---- shared helper: the same text in the plan, run and collect jobs ----------------
+          # cr_push "<commit message>" adds the files that cr_hook puts into stage/ to the folder
+          # results/$ID/ of the branch cloud-results, in ONE commit built on the newest tip of
+          # that branch. If the push is refused (another job was faster) the next try starts
+          # from a fresh fetch after a pause, so jobs never overwrite each other and a retry
+          # never makes a second commit. The first pause depends on the job's number (CR_SLOT),
+          # so jobs that collided are spread out instead of colliding again; later pauses are
+          # random. Needs git and bash only (also in Git Bash).
+          cr_wait() {
+            if [ "$1" = 1 ]; then
+              s=$(( (CR_SLOT % 16) * 2 + RANDOM % 3 + 1 ))
+            else
+              s=$(( RANDOM % (3 + $1 * 2) + 1 ))
+              if [ "$s" -gt 20 ]; then s=20; fi
+            fi
+            sleep "$s"
+          }
+          # One try. Returns 0 when the files are on cloud-results (pushed now, or already there,
+          # or nothing to add), 1 when the caller should pause and try again.
+          cr_try() {
+            # 1. the newest tip of the branch (a blobless one-commit fetch: only the folder listing is needed)
+            parent=
+            f=0
+            git fetch -q --depth=1 $filt origin cloud-results 2> err.txt || f=$?
+            if [ "$f" != 0 ] && [ -n "$filt" ] && ! grep -q "couldn't find remote ref" err.txt; then
+              filt=
+              f=0
+              git fetch -q --depth=1 origin cloud-results 2> err.txt || f=$?
+            fi
+            if [ "$f" = 0 ]; then
+              parent=$(git rev-parse FETCH_HEAD) || return 1
+              git read-tree "$parent" || return 1
+            elif grep -q "couldn't find remote ref" err.txt; then
+              git read-tree --empty || return 1
+            else
+              echo "try $n: cannot fetch cloud-results: $(tail -n 2 err.txt | tr '\r\n' '  ')"
+              return 1
+            fi
+            # 2. what the caller wants to add, given what the branch already holds
+            git ls-files -- "results/$ID" | sed 's#^.*/##' > present.txt || return 1
+            rm -rf stage
+            mkdir stage
+            cr_hook || return 1
+            : > paths.txt
+            for f in stage/*; do
+              if [ -f "$f" ]; then echo "$f" >> paths.txt; fi
+            done
+            if [ ! -s paths.txt ]; then
+              echo "nothing to add to results/$ID"
+              return 0
+            fi
+            # GitHub refuses files of 100 MB or more, which would block the whole push
+            wc -c stage/* | while read -r size name; do
+              if [ "$name" != total ] && [ "$size" -gt 50000000 ]; then
+                { head -c 1000000 "$name"; printf '\n[cloud] file cut: it had %s bytes, kept the first 1 MB and the last 20 MB\n' "$size"; tail -c 20000000 "$name"; } > cut.tmp
+                mv -f cut.tmp "$name"
+              fi
+            done || return 1
+            git hash-object -w --no-filters --stdin-paths < paths.txt > shas.txt || return 1
+            mapfile -t paths < paths.txt
+            mapfile -t shas < shas.txt
+            if [ "${#paths[@]}" != "${#shas[@]}" ]; then return 1; fi
+            : > info.txt
+            i=0
+            while [ "$i" -lt "${#paths[@]}" ]; do
+              printf '100644 %s\t%s\n' "${shas[$i]}" "results/$ID/${paths[$i]#stage/}" >> info.txt
+              i=$((i + 1))
+            done
+            git update-index --add --index-info < info.txt || return 1
+            tree=$(git write-tree --missing-ok) || return 1
+            if [ -n "$parent" ] && [ "$tree" = "$(git rev-parse "$parent^{tree}")" ]; then
+              echo "results/$ID already holds these files"
+              return 0
+            fi
+            if [ -n "$parent" ]; then
+              c=$(git commit-tree "$tree" -p "$parent" -m "$msg") || return 1
+            else
+              c=$(git commit-tree "$tree" -m "$msg") || return 1
+            fi
+            # 3. push it; if another job moved the branch first, the next try starts from the new tip
+            git push -q origin "$c:refs/heads/cloud-results" 2> err.txt || {
+              echo "try $n: push refused: $(tail -n 2 err.txt | tr '\r\n' '  ')"
+              return 1
+            }
+            echo "pushed to cloud-results in try $n: ${#paths[@]} file(s) in results/$ID"
+            return 0
+          }
+          cr_push() {
+            msg=$1
+            CR_BASE=$(pwd)
+            export CR_BASE
+            echo "push to cloud-results: $(git --version)"
+            case "${CR_SLOT:-0}" in *[!0-9]*) CR_SLOT=0 ;; esac
+            url=${CR_REMOTE:-${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY}.git}
+            rm -rf crwork
+            mkdir crwork
+            cd crwork || return 1
+            git init -q . || return 1
+            git symbolic-ref HEAD refs/heads/cloud-results || return 1
+            git remote add origin "$url" || return 1
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config gc.auto 0
+            if [ -n "${GH_TOKEN:-}" ]; then
+              git config "http.${GITHUB_SERVER_URL:-https://github.com}/.extraheader" "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\r\n')"
+            fi
+            export GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=60
+            filt=--filter=blob:none
+            tries=${CR_TRIES:-30}
+            n=0
+            rc=1
+            while [ "$n" -lt "$tries" ]; do
+              n=$((n + 1))
+              if cr_try; then
+                rc=0
+                break
+              fi
+              if [ "$n" -lt "$tries" ]; then cr_wait "$n"; fi
+            done
+            cd "$CR_BASE"
+            rm -rf crwork
+            if [ "$rc" != 0 ]; then echo "could not push to cloud-results after $tries tries"; fi
+            return $rc
+          }
+          cr_hook() {
+            cp "$CR_BASE/crsrc/EXPECTED.txt" stage/
+          }
+          if ! cr_push "cloud results ${ID}: batch announced (EXPECTED.txt)"; then
+            echo "::warning::the announcement could not be pushed: the run jobs write a placeholder EXPECTED.txt and the collect job the real one"
+            exit 1
+          fi
 
   run:
     needs: plan
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 330
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Git Bash on the Windows runners must not rewrite option values that look like paths.
+      MSYS_NO_PATHCONV: "1"
+      MSYS2_ARG_CONV_EXCL: "*"
     strategy:
       fail-fast: false
       max-parallel: 20
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
+      - name: Start the setup timer
+        run: echo "SETUP_T0=$(date +%s)" >> "$GITHUB_ENV"
+      - name: LF line endings on Windows (same file bytes as on Linux)
+        if: runner.os == 'Windows'
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
       - uses: actions/checkout@v4
-      - name: Get Godot (official Linux build)
+        with:
+          persist-credentials: false
+      - name: Restore the cached Godot binary
+        id: gcache
+        if: matrix.cache == 'on'
+        continue-on-error: true
+        uses: actions/cache/restore@v4
+        with:
+          path: godot-bin
+          key: godot-c1-${{ runner.os }}-${{ env.GODOT_VERSION }}
+      - name: Restore the cached project import
+        id: icache
+        if: matrix.cache == 'on'
+        continue-on-error: true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ matrix.project }}/.godot
+          key: godot-import-c1-${{ runner.os }}-${{ env.GODOT_VERSION }}-${{ matrix.ikey }}
+      - name: Get Godot and import the project
+        id: setup
+        env:
+          TAG: ${{ matrix.tag }}
+          PROJECT: ${{ matrix.project }}
+          JOB_INDEX: ${{ strategy.job-index }}
+          GCACHE_HIT: ${{ steps.gcache.outputs.cache-hit }}
+          ICACHE_HIT: ${{ steps.icache.outputs.cache-hit }}
         run: |
           set -e
-          V="${GODOT_VERSION}"
-          F="Godot_v${V}-stable_linux.x86_64"
-          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${V}-stable/${F}.zip" \
-            || curl -fsSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${V}-stable/${F}.zip"
-          unzip -q godot.zip
-          mv "${F}" godot
-          chmod +x godot
-          ./godot --version
-      - name: Import the project (registers class names)
-        run: timeout 10m ./godot --headless --path "${{ matrix.project }}" --import || true
-      - name: Run the matches
-        run: |
           mkdir -p out
-          echo "cores: $(nproc)" > "out/runner_${{ matrix.tag }}_${{ strategy.job-index }}.txt"
-          for s in ${{ matrix.seeds }}; do
-            (
-              start=$(date +%s)
-              timeout ${{ matrix.timeout }}m ./godot --headless --path "${{ matrix.project }}" --fixed-fps 60 -- \
-                --all-ai --seed=$s --test=${{ matrix.test }} ${{ matrix.extra }} \
-                > "out/${{ matrix.tag }}_seed$s.txt" 2> "out/${{ matrix.tag }}_seed${s}_err.txt"
-              code=$?
-              echo "seed $s exit $code wall_s $(( $(date +%s) - start ))" >> "out/runner_${{ matrix.tag }}_${{ strategy.job-index }}.txt"
-            ) &
+          LOGF=setup.log
+          : > "$LOGF"
+          RUNNER_FILE="out/runner_${TAG}_${JOB_INDEX}.txt"
+          CORES=$(nproc 2>/dev/null || echo "${NUMBER_OF_PROCESSORS:-unknown}")
+          echo "cores: ${CORES}" > "$RUNNER_FILE"
+          on_exit() {
+            rc=$?
+            if [ "$rc" -ne 0 ]; then
+              echo "setup FAILED (exit ${rc}); last lines of the setup log:" >> "$RUNNER_FILE"
+              tail -n 40 "$LOGF" >> "$RUNNER_FILE" 2>/dev/null || true
+              echo "---- setup FAILED (exit ${rc}); last lines of the setup log ----"
+              tail -n 40 "$LOGF" 2>/dev/null || true
+            fi
+          }
+          trap on_exit EXIT
+
+          have() { command -v "$1" >/dev/null 2>&1; }
+          # A GNU timeout for the matches (Windows has its own, different timeout.exe).
+          TMO=""
+          for c in timeout /usr/bin/timeout; do
+            if have "$c"; then
+              tv=$("$c" --version 2>&1 || true)
+              case "$tv" in
+                *GNU*|*coreutils*) TMO="$c"; break ;;
+              esac
+            fi
+          done
+          run_to() { m=$1; shift; if [ -n "$TMO" ]; then "$TMO" "$m" "$@"; else "$@"; fi; }
+          extract_zip() {
+            if have unzip; then unzip -q -o "$1" -d "$2"
+            elif have 7z; then 7z x -y -o"$2" "$1" > /dev/null
+            elif have python3; then python3 -m zipfile -e "$1" "$2"
+            elif have python; then python -m zipfile -e "$1" "$2"
+            else powershell -NoProfile -Command "Expand-Archive -Force -Path '$1' -DestinationPath '$2'"
+            fi
+          }
+
+          # Step 1: the Godot binary (cache hit, or the official build).
+          case "${RUNNER_OS}" in
+            Windows)
+              ASSET="Godot_v${GODOT_VERSION}-stable_win64.exe.zip"
+              GODOT="./godot-bin/Godot_v${GODOT_VERSION}-stable_win64_console.exe" ;;
+            *)
+              ASSET="Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+              GODOT="./godot-bin/godot" ;;
+          esac
+          locate_godot() {
+            if [ ! -f "$GODOT" ]; then
+              for f in godot-bin/*console*.exe godot-bin/*/*console*.exe godot-bin/godot godot-bin/*/godot; do
+                if [ -f "$f" ]; then GODOT="./$f"; break; fi
+              done
+            fi
+          }
+          t0=$(date +%s)
+          GODOT_CACHE=miss
+          locate_godot
+          if [ "${GCACHE_HIT}" = "true" ] && [ -f "$GODOT" ] && "$GODOT" --version >> "$LOGF" 2>&1; then
+            GODOT_CACHE=hit
+          else
+            rm -rf godot-bin
+            mkdir -p godot-bin
+            GODOT="./godot-bin/godot"
+            if [ "${RUNNER_OS}" = "Windows" ]; then GODOT="./godot-bin/Godot_v${GODOT_VERSION}-stable_win64_console.exe"; fi
+            curl -fsSL --retry 3 --retry-delay 2 -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/${ASSET}" >> "$LOGF" 2>&1 \
+              || curl -fsSL --retry 3 --retry-delay 2 -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/${ASSET}" >> "$LOGF" 2>&1
+            extract_zip godot.zip godot-bin >> "$LOGF" 2>&1
+            rm -f godot.zip
+            if [ "${RUNNER_OS}" != "Windows" ]; then
+              mv "godot-bin/Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot-bin/godot
+              chmod +x godot-bin/godot
+            fi
+            locate_godot
+          fi
+          GV=$("$GODOT" --version 2>> "$LOGF" | tr -d '\r')
+          GODOT_S=$(( $(date +%s) - t0 ))
+          echo "Godot ${GV} (${ASSET}, cache ${GODOT_CACHE}, ${GODOT_S} s)"
+
+          # Step 2: the project's import (registers class names): cached, or a fresh --import.
+          t0=$(date +%s)
+          IMPORT_CACHE=miss
+          if [ "${ICACHE_HIT}" = "true" ] && [ -s "${PROJECT}/.godot/global_script_class_cache.cfg" ]; then
+            IMPORT_CACHE=hit
+          else
+            run_to 10m "$GODOT" --headless --path "${PROJECT}" --import >> "$LOGF" 2>&1 || true
+          fi
+          IMPORT_S=$(( $(date +%s) - t0 ))
+          IMPORT_OK=false
+          if [ -s "${PROJECT}/.godot/global_script_class_cache.cfg" ]; then IMPORT_OK=true; fi
+          echo "Import of ${PROJECT}: cache ${IMPORT_CACHE}, ok ${IMPORT_OK}, ${IMPORT_S} s"
+
+          # Step 3: what the cache-save steps and the run step need to know.
+          if [ -r /proc/cpuinfo ]; then
+            CPU=$(awk -F': ' '/^model name/ {print $2; exit}' /proc/cpuinfo)
+          else
+            CPU="${PROCESSOR_IDENTIFIER:-unknown}"
+          fi
+          {
+            echo "godot=${GODOT}"
+            echo "tmo=${TMO}"
+            echo "godot_cache=${GODOT_CACHE}"
+            echo "import_cache=${IMPORT_CACHE}"
+            echo "import_ok=${IMPORT_OK}"
+            echo "godot_s=${GODOT_S}"
+            echo "import_s=${IMPORT_S}"
+            echo "cpu=${CPU}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Save the Godot binary to the cache
+        if: matrix.cache == 'on' && steps.setup.outputs.godot_cache == 'miss'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: godot-bin
+          key: godot-c1-${{ runner.os }}-${{ env.GODOT_VERSION }}
+      - name: Save the project import to the cache
+        if: matrix.cache == 'on' && steps.setup.outputs.import_cache == 'miss' && steps.setup.outputs.import_ok == 'true'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ matrix.project }}/.godot
+          key: godot-import-c1-${{ runner.os }}-${{ env.GODOT_VERSION }}-${{ matrix.ikey }}
+      - name: Run the matches
+        env:
+          TAG: ${{ matrix.tag }}
+          TEST: ${{ matrix.test }}
+          SEEDS: ${{ matrix.seeds }}
+          PROJECT: ${{ matrix.project }}
+          TIMEOUT_MIN: ${{ matrix.timeout }}
+          JOB_INDEX: ${{ strategy.job-index }}
+          GODOT: ${{ steps.setup.outputs.godot }}
+          TMO: ${{ steps.setup.outputs.tmo }}
+          CACHE_MODE: ${{ matrix.cache }}
+          GODOT_CACHE: ${{ steps.setup.outputs.godot_cache }}
+          IMPORT_CACHE: ${{ steps.setup.outputs.import_cache }}
+          GODOT_S: ${{ steps.setup.outputs.godot_s }}
+          IMPORT_S: ${{ steps.setup.outputs.import_s }}
+          CPU: ${{ steps.setup.outputs.cpu }}
+        run: |
+          set -e
+          mkdir -p out
+          RUNNER_FILE="out/runner_${TAG}_${JOB_INDEX}.txt"
+          if [ -n "${SETUP_T0}" ]; then SETUP_S=$(( $(date +%s) - SETUP_T0 )); else SETUP_S=0; fi
+          echo "setup: os=${RUNNER_OS} image=${ImageOS:-?}-${ImageVersion:-?} cpu=\"${CPU}\" godot=${GODOT_VERSION} cache=${CACHE_MODE} godot_cache=${GODOT_CACHE} import_cache=${IMPORT_CACHE} godot_s=${GODOT_S} import_s=${IMPORT_S} setup_s=${SETUP_S} timeout=${TMO:-none}" >> "$RUNNER_FILE"
+          with_timeout() { m=$1; shift; if [ -n "${TMO}" ]; then "${TMO}" "$m" "$@"; else "$@"; fi; }
+          run_match() {
+            s=$1
+            start=$(date +%s)
+            rc=0
+            with_timeout "${TIMEOUT_MIN}m" "${GODOT}" --headless --path "${PROJECT}" --fixed-fps 60 -- \
+              --all-ai --seed=$s --test=${TEST} ${{ matrix.extra }} \
+              > "out/${TAG}_seed$s.txt" 2> "out/${TAG}_seed${s}_err.txt" || rc=$?
+            echo "seed $s exit $rc wall_s $(( $(date +%s) - start ))" >> "$RUNNER_FILE"
+          }
+          for s in ${SEEDS}; do
+            run_match "$s" &
           done
           wait
-          cat out/runner_*.txt
+          cat "$RUNNER_FILE"
+      - name: Compact the logs
+        id: compact
+        if: always()
+        continue-on-error: true
+        env:
+          ART_DIR: out
+          OUT_DIR: compact
+          OK_FILE: compact.ok
+        run: |
+          mkdir -p out
+          rm -rf compact compact.ok
+          cat > compact.py <<'EOF'
+          import json, os, re, sys
+
+          ART = os.environ.get('ART_DIR', '/tmp/art')
+          OUT = os.environ.get('OUT_DIR', '/tmp/compact')
+          REQUEST = os.environ.get('REQUEST_FILE', 'cloud/request.json')
+          MAX_KEPT = 20000   # ordinary lines kept per file, at most
+          MAX_RESULT = 100000  # result lines kept per file, at most (a runaway-print guard only)
+          DUP_CAP = 5        # copies of one identical error line (or stderr line) kept per file
+          DUP_CAP_LINE = 50  # copies of one identical ordinary line kept per file
+          TAIL = 40          # lines kept from the end of a log that has nothing but minute reports, or that hit MAX_KEPT
+
+          # Result lines carry one of these words anywhere in the line (fun_lib reads them so).
+          TAGS = re.compile(r'FUN_JSON|AUDIT_JSON|PROBE_JSON|DUEL_JSON|SCORE_JSON')
+          # Other result lines, recognised by how they start: first the agreed
+          # list, then any line that starts with an ALL-CAPS tag word (SUMMARY,
+          # RESULT, DET_HASH, AUDIT, FEED, and any tag a fork adds), which is a
+          # result line by this codebase's convention (the minute reports start
+          # with "t=" and the team lines with a team name, so they never match),
+          # then a few lower-case tags. ALL lines are kept except the minute
+          # reports, blank lines and the exit-time noise; these patterns only
+          # decide what is never lost to the line limit and never taken for a
+          # team line under a minute report.
+          STARTS = re.compile(r'\s*(?:FUN_JSON|AUDIT_JSON|PROBE_JSON|DUEL_JSON|SCORE_JSON|hash |END|DET_RNG|match:|MAUDIT|ADM |[A-Z][A-Z0-9_]*(?=[ :=]|$)|features:|fight |ms_duel|arena_matrix:|Godot Engine)')
+          # A lower-case tag line ("tune: ...", "arena: ..."): kept even when it is
+          # indented right under a minute report.
+          LOWTAG = re.compile(r'\s*[a-z][a-z0-9_]*:(?:\s|$)')
+          # What Godot prints on every exit (never worth keeping).
+          NOISE = re.compile(r'ObjectDB instances were leaked at exit|resources still in use at exit|RID allocations of type|Pages in use exist at exit')
+          # The location and backtrace lines that follow an error line.
+          CONT = re.compile(r'\s+at: |\s*GDScript backtrace|\s+\[\d+\] ')
+          # The first line of a minute report (the team lines under it start with a blank).
+          REPORT = re.compile(r't=\d+:\d\d\s')
+          LOGNAME = re.compile(r'(.+)_seed(\d+)(_err)?\.txt$')
+
+
+          def compact(data, is_err, extras):
+              """Return (the compact bytes, the number of lines in) of one log."""
+              lines = data.split(b'\n')
+              if lines and lines[-1] == b'':
+                  lines.pop()
+              lines = [ln[:-1] if ln.endswith(b'\r') else ln for ln in lines]
+              n = len(lines)
+              keep = [False] * n
+              seen, omitted = {}, {}
+              kept = useful = capped = 0
+              chain = None    # after an error line: 'kept' or 'omitted' (its location / backtrace lines follow suit)
+              after_noise = in_report = False
+              for i, raw in enumerate(lines):
+                  text = raw.decode('utf-8', 'replace')
+                  if NOISE.search(text):
+                      chain, after_noise, in_report = None, True, False
+                      continue
+                  if after_noise and CONT.match(text):
+                      continue    # the location of an exit-time warning
+                  after_noise = False
+                  if not text.strip():
+                      in_report = False
+                      continue    # blank lines are not kept
+                  result = bool(TAGS.search(text) or STARTS.match(text) or any(x.search(text) for x in extras))
+                  # The minute report: its first line, then the indented team / prof lines.
+                  if not is_err and REPORT.match(text):
+                      in_report, chain = True, None
+                      if not result:
+                          continue    # (the last report is added back below)
+                  elif in_report:
+                      if not result and text[:1] in (' ', '\t') and not LOWTAG.match(text):
+                          continue    # a team / prof line under a minute report
+                      in_report = False
+                  # Everything else is kept, except copies beyond the caps below.
+                  err_line = 'SCRIPT ERROR' in text or text.lstrip().startswith(('ERROR:', 'WARNING:', 'USER ERROR:', 'USER WARNING:'))
+                  cont = CONT.match(text) is not None
+                  if cont and chain == 'omitted':
+                      continue    # the location / backtrace of an error line that was left out
+                  chains = err_line or (cont and chain == 'kept')
+                  want = True
+                  if not TAGS.search(text):
+                      key = text.strip()
+                      seen[key] = seen.get(key, 0) + 1
+                      if seen[key] > (DUP_CAP if (is_err or err_line or cont) else DUP_CAP_LINE):
+                          omitted[key] = omitted.get(key, 0) + 1
+                          want = False
+                  if want and kept >= (MAX_RESULT if result else MAX_KEPT):
+                      capped += 1
+                      want = False
+                  if chains:
+                      chain = 'kept' if want else 'omitted'
+                  else:
+                      chain = None
+                  if want:
+                      keep[i] = True
+                      kept += 1
+                      if not text.startswith('Godot Engine'):
+                          useful += 1
+              # The last minute report (its first line and the blank-led lines under it).
+              if not is_err:
+                  for i in range(n - 1, -1, -1):
+                      if REPORT.match(lines[i].decode('utf-8', 'replace')):
+                          keep[i] = True
+                          j = i + 1
+                          while j < n and lines[j][:1] in (b' ', b'\t'):
+                              keep[j] = True
+                              j += 1
+                          break
+              notes = []
+              if useful == 0 and not is_err and n:
+                  for i in range(max(0, n - TAIL), n):
+                      keep[i] = True
+                  notes.append('[compact] no line other than minute reports in this log: kept its last %d lines' % min(n, TAIL))
+              if capped:
+                  # The end of a log is where its result lines usually are.
+                  for i in range(max(0, n - TAIL), n):
+                      if lines[i].strip():
+                          keep[i] = True
+              out = [lines[i] for i in range(n) if keep[i]]
+              for key, cnt in sorted(omitted.items(), key=lambda kv: -kv[1])[:20]:
+                  notes.append('[compact] %d more copies omitted (%d in all) of: %s' % (cnt, seen[key], key[:200]))
+              if capped:
+                  notes.append('[compact] %d more lines omitted (limit %d ordinary / %d result lines; the last %d lines are kept)' % (capped, MAX_KEPT, MAX_RESULT, TAIL))
+              out += [t.encode('utf-8') for t in notes]
+              if not out:
+                  if is_err:
+                      out = [b'[compact] no stderr lines other than the usual exit-time leak warnings']
+                  else:
+                      out = [b'[compact] this log was empty']
+              return b'\n'.join(out) + b'\n', n
+
+
+          def run_options():
+              """Per tag: whether to compact and the extra keep patterns, from the request."""
+              opts = {}
+              try:
+                  with open(REQUEST, encoding='utf-8-sig') as f:
+                      runs = json.load(f).get('runs') or []
+              except Exception as e:
+                  print('::warning::cannot read the request (%s): compacting every log by the defaults' % e)
+                  return opts
+              for r in runs:
+                  o = opts.setdefault(str(r.get('tag')), {'compact': True, 'keep': []})
+                  if r.get('compact') is False:
+                      o['compact'] = False
+                  extra = r.get('keep') or []
+                  if isinstance(extra, str):
+                      extra = [extra]
+                  for pat in extra:
+                      try:
+                          o['keep'].append(re.compile(pat))
+                      except re.error as e:
+                          print('::warning::bad keep pattern %r for tag %s: %s' % (pat, r.get('tag'), e))
+              return opts
+
+
+          os.makedirs(OUT, exist_ok=True)
+          opts = run_options()
+          files = total_in = total_out = logs = 0
+          for dirpath, _dirs, names in os.walk(ART):
+              for name in sorted(names):
+                  with open(os.path.join(dirpath, name), 'rb') as f:
+                      data = f.read()
+                  res = data
+                  m = LOGNAME.match(name)
+                  if m:
+                      o = opts.get(m.group(1), {'compact': True, 'keep': []})
+                      if o['compact']:
+                          try:
+                              res, _n = compact(data, bool(m.group(3)), o['keep'])
+                          except Exception as e:
+                              print('::warning::compacting %s failed (%s): keeping it whole' % (name, e))
+                              res = data
+                      logs += 1
+                      total_in += len(data)
+                      total_out += len(res)
+                  if os.path.exists(os.path.join(OUT, name)):
+                      print('::warning::%s comes from two jobs: the later copy wins' % name)
+                  with open(os.path.join(OUT, name), 'wb') as f:
+                      f.write(res)
+                  files += 1
+
+          line = 'compact: %d log files, %d bytes -> %d bytes (%d files in all)' % (logs, total_in, total_out, files)
+          print(line)
+          summary = os.environ.get('GITHUB_STEP_SUMMARY')
+          if summary:
+              with open(summary, 'a') as f:
+                  f.write(line + '\n')
+          # Last: tells the commit step that /tmp/compact is complete.
+          with open(os.environ.get('OK_FILE', '/tmp/compact.ok'), 'w') as f:
+              f.write('ok\n')
+          EOF
+          PY=
+          for c in python3 python; do
+            if "$c" -c "import sys; sys.exit(0 if sys.version_info[0] >= 3 else 1)" > /dev/null 2>&1; then PY=$c; break; fi
+          done
+          if [ -n "$PY" ]; then
+            "$PY" compact.py || echo "::warning::the compaction failed"
+          else
+            echo "::warning::no Python 3 on this runner"
+          fi
+          # Never lose results because of the compaction: without a finished compaction the
+          # full logs are what goes to cloud-results.
+          if [ ! -f compact.ok ]; then
+            echo "::warning::the compaction did not finish: this job's FULL logs go to cloud-results"
+            rm -rf compact
+            mkdir compact
+            cp out/* compact/ 2>/dev/null || true
+          fi
       - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compact-${{ matrix.tag }}-${{ strategy.job-index }}
+          path: compact/
+          retention-days: 3
+          if-no-files-found: ignore
+      - name: Commit this job's results to cloud-results
+        id: commit
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          ID: ${{ needs.plan.outputs.id }}
+          TAG: ${{ matrix.tag }}
+          JOB_INDEX: ${{ strategy.job-index }}
+          RUN_ID: ${{ github.run_id }}
+          GH_TOKEN: ${{ github.token }}
+          CR_TRIES: "30"
+          CR_SLOT: ${{ strategy.job-index }}
+        run: |
+          # ---- shared helper: the same text in the plan, run and collect jobs ----------------
+          # cr_push "<commit message>" adds the files that cr_hook puts into stage/ to the folder
+          # results/$ID/ of the branch cloud-results, in ONE commit built on the newest tip of
+          # that branch. If the push is refused (another job was faster) the next try starts
+          # from a fresh fetch after a pause, so jobs never overwrite each other and a retry
+          # never makes a second commit. The first pause depends on the job's number (CR_SLOT),
+          # so jobs that collided are spread out instead of colliding again; later pauses are
+          # random. Needs git and bash only (also in Git Bash).
+          cr_wait() {
+            if [ "$1" = 1 ]; then
+              s=$(( (CR_SLOT % 16) * 2 + RANDOM % 3 + 1 ))
+            else
+              s=$(( RANDOM % (3 + $1 * 2) + 1 ))
+              if [ "$s" -gt 20 ]; then s=20; fi
+            fi
+            sleep "$s"
+          }
+          # One try. Returns 0 when the files are on cloud-results (pushed now, or already there,
+          # or nothing to add), 1 when the caller should pause and try again.
+          cr_try() {
+            # 1. the newest tip of the branch (a blobless one-commit fetch: only the folder listing is needed)
+            parent=
+            f=0
+            git fetch -q --depth=1 $filt origin cloud-results 2> err.txt || f=$?
+            if [ "$f" != 0 ] && [ -n "$filt" ] && ! grep -q "couldn't find remote ref" err.txt; then
+              filt=
+              f=0
+              git fetch -q --depth=1 origin cloud-results 2> err.txt || f=$?
+            fi
+            if [ "$f" = 0 ]; then
+              parent=$(git rev-parse FETCH_HEAD) || return 1
+              git read-tree "$parent" || return 1
+            elif grep -q "couldn't find remote ref" err.txt; then
+              git read-tree --empty || return 1
+            else
+              echo "try $n: cannot fetch cloud-results: $(tail -n 2 err.txt | tr '\r\n' '  ')"
+              return 1
+            fi
+            # 2. what the caller wants to add, given what the branch already holds
+            git ls-files -- "results/$ID" | sed 's#^.*/##' > present.txt || return 1
+            rm -rf stage
+            mkdir stage
+            cr_hook || return 1
+            : > paths.txt
+            for f in stage/*; do
+              if [ -f "$f" ]; then echo "$f" >> paths.txt; fi
+            done
+            if [ ! -s paths.txt ]; then
+              echo "nothing to add to results/$ID"
+              return 0
+            fi
+            # GitHub refuses files of 100 MB or more, which would block the whole push
+            wc -c stage/* | while read -r size name; do
+              if [ "$name" != total ] && [ "$size" -gt 50000000 ]; then
+                { head -c 1000000 "$name"; printf '\n[cloud] file cut: it had %s bytes, kept the first 1 MB and the last 20 MB\n' "$size"; tail -c 20000000 "$name"; } > cut.tmp
+                mv -f cut.tmp "$name"
+              fi
+            done || return 1
+            git hash-object -w --no-filters --stdin-paths < paths.txt > shas.txt || return 1
+            mapfile -t paths < paths.txt
+            mapfile -t shas < shas.txt
+            if [ "${#paths[@]}" != "${#shas[@]}" ]; then return 1; fi
+            : > info.txt
+            i=0
+            while [ "$i" -lt "${#paths[@]}" ]; do
+              printf '100644 %s\t%s\n' "${shas[$i]}" "results/$ID/${paths[$i]#stage/}" >> info.txt
+              i=$((i + 1))
+            done
+            git update-index --add --index-info < info.txt || return 1
+            tree=$(git write-tree --missing-ok) || return 1
+            if [ -n "$parent" ] && [ "$tree" = "$(git rev-parse "$parent^{tree}")" ]; then
+              echo "results/$ID already holds these files"
+              return 0
+            fi
+            if [ -n "$parent" ]; then
+              c=$(git commit-tree "$tree" -p "$parent" -m "$msg") || return 1
+            else
+              c=$(git commit-tree "$tree" -m "$msg") || return 1
+            fi
+            # 3. push it; if another job moved the branch first, the next try starts from the new tip
+            git push -q origin "$c:refs/heads/cloud-results" 2> err.txt || {
+              echo "try $n: push refused: $(tail -n 2 err.txt | tr '\r\n' '  ')"
+              return 1
+            }
+            echo "pushed to cloud-results in try $n: ${#paths[@]} file(s) in results/$ID"
+            return 0
+          }
+          cr_push() {
+            msg=$1
+            CR_BASE=$(pwd)
+            export CR_BASE
+            echo "push to cloud-results: $(git --version)"
+            case "${CR_SLOT:-0}" in *[!0-9]*) CR_SLOT=0 ;; esac
+            url=${CR_REMOTE:-${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY}.git}
+            rm -rf crwork
+            mkdir crwork
+            cd crwork || return 1
+            git init -q . || return 1
+            git symbolic-ref HEAD refs/heads/cloud-results || return 1
+            git remote add origin "$url" || return 1
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config gc.auto 0
+            if [ -n "${GH_TOKEN:-}" ]; then
+              git config "http.${GITHUB_SERVER_URL:-https://github.com}/.extraheader" "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\r\n')"
+            fi
+            export GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=60
+            filt=--filter=blob:none
+            tries=${CR_TRIES:-30}
+            n=0
+            rc=1
+            while [ "$n" -lt "$tries" ]; do
+              n=$((n + 1))
+              if cr_try; then
+                rc=0
+                break
+              fi
+              if [ "$n" -lt "$tries" ]; then cr_wait "$n"; fi
+            done
+            cd "$CR_BASE"
+            rm -rf crwork
+            if [ "$rc" != 0 ]; then echo "could not push to cloud-results after $tries tries"; fi
+            return $rc
+          }
+          cr_hook() {
+            cp "$CR_BASE"/compact/* stage/ 2>/dev/null || true
+            # The plan job announces the batch first. If that failed, say so (a folder without
+            # EXPECTED.txt would look like a finished batch of an older workflow version).
+            if ! grep -qx 'EXPECTED.txt' present.txt; then
+              printf '%s\n' "# cloud results of batch ${ID}: the announcement of the plan job did not arrive; the collect job writes the list of files" > stage/EXPECTED.txt
+            fi
+          }
+          if ! cr_push "cloud results ${ID}: ${TAG} job ${JOB_INDEX} (compact logs; full logs: artifact logs-${TAG}-${JOB_INDEX} of run ${RUN_ID}, 7 days)"; then
+            echo "::warning::the results of this job are not on cloud-results; the collect job commits them from the artifacts"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: logs-${{ matrix.tag }}-${{ strategy.job-index }}
           path: out/
           retention-days: 7
+          if-no-files-found: ignore
 
+  # The safety net. By now the run jobs have committed their own results; this job adds
+  # every expected file that is still missing (a job whose push failed, a job that died)
+  # from the artifacts and then closes the batch with BATCH_DONE.txt. It starts only
+  # after all match jobs are done, which may be late (queue): the results do not wait for it.
   collect:
     needs: [plan, run]
     if: always() && needs.plan.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
-          path: /tmp/art
-      - name: Commit the logs to cloud-results
+          path: art
+      - name: Fill in what is missing and close the batch
+        timeout-minutes: 20
+        env:
+          ID: ${{ needs.plan.outputs.id }}
+          PLAN_EXPECT: ${{ needs.plan.outputs.expect }}
+          PLAN_NRUNS: ${{ needs.plan.outputs.nruns }}
+          RUN_RESULT: ${{ needs.run.result }}
+          RUN_ID: ${{ github.run_id }}
+          GH_TOKEN: ${{ github.token }}
+          CR_TRIES: "30"
+          CR_SLOT: "0"
         run: |
-          set -e
-          ID="${{ needs.plan.outputs.id }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git ls-remote --exit-code --heads origin cloud-results >/dev/null 2>&1; then
-            git fetch -q origin cloud-results
-            git checkout -q -f -B cloud-results origin/cloud-results
-          else
-            git checkout -q -f --orphan cloud-results
-            git rm -rfq . || true
-            git clean -fdq
-          fi
-          mkdir -p "results/${ID}"
-          find /tmp/art -type f -exec cp {} "results/${ID}/" \;
-          git add -f results
-          git commit -q -m "cloud results ${ID}" || echo "nothing to commit"
-          # Several batches may finish at once: on a rejected push, rebase on the
-          # newer cloud-results and retry (each batch writes only results/<id>/).
-          for attempt in 1 2 3 4 5 6 7 8; do
-            if git push -q origin cloud-results; then exit 0; fi
-            sleep $((attempt * 5))
-            git pull -q --rebase origin cloud-results
-          done
-          exit 1
+          # ---- shared helper: the same text in the plan, run and collect jobs ----------------
+          # cr_push "<commit message>" adds the files that cr_hook puts into stage/ to the folder
+          # results/$ID/ of the branch cloud-results, in ONE commit built on the newest tip of
+          # that branch. If the push is refused (another job was faster) the next try starts
+          # from a fresh fetch after a pause, so jobs never overwrite each other and a retry
+          # never makes a second commit. The first pause depends on the job's number (CR_SLOT),
+          # so jobs that collided are spread out instead of colliding again; later pauses are
+          # random. Needs git and bash only (also in Git Bash).
+          cr_wait() {
+            if [ "$1" = 1 ]; then
+              s=$(( (CR_SLOT % 16) * 2 + RANDOM % 3 + 1 ))
+            else
+              s=$(( RANDOM % (3 + $1 * 2) + 1 ))
+              if [ "$s" -gt 20 ]; then s=20; fi
+            fi
+            sleep "$s"
+          }
+          # One try. Returns 0 when the files are on cloud-results (pushed now, or already there,
+          # or nothing to add), 1 when the caller should pause and try again.
+          cr_try() {
+            # 1. the newest tip of the branch (a blobless one-commit fetch: only the folder listing is needed)
+            parent=
+            f=0
+            git fetch -q --depth=1 $filt origin cloud-results 2> err.txt || f=$?
+            if [ "$f" != 0 ] && [ -n "$filt" ] && ! grep -q "couldn't find remote ref" err.txt; then
+              filt=
+              f=0
+              git fetch -q --depth=1 origin cloud-results 2> err.txt || f=$?
+            fi
+            if [ "$f" = 0 ]; then
+              parent=$(git rev-parse FETCH_HEAD) || return 1
+              git read-tree "$parent" || return 1
+            elif grep -q "couldn't find remote ref" err.txt; then
+              git read-tree --empty || return 1
+            else
+              echo "try $n: cannot fetch cloud-results: $(tail -n 2 err.txt | tr '\r\n' '  ')"
+              return 1
+            fi
+            # 2. what the caller wants to add, given what the branch already holds
+            git ls-files -- "results/$ID" | sed 's#^.*/##' > present.txt || return 1
+            rm -rf stage
+            mkdir stage
+            cr_hook || return 1
+            : > paths.txt
+            for f in stage/*; do
+              if [ -f "$f" ]; then echo "$f" >> paths.txt; fi
+            done
+            if [ ! -s paths.txt ]; then
+              echo "nothing to add to results/$ID"
+              return 0
+            fi
+            # GitHub refuses files of 100 MB or more, which would block the whole push
+            wc -c stage/* | while read -r size name; do
+              if [ "$name" != total ] && [ "$size" -gt 50000000 ]; then
+                { head -c 1000000 "$name"; printf '\n[cloud] file cut: it had %s bytes, kept the first 1 MB and the last 20 MB\n' "$size"; tail -c 20000000 "$name"; } > cut.tmp
+                mv -f cut.tmp "$name"
+              fi
+            done || return 1
+            git hash-object -w --no-filters --stdin-paths < paths.txt > shas.txt || return 1
+            mapfile -t paths < paths.txt
+            mapfile -t shas < shas.txt
+            if [ "${#paths[@]}" != "${#shas[@]}" ]; then return 1; fi
+            : > info.txt
+            i=0
+            while [ "$i" -lt "${#paths[@]}" ]; do
+              printf '100644 %s\t%s\n' "${shas[$i]}" "results/$ID/${paths[$i]#stage/}" >> info.txt
+              i=$((i + 1))
+            done
+            git update-index --add --index-info < info.txt || return 1
+            tree=$(git write-tree --missing-ok) || return 1
+            if [ -n "$parent" ] && [ "$tree" = "$(git rev-parse "$parent^{tree}")" ]; then
+              echo "results/$ID already holds these files"
+              return 0
+            fi
+            if [ -n "$parent" ]; then
+              c=$(git commit-tree "$tree" -p "$parent" -m "$msg") || return 1
+            else
+              c=$(git commit-tree "$tree" -m "$msg") || return 1
+            fi
+            # 3. push it; if another job moved the branch first, the next try starts from the new tip
+            git push -q origin "$c:refs/heads/cloud-results" 2> err.txt || {
+              echo "try $n: push refused: $(tail -n 2 err.txt | tr '\r\n' '  ')"
+              return 1
+            }
+            echo "pushed to cloud-results in try $n: ${#paths[@]} file(s) in results/$ID"
+            return 0
+          }
+          cr_push() {
+            msg=$1
+            CR_BASE=$(pwd)
+            export CR_BASE
+            echo "push to cloud-results: $(git --version)"
+            case "${CR_SLOT:-0}" in *[!0-9]*) CR_SLOT=0 ;; esac
+            url=${CR_REMOTE:-${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY}.git}
+            rm -rf crwork
+            mkdir crwork
+            cd crwork || return 1
+            git init -q . || return 1
+            git symbolic-ref HEAD refs/heads/cloud-results || return 1
+            git remote add origin "$url" || return 1
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config gc.auto 0
+            if [ -n "${GH_TOKEN:-}" ]; then
+              git config "http.${GITHUB_SERVER_URL:-https://github.com}/.extraheader" "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\r\n')"
+            fi
+            export GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=60
+            filt=--filter=blob:none
+            tries=${CR_TRIES:-30}
+            n=0
+            rc=1
+            while [ "$n" -lt "$tries" ]; do
+              n=$((n + 1))
+              if cr_try; then
+                rc=0
+                break
+              fi
+              if [ "$n" -lt "$tries" ]; then cr_wait "$n"; fi
+            done
+            cd "$CR_BASE"
+            rm -rf crwork
+            if [ "$rc" != 0 ]; then echo "could not push to cloud-results after $tries tries"; fi
+            return $rc
+          }
+          cat > fill.py <<'EOF'
+          import datetime
+          import json
+          import os
+          import re
+
+          ID = os.environ['ID']
+          ART = os.environ.get('ART_DIR', 'art')
+          RUN_ID = os.environ.get('RUN_ID', '?')
+          RUN_RESULT = os.environ.get('RUN_RESULT', '?')
+
+
+          def expected_files(items):
+              """Every file the batch should leave in results/<id>/ (the same rules as the plan job)."""
+              names = []
+              for k, (tag, _os, seeds) in enumerate(items):
+                  for s in seeds.split():
+                      for name in ('%s_seed%s.txt' % (tag, s), '%s_seed%s_err.txt' % (tag, s)):
+                          if name not in names:
+                              names.append(name)
+                  names.append('runner_%s_%d.txt' % (tag, k))
+              return names
+
+
+          def expected_text(batch, nruns, njobs, names):
+              return ('# cloud results of batch %s: the files this batch leaves in this folder\n'
+                      '# runs: %d\n# jobs: %d\n# files: %d\n' % (batch, nruns, njobs, len(names))) + ''.join(n + '\n' for n in names)
+
+
+          expect = json.loads(os.environ.get('PLAN_EXPECT') or '[]')
+          nruns = int(os.environ.get('PLAN_NRUNS') or 0)
+          names = expected_files(expect)
+          with open('present.txt', encoding='utf-8') as f:
+              present = set(ln for ln in f.read().split('\n') if ln)
+          META = ('EXPECTED.txt', 'BATCH_DONE.txt')
+
+          # What the jobs left as artifacts: the compact logs (what the job tried to commit), else the full logs.
+          stage = {}
+          jobdir, runner_text = {}, {}
+          for k, (tag, _os, seeds) in enumerate(expect):
+              d = None
+              for prefix in ('compact', 'logs'):
+                  p = os.path.join(ART, '%s-%s-%d' % (prefix, tag, k))
+                  if os.path.isdir(p):
+                      d = p
+                      break
+              jobdir[k] = d
+              if d is None:
+                  continue
+              for name in sorted(os.listdir(d)):
+                  p = os.path.join(d, name)
+                  if not os.path.isfile(p) or name in META:
+                      continue
+                  with open(p, 'rb') as f:
+                      data = f.read()
+                  if name == 'runner_%s_%d.txt' % (tag, k):
+                      runner_text[k] = data.decode('utf-8', 'replace')
+                  if name not in present and name not in stage:
+                      stage[name] = data
+
+          # A job that left no artifact at all still gets a runner file, so it shows.
+          for k, (tag, runner, seeds) in enumerate(expect):
+              rn = 'runner_%s_%d.txt' % (tag, k)
+              if jobdir[k] is None and rn not in present and rn not in stage:
+                  text = ('job %d (%s, %s, seeds %s): NO LOGS came back (the job failed early or its artifacts could not be downloaded; '
+                          'see the Actions run %s)\n' % (k, tag, runner, seeds, RUN_ID))
+                  stage[rn] = text.encode()
+                  runner_text[k] = text
+                  print('::warning::job %d (%s) returned no logs' % (k, tag))
+
+          after = present | set(stage)
+          missing = [n for n in names if n not in after]
+          lost = set(missing)
+          failed, nonzero = [], 0
+          for k, (tag, runner, seeds) in enumerate(expect):
+              why = []
+              rt = runner_text.get(k, '')
+              if jobdir[k] is None and 'NO LOGS' in rt:
+                  why.append('no logs came back')
+              if 'setup FAILED' in rt:
+                  why.append('setup failed')
+              mine = []
+              for s in seeds.split():
+                  mine += ['%s_seed%s.txt' % (tag, s), '%s_seed%s_err.txt' % (tag, s)]
+              mine.append('runner_%s_%d.txt' % (tag, k))
+              gone = [n for n in mine if n in lost]
+              if gone:
+                  why.append('%d expected file(s) missing' % len(gone))
+              nonzero += sum(1 for m in re.finditer(r'^seed \d+ exit (\d+)', rt, re.M) if m.group(1) != '0')
+              if why:
+                  failed.append((k, tag, runner, seeds, '; '.join(why)))
+
+          os.makedirs('stage', exist_ok=True)
+          for name, data in stage.items():
+              with open(os.path.join('stage', name), 'wb') as f:
+                  f.write(data)
+          with open(os.path.join('stage', 'EXPECTED.txt'), 'w', encoding='utf-8', newline='\n') as f:
+              f.write(expected_text(ID, nruns, len(expect), names))
+          done = ['batch: %s' % ID,
+                  'run: %s' % RUN_ID,
+                  'finished: %s' % datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                  'runs: %d' % nruns,
+                  'jobs: %d' % len(expect),
+                  'expected: %d' % len(names),
+                  'present: %d' % (len(names) - len(missing)),
+                  'missing: %d' % len(missing),
+                  'failed_jobs: %d' % len(failed),
+                  'filled_by_collect: %d' % len(stage),
+                  'matches_nonzero_exit: %d' % nonzero,
+                  'run_jobs_result: %s' % RUN_RESULT]
+          done += ['missing_file: %s' % n for n in missing[:200]]
+          if len(missing) > 200:
+              done.append('missing_file: ... and %d more' % (len(missing) - 200))
+          done += ['failed_job: %d %s %s seeds %s: %s' % x for x in failed[:100]]
+          with open(os.path.join('stage', 'BATCH_DONE.txt'), 'w', encoding='utf-8', newline='\n') as f:
+              f.write('\n'.join(done) + '\n')
+          with open('msg.txt', 'w', encoding='utf-8') as f:
+              f.write('cloud results %s: batch done (%d of %d expected files, %d added by the collect job, %d failed job(s))'
+                      % (ID, len(names) - len(missing), len(names), len(stage), len(failed)))
+          print('batch %s: %d of %d expected files present, %d added now, %d failed job(s)' % (ID, len(names) - len(missing), len(names), len(stage), len(failed)))
+          EOF
+          cr_hook() {
+            ART_DIR="$CR_BASE/art" python3 "$CR_BASE/fill.py" || return 1
+            msg=$(cat msg.txt)
+          }
+          cr_push "cloud results ${ID}: batch done"
