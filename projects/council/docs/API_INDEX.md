@@ -121,6 +121,7 @@ changes.
 - `signal damage_applied(target: Node, info: RefCounted, amount: float, hull_dmg: float)`
 
 ## scripts/autoload/game.gd  (extends Node)
+- `func apply_preset(preset_name: String) -> void`
 - `func opt(key: String, default_value = null)`
 - `func variant(key: String) -> String`
 - `func count_usage(key: String, n: int = 1) -> void`
@@ -207,6 +208,10 @@ changes.
 - `static func money(v: float) -> String`
 - `static func clock(seconds: float) -> String`
 
+## scripts/data/council_presets.gd  (class_name CouncilPresets extends RefCounted)
+- `static func is_preset(preset_name: String) -> bool`
+- `static func variant_string(preset_name: String) -> String`
+
 ## scripts/data/items.gd  (class_name Items extends RefCounted)
 - `static func by_category(cat: String) -> Array`
 
@@ -216,6 +221,7 @@ changes.
 - `static func lane_points(lane: String, team: int) -> PackedVector2Array`
 
 ## scripts/data/minions.gd  (class_name Minions extends RefCounted)
+- `static func control_cap() -> int`
 - `static func scaling(match_time: float) -> float`
 
 ## scripts/data/modules.gd  (class_name Modules extends RefCounted)
@@ -232,6 +238,7 @@ changes.
 
 ## scripts/data/rules.gd  (class_name Rules extends RefCounted)
 - `static func enemy_of(team: int) -> int`
+- `static func display_label(text: String) -> String`
 - `static func size_index(size_class: int) -> int`
 - `static func damage_mult(kind: int, target_class: int) -> float`
 - `static func tune(name: String, default_value: Variant) -> Variant`
@@ -244,6 +251,7 @@ changes.
 ## scripts/data/tech.gd  (class_name Tech extends RefCounted)
 - `static func column_facility(column: String) -> String`
 - `static func blurb(id: String) -> String`
+- `static func facility_blurb(id: String) -> String`
 - `static func tech_blocker(id: String, facilities: Dictionary, planned: Dictionary) -> String`
 - `static func facility_blocker(id: String, facilities: Dictionary, done: Dictionary) -> String`
 - `static func ship_unlocked(ship_id: String, facilities: Dictionary, done: Dictionary) -> bool`
@@ -607,6 +615,9 @@ changes.
 - `static func conflict() -> String`
 - `static func banner_for(world: World, team: int) -> Array`
 - `static func minimap_chevrons(world: World) -> Array`
+
+## scripts/features/fleet_cap.gd  (class_name FleetCapFeature extends RefCounted)
+- `func install(_w: World) -> void`
 
 ## scripts/features/fortify.gd  (class_name FortifyFeature extends RefCounted)
 - `func install(w: World) -> void`

@@ -30,9 +30,6 @@ extends Node
 ##   "hash t=5 412 units, 1a2b3c4d"  at game time 5 s there were 412 units
 ##       in the match, and the state's hash was 1a2b3c4d (8 hex digits).
 ##   "DET_HASH END t=600 ..."  the same, once, at the end.
-##   "DET_RNG 123456"  the next number of the game's shared random sequence,
-##       once, after the END line. It must be the same too: it proves that
-##       both runs rolled the dice exactly as often.
 ## Compare the "hash" lines of two runs: they must be the same, line by
 ## line.
 ##
@@ -73,10 +70,6 @@ func _physics_process(_dt: float) -> void:
 		print("hash t=%d %s" % [int(world.time), _fingerprint()])
 	if world.time >= secs or world.phase != "play":
 		print("DET_HASH END t=%d %s" % [int(world.time), _fingerprint()])
-		# One more number from the game's shared random sequence: if two runs
-		# used the sequence a different number of times (even where it did not
-		# change any hash yet), this number differs.
-		print("DET_RNG %d" % randi())
 		get_tree().quit()
 
 

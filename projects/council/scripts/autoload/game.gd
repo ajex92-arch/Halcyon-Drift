@@ -11,8 +11,11 @@ extends Node
 ##   1. reads the options written after `--` on the command line
 ##      (_parse_options), such as `godot -- --auto --seed=7`;
 ##   2. fills in the rule variants: the defaults from
-##      Rules.VARIANT_DEFAULTS, changed by --variant;
+##      Rules.VARIANT_DEFAULTS, then the council preset named by --preset
+##      (if any; CouncilPresets), then the pairs of --variant;
 ##   3. defines the controls ("input actions") through GameInputMap.
+## The start screen may choose a preset later (apply_preset()), before the
+## match is built.
 ## Other files then ask Game.opt("name") or Game.variant("name").
 ## Two lists belong to the feature modules (scripts/features/, see
 ## FeatureRegistry): `tunables` (numbers a feature changed for this match;
@@ -28,7 +31,8 @@ extends Node
 ## count_usage(); Rules.tune() reads tunables; the fun probe prints usage;
 ## PilotAI and SkillJitter read --skill-jitter and --seed; tests read
 ## their own options (such as --secs); the end screen clears Game.world
-## before a new match.
+## before a new match. The start screen calls apply_preset() (its rule-set
+## buttons) and FeatureRegistry reads preset_error.
 ##
 ## The options (who reads them in brackets):
 ##   --role=pilot|admiral|spectator   the human's seat. Without --auto (and
@@ -53,6 +57,16 @@ extends Node
 ##                                    Rules.VARIANT_DEFAULTS). A variant
 ##                                    that has a feature module switches
 ##                                    it on (FeatureRegistry).
+##   --preset=within|pick             a council rule set for playtests: a
+##                                    named --variant string
+##                                    (CouncilPresets). The preset is
+##                                    applied first, then --variant, so
+##                                    --variant can change one of its keys.
+##                                    Without it the match is today's game.
+##                                    An unknown name stops the match at
+##                                    its start (FeatureRegistry, exit
+##                                    code 3). The start screen offers the
+##                                    same choice. (Game, StartScreen)
 ##   --skill-jitter[=S]               fun tests: every AI pilot seat's skill
 ##                                    gets its own random nudge of up to S
 ##                                    either way (0.20 when no S is given),
@@ -104,8 +118,18 @@ var world: Node = null
 ## gives "seed" -> "7" (always text); a bare "--auto" gives "auto" -> true.
 var options := {}
 ## The rule variants for this match: variant name -> chosen value (text).
-## Starts as a copy of Rules.VARIANT_DEFAULTS; --variant changes entries.
+## Starts as a copy of Rules.VARIANT_DEFAULTS; a council preset (--preset,
+## or the start screen) and then --variant change entries.
 var variants := {}
+## The council preset (rule set) of this match: one of CouncilPresets.ORDER,
+## or "" for none, which is today's game. Set from --preset by
+## _parse_options(), or by the start screen through apply_preset().
+var preset := ""
+## Why the preset that was asked for could not be used: "" when it could
+## (or when none was asked for), else a line naming the unknown name.
+## FeatureRegistry.install() then refuses the match (exit code 3), so a typo
+## never plays today's game by mistake.
+var preset_error := ""
 ## Feature hook: tuned numbers changed for this match, by name: name ->
 ## new value (for example "kill_base" -> 150.0). Empty (the default) =
 ## every number has its normal value. A feature module sets entries in its
@@ -153,12 +177,45 @@ func _parse_options() -> void:
 	# the many places that check it need no lookup in `options`.
 	var so: String = str(options.get("sim-only", "false"))
 	sim_only = so != "false" and so != "0"
-	# Step 2: the variants: start from the defaults, then apply each
-	# "name:value" pair of --variant (pairs split by commas; a pair that
-	# isn't exactly name:value is skipped).
+	# Step 2: the variants: start from the defaults, then the council preset
+	# named by --preset (if any), then each "name:value" pair of --variant
+	# (see _build_variants()). A preset is named in the log.
+	_build_variants(str(options.get("preset", "")))
+	if preset != "":
+		print("preset: %s = %s" % [preset, CouncilPresets.variant_string(preset)])
+
+
+## Use council preset `preset_name` (one of CouncilPresets.ORDER, or "" for
+## none: today's game) for the next match: `variants` is built again from
+## the defaults, that preset and --variant. The start screen calls it when a
+## rule-set button is pressed; it must run before the match is built, since
+## FeatureRegistry reads the variants then.
+func apply_preset(preset_name: String) -> void:
+	_build_variants(preset_name)
+
+
+## Build `variants`: start from Rules.VARIANT_DEFAULTS, then apply the pairs
+## of council preset `preset_name` (CouncilPresets; "" = none), then the
+## pairs of --variant, so --variant wins where both set a key. Sets `preset`
+## and `preset_error`: an unknown preset name adds nothing and leaves an
+## error line for FeatureRegistry.
+func _build_variants(preset_name: String) -> void:
 	variants = Rules.VARIANT_DEFAULTS.duplicate()
-	var v: String = str(options.get("variant", ""))
-	for pair in v.split(",", false):
+	preset = ""
+	preset_error = ""
+	if preset_name != "":
+		if CouncilPresets.is_preset(preset_name):
+			preset = preset_name
+			_apply_pairs(CouncilPresets.variant_string(preset_name))
+		else:
+			preset_error = "unknown preset \"%s\" (the presets are: %s)" % [preset_name, ", ".join(PackedStringArray(CouncilPresets.ORDER))]
+	_apply_pairs(str(options.get("variant", "")))
+
+
+## Apply each "name:value" pair of `text` (pairs split by commas) to
+## `variants`; a pair that isn't exactly name:value is skipped.
+func _apply_pairs(text: String) -> void:
+	for pair in text.split(",", false):
 		var kv := pair.split(":")
 		if kv.size() == 2:
 			variants[kv[0]] = kv[1]

@@ -10,7 +10,7 @@ extends Camera2D
 ##     (PILOT_VIEW_WIDTH: small craft see roughly their lane, capital ships
 ##     a bit more). Holding the mouse at a screen edge "peeks" a little
 ##     further that way. With no ship (docked or dead), the camera looks at
-##     the Halcyon mothership.
+##     the Aurelian mothership.
 ##   - Free mode (admirals and spectators): the camera goes anywhere at any
 ##     zoom. The mouse wheel zooms; the move keys (W/A/S/D, also Q/E) and
 ##     the screen edges pan when you are not flying; dragging with the
@@ -62,7 +62,7 @@ var _free_pos := Vector2.ZERO
 
 
 ## Get ready for match `w`. Free mode for anyone who is not a pilot. Start
-## 1800 world units to the right of the Halcyon mothership's spot, zoomed
+## 1800 world units to the right of the Aurelian mothership's spot, zoomed
 ## so 6000 world units fit across the screen, and become the screen's
 ## camera.
 func setup(w: World) -> void:
@@ -195,7 +195,7 @@ func _process(dt: float) -> void:
 		want += peek
 	else:
 		# Step 4: no ship (docked or dead): look at a spot 900 world units
-		# in front of the Halcyon mothership (in the direction it faces).
+		# in front of the Aurelian mothership (in the direction it faces).
 		var ms := world.mothership(Rules.HALCYON)
 		want = ms.global_position + Vector2.from_angle(ms.rotation) * 900.0
 	# Step 5: slide toward that spot (k = 6).

@@ -1,10 +1,11 @@
 # Halcyon Drift (remake)
 
 A top-down space MOBA at Homeworld scale, built in Godot 4.7 with GDScript
-only. Two motherships face each other across three lanes joined by a
-crossing down the middle. Minion waves push every lane, Admirals build
-turrets at the asteroid resource nodes, and an asteroid jungle full of
-derelict monsters sits between the lanes. It is 13 vs 13: 12 pilots and 1
+only. The battle is fought in the Halcyon Drift, an asteroid belt. Two
+motherships face each other across three lanes joined by a crossing down
+the middle. Minion waves push every lane, Admirals build turrets at the
+asteroid resource nodes, and an asteroid jungle full of derelict monsters
+sits between the lanes. It is 13 vs 13: 12 pilots and 1
 Admiral per side, with AI filling every seat you don't take. The match ends
 only when a mothership is destroyed.
 
@@ -29,6 +30,12 @@ match:
   enemy mothership. An AI Admiral commands.
 
 Press **H** in game for the full how-to-play.
+
+This is the council build: above the seats, the RULE SET row picks today's
+game (the default) or one of the fun council's two presets for a playtest,
+"Within requirements" or "Council's pick". From a terminal:
+`godot --path remake -- --preset=within` (or `pick`). `FORK_MANIFEST.md`
+explains the presets and every other switch.
 
 ## Controls
 
@@ -111,4 +118,5 @@ godot --path remake --resolution 1280x720 -- --auto --role=pilot --bot=tour --te
 
 Command-line options are documented at the top of
 `scripts/autoload/game.gd`. They include `--variant=` for the design
-variants that can still be switched (see `Rules.VARIANT_DEFAULTS`).
+variants that can still be switched (see `Rules.VARIANT_DEFAULTS`), and
+`--preset=` for the council presets (`scripts/data/council_presets.gd`).

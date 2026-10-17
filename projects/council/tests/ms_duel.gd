@@ -1,13 +1,13 @@
 extends Node
 ## WHAT THIS IS: the mothership duel. A fleet of Cinder ships besieges the
-## Halcyon mothership with nothing else on the map. It checks the design
+## Aurelian mothership with nothing else on the map. It checks the design
 ## rule that the mothership is tough and has decent point defense (small
 ## quick guns that can also shoot down torpedoes) but is weak to big ships,
 ## and that a fully upgraded one can fight several frigates at once and
 ## (barely) win.
 ##
 ## HOW IT WORKS: setup() picks a scenario from SCENARIOS (--scenario,
-## default B). For a "+" scenario it first gives Halcyon all the Flagship
+## default B). For a "+" scenario it first gives Aurelian all the Flagship
 ## research and refills the mothership. Then it launches the attackers in
 ## an arc 4,200 world units from the mothership (1 world unit is about one
 ## pixel at normal zoom). Each attacker is flown by a simple Siege brain
@@ -141,7 +141,7 @@ var ships: Array = []
 var t := 0.0
 ## Seconds until the next progress report.
 var report_t := 0.0
-## The Halcyon mothership under attack.
+## The Aurelian mothership under attack.
 var ms: Mothership
 ## The mothership's hull + shield points at the start.
 var start_hp := 0.0

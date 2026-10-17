@@ -4,10 +4,10 @@ extends RefCounted
 ## it is, where the motherships start, where the three lanes run, and where
 ## the ore nodes, monster camps and jungle entrances are. DESIGN.md A4.
 ##
-## HOW IT WORKS: Halcyon's half is authored here; MapBuilder mirrors it
+## HOW IT WORKS: Aurelian's half is authored here; MapBuilder mirrors it
 ## across x = CX for Cinder so neither side gets a better map. ("Mirror" =
 ## flip left-right across the centre line, like a reflection.) Lanes are
-## shared polylines from Halcyon's mothership to Cinder's (a "polyline" is
+## shared polylines from Aurelian's mothership to Cinder's (a "polyline" is
 ## a path of straight pieces joining the listed points in order).
 ## Asteroids are generated around this skeleton by MapBuilder from SEED.
 ## Positions are in world units (1 world unit is about one pixel at normal
@@ -31,7 +31,7 @@ extends RefCounted
 const W := 40000.0
 ## The map's height (world units).
 const H := 26000.0
-## The x of the map's centre line (W / 2). Cinder's half is Halcyon's half
+## The x of the map's centre line (W / 2). Cinder's half is Aurelian's half
 ## mirrored across it.
 const CX := 20000.0
 ## The "seed" number that starts the map's random number sequence, so the
@@ -39,7 +39,7 @@ const CX := 20000.0
 ## asteroid shapes use SEED + 77).
 const SEED := 4141
 
-## Where each mothership starts, by team (0 Halcyon, 1 Cinder): its
+## Where each mothership starts, by team (0 Aurelian, 1 Cinder): its
 ## position and its facing, an angle in radians (0 = pointing right, PI =
 ## pointing left, so they face each other).
 const MOTHERSHIPS := [
@@ -51,10 +51,10 @@ const MOTHERSHIPS := [
 ## faintly in the team colour.
 const BASE_CLEAR_RADIUS := 6000.0
 
-## Lane polylines run Halcyon -> Cinder. half = corridor half-width.
+## Lane polylines run Aurelian -> Cinder. half = corridor half-width.
 ## lane id -> label (the name players see), half (half the corridor's
 ## width, in world units: the open lane is 3600 wide) and points (the
-## polyline). All three lanes start at Halcyon's mothership and end at
+## polyline). All three lanes start at Aurelian's mothership and end at
 ## Cinder's; the middle lane has a small bend around the centre.
 const LANES := {
 	"top": {"label": "Top lane", "half": 1800.0, "points": [Vector2(3600, 13000), Vector2(8200, 3800), Vector2(31800, 3800), Vector2(36400, 13000)]},
@@ -69,7 +69,7 @@ const CONNECTOR := {"label": "Crossing", "half": 1600.0, "points": [Vector2(2000
 const LANE_ORDER := ["top", "mid", "bot"]
 
 ## Resource nodes. "inner" = near a mothership (torpedo turrets allowed);
-## "middle" = on the crossing (PD only). Halcyon inner nodes are mirrored for
+## "middle" = on the crossing (PD only). Aurelian inner nodes are mirrored for
 ## Cinder; middle nodes sit on the centre line and are shared.
 ## A resource node is a cluster of ore rocks that mining drones harvest,
 ## with turret slots next to it. Fields:
@@ -104,7 +104,7 @@ const ORE_PER_ROCK := 1600.0
 ## Ore each rock regrows per second (times the node's value), up to full.
 const ORE_REGEN := 6.0
 
-## Monster camps on Halcyon's side (top-left and bottom-left quadrants).
+## Monster camps on Aurelian's side (top-left and bottom-left quadrants).
 ## id, type (a camp type from Jungle.CAMPS: "gunship" or "carrier"), pos
 ## [world units] and quad ("tl" = top-left quarter, "bl" = bottom-left).
 ## Mirrored copies become "tr" and "br" (ids like "tr_a").
@@ -131,7 +131,7 @@ const CAMPS_EXTRA := [
 ## spot (MapBuilderJungle).
 const CAMP_CLEAR_RADIUS := 650.0
 
-## Jungle entrances on Halcyon's side: `lane` is a point on the corridor
+## Jungle entrances on Aurelian's side: `lane` is a point on the corridor
 ## centreline, `inside` is just inside the jungle. The path between them
 ## passes a choke ~86 u wide (strike craft only).
 ## ("u" = world units; a "choke" is a narrow gap between rocks.) `quad`
@@ -161,7 +161,7 @@ const CHOKE_GAP := 86.0
 
 
 ## The mirror image of point `p` across the centre line: (W - x, y). This
-## is how Halcyon's half becomes Cinder's. MapBuilder and its parts use it.
+## is how Aurelian's half becomes Cinder's. MapBuilder and its parts use it.
 static func mirror(p: Vector2) -> Vector2:
 	return Vector2(W - p.x, p.y)
 
@@ -172,7 +172,7 @@ static func mothership_pos(team: int) -> Vector2:
 	return MOTHERSHIPS[team]["pos"]
 
 
-## Lane polyline as walked by `team` (Halcyon walks it as authored).
+## Lane polyline as walked by `team` (Aurelian walks it as authored).
 ## Cinder walks it backwards, so for both teams the list starts at their
 ## own mothership and ends at the enemy's.
 static func lane_points(lane: String, team: int) -> PackedVector2Array:

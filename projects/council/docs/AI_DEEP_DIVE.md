@@ -355,7 +355,7 @@ rule, ideas that break a requirement are kept as variants and flagged
 ### 1. mmid2: motherships always park on mid
 - **What it changes.** The admiral advances the mothership only up the mid lane. Now each team parks on the lane it was pushing at 20:00, which the old lane bias made top or bot; the two motherships ended about 30,000 units apart.
 - **Numbers.** Old game, normal 30 min: 0 of 3 matches ended, enemy mothership hull lost about 1%, motherships spent 953 s moving. With mmid2 (2 seeds, 1,800 s): both matches ended (1,504 s and 1,436 s, Cinder's mothership destroyed both times), moving time 299 s. With the milder "mmid" (1 seed): ended at 1,687 s. After pass 2's fixes alone: still 0 of 3 end in 30 minutes.
-- **Caution.** Halcyon won both mmid2 matches; team 0 decides first. Check for a side bias on 6+ seeds before using it for the fun runs.
+- **Caution.** Aurelian won both mmid2 matches; team 0 decides first. Check for a side bias on 6+ seeds before using it for the fun runs.
 - **REQ-CHANGE (borderline): "pushing lanes to destroy the enemy mothership"**, and the admiral choosing where the mothership goes. Top and bot would no longer see a mothership advance.
 
 ### 2. lanespawn: late minions launch from the lane ends

@@ -151,7 +151,7 @@ func update() -> void:
 	# Step 4: sound the alarm (the message only when it is new) and keep
 	# the call on for 12 more seconds.
 	if not defending(world.time):
-		Events.feed.emit("%s capital ships are pushing into the %s base: all pilots defend!" % [Rules.TEAM_NAMES[1 - team], Rules.TEAM_NAMES[team]], "team", team)
+		Events.feed.emit("%s capital ships are pushing into the %s base: all pilots defend!" % [Rules.TEAM_DISPLAY[1 - team], Rules.TEAM_DISPLAY[team]], "team", team)
 	ts.defend_point = near
 	ts.defend_until = world.time + 12.0
 	# Step 5: call off our own siege, unless our assault is about to win.

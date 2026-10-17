@@ -41,12 +41,14 @@ static func set_line(world: World, key: String, text: String) -> void:
 	b._put(key, text)
 
 
-## Store one line and rewrite the label.
+## Store one line and rewrite the label. The features write the internal
+## team labels (Rules.TEAM_NAMES); Rules.display_label() turns them into the
+## names the player sees ("Aurelian").
 func _put(key: String, text: String) -> void:
 	if text == "":
 		lines.erase(key)
 	else:
-		lines[key] = text
+		lines[key] = Rules.display_label(text)
 	if _label != null:
 		_label.text = "\n".join(PackedStringArray(lines.values()))
 		_label.visible = not lines.is_empty()

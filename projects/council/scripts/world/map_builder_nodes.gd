@@ -11,7 +11,7 @@ extends RefCounted
 ##   2. Scatter its ore rocks inside it, spaced apart (this uses random
 ##      numbers).
 ##   3. Write the node into the map. An "inner" node (near a mothership) is
-##      authored for Halcyon only, so it is written twice: once as it is
+##      authored for Aurelian only, so it is written twice: once as it is
 ##      and once mirrored for Cinder ("hal_top" and "cin_top", say). A
 ##      "middle" node sits on the centre line and is shared, so it is
 ##      written once.
@@ -44,7 +44,7 @@ func run() -> void:
 		var slots: int = int(nd["slots"])
 		var slot_pos := _slot_positions(p, lane, slots)
 		var ores := _ore_rocks(p, 6 if nd["id"] == "c_mid" else MapLayout.ORE_ROCKS, nd["kind"] == "middle")
-		# Step 3: an inner node is written for both teams (t = 0 Halcyon as
+		# Step 3: an inner node is written for both teams (t = 0 Aurelian as
 		# authored, t = 1 Cinder mirrored), with its slots and ore mirrored too.
 		if nd["kind"] == "inner":
 			for t in 2:
@@ -76,7 +76,7 @@ func run() -> void:
 
 
 ## Add one node to the map's node list (MapInfo.nodes). `side` is the
-## owning team (0 Halcyon, 1 Cinder) or -1 for a shared middle node;
+## owning team (0 Aurelian, 1 Cinder) or -1 for a shared middle node;
 ## `value` is how rich the node is (from MapLayout.NODES); `slot_pos` are
 ## its turret slots and `ore` its ore rocks ([{pos, r}]).
 func _add_node(id: String, nm: String, pos: Vector2, kind: String, side: int, lane: String, value: float, slot_pos: PackedVector2Array, ore: Array) -> void:
@@ -106,7 +106,7 @@ func _slot_positions(p: Vector2, lane: String, n: int) -> PackedVector2Array:
 ## Scatter `n` ore rocks inside the node at `p` and return them as
 ## [{pos, r}]. Each rock sits 140 to 480 world units from the centre, has a
 ## radius of 42 to 72, and keeps clear of the others. Middle nodes sit on
-## the mirror line (`on_axis`), so we make half the rocks on Halcyon's side
+## the mirror line (`on_axis`), so we make half the rocks on Aurelian's side
 ## and mirror them, so both sides see the same field; if `n` is odd, one
 ## more rock (radius 50) goes 60 units above the centre.
 func _ore_rocks(p: Vector2, n: int, on_axis: bool) -> Array:
@@ -124,7 +124,7 @@ func _ore_rocks(p: Vector2, n: int, on_axis: bool) -> Array:
 		var r := 42.0 + mb.rng.next() * 30.0
 		var q := p + Vector2.from_angle(a) * d
 		# On the mirror line, a rock too close to (or past) the centre line
-		# is flipped over to Halcyon's side; if it is still too close, the
+		# is flipped over to Aurelian's side; if it is still too close, the
 		# try is wasted.
 		if on_axis and q.x > MapLayout.CX - r - 40.0:
 			q.x = 2.0 * MapLayout.CX - q.x

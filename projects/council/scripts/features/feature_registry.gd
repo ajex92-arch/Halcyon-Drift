@@ -83,7 +83,8 @@ extends RefCounted
 ## pair is in CONFLICTS; when both are on, install() installs nothing,
 ## prints "FEATURE CONFLICT: ..." and quits the game with exit code 3, so a
 ## test match with an impossible combination stops at once instead of
-## measuring something nobody asked for.
+## measuring something nobody asked for. The same happens, with "PRESET
+## UNKNOWN: ...", when --preset names no council preset (CouncilPresets).
 
 ## Pairs of variant settings that must not be on together (FUN_PLAN 4.5,
 ## "alternatives of which at most one merges"): [key a, value a, key b,
@@ -210,13 +211,24 @@ const FEATURES := [
 	# admiral_sinks: the AI admiral builds Fleet Command and refreshes wards
 	# when its treasury piles up (AdmiralSinksFeature).
 	["admiral_sinks", preload("res://scripts/features/admiral_sinks.gd")],
+	# fleet_cap: the most bought minions a team may have alive in Fleet
+	# Command mode, 30 by default (FleetCapFeature).
+	["fleet_cap", preload("res://scripts/features/fleet_cap.gd")],
 ]
 
 
 ## Install every feature that is on into match `world` (see HOW IT WORKS
 ## at the top). WorldSetup.build() calls this once, as its last step.
 static func install(world: World) -> void:
-	# Step 0: refuse a combination that FUN_PLAN 4.5 rules out (CONFLICTS):
+	# Step 0a: refuse a match whose council preset name is unknown
+	# (--preset=<name>, Game.preset_error): nothing is installed and the
+	# game quits with exit code 3, so a typo never plays today's game.
+	if Game.preset_error != "":
+		print("PRESET UNKNOWN: " + Game.preset_error)
+		push_error("PRESET UNKNOWN: " + Game.preset_error)
+		(Engine.get_main_loop() as SceneTree).quit(3)
+		return
+	# Step 0b: refuse a combination that FUN_PLAN 4.5 rules out (CONFLICTS):
 	# nothing is installed and the game quits with exit code 3.
 	var clash := conflict()
 	if clash != "":

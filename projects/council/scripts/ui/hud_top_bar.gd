@@ -22,7 +22,7 @@ extends PanelContainer
 @onready var _clock: Label = $Row/Middle/Clock
 ## "Next minion wave 0:21" (or that free waves have stopped).
 @onready var _wave: Label = $Row/Middle/Wave
-## Each team's mothership hull bar (index = team: 0 Halcyon, 1 Cinder).
+## Each team's mothership hull bar (index = team: 0 Aurelian, 1 Cinder).
 @onready var _ms_bars: Array[ProgressBar] = [$Row/Halcyon/Hull, $Row/Cinder/Hull]
 ## Each team's name, hull percent and any mothership trouble.
 @onready var _ms_labels: Array[Label] = [$Row/Halcyon/Name, $Row/Cinder/Name]
@@ -78,10 +78,10 @@ func _refresh_team(world: World, t: int, vt: int) -> void:
 	# "FORTIFIED 3s"); none in today's game.
 	if not world.command.orders.is_empty():
 		extra += CommandOrders.hud_tag(world, t, vt)
-	# Step 2: the name line, "Halcyon (us)  87%  STRAINED". Cinder's is
+	# Step 2: the name line, "Aurelian (us)  87%  STRAINED". Cinder's is
 	# written the other way round ("STRAINED  87%  Cinder (enemy)"), so on
 	# both sides the team name sits at the outer edge.
-	var tname: String = Rules.TEAM_NAMES[t]
+	var tname: String = Rules.TEAM_DISPLAY[t]
 	if vt >= 0:
 		tname += " (us)" if t == vt else " (enemy)"
 	var txt := "%s  %d%%%s" % [tname, int(ms.hull_frac() * 100.0), extra]

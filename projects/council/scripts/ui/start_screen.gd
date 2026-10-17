@@ -1,7 +1,7 @@
 class_name StartScreen
 extends Control
 ## WHAT THIS IS: the first screen of the game, where the human picks their
-## seat: command Halcyon as its Admiral, or fly as one of its 12 pilots
+## seat: command Aurelian as its Admiral, or fly as one of its 12 pilots
 ## (then an AI admiral commands). The choice is locked for the whole match.
 ## DESIGN.md A3.
 ##
@@ -16,9 +16,16 @@ extends Control
 ## _ready() gives the screen the game's look (UiKit.make_theme()), and
 ## _layout() keeps the card at most 980 pixels wide and fits the wrapped
 ## text to it whenever the window is resized.
+## Under the rules text, _ready() also adds the rule-set row (made in code,
+## not in the scene): "Today's game" and one button per council preset
+## (CouncilPresets: "Within requirements", "Council's pick"), with the
+## chosen set's description below. A button calls Game.apply_preset() at
+## once, so the match the seat buttons start plays with it. It starts on
+## today's game, or on the preset the game was launched with (--preset).
 ##
 ## WHO USES IT: main.gd shows it from scenes/ui/start_screen.tscn and
-## connects `chosen` to its start(role).
+## connects `chosen` to its start(role). The rule-set row reads
+## CouncilPresets and calls Game.apply_preset().
 
 ## Sent once the player picks a seat: role is "admiral" or "pilot".
 signal chosen(role: String)
@@ -31,18 +38,73 @@ signal chosen(role: String)
 @onready var _wide_texts: Array[Label] = [$Scroll/Center/Card/Col/Rules, $Scroll/Center/Card/Col/Controls]
 ## The wrapped texts inside the two seat cards (half the card each).
 @onready var _seat_texts: Array[Label] = [$Scroll/Center/Card/Col/Seats/Admiral/Col/Body, $Scroll/Center/Card/Col/Seats/Pilot/Col/Body]
+## The rule-set buttons, by preset name ("" = today's game, else a name in
+## CouncilPresets.ORDER). Made by _build_rule_sets().
+var _rule_buttons := {}
+## The chosen rule set's description, under its buttons.
+var _rule_blurb: Label = null
 
 
 ## Called once when the node joins the scene: give the screen the game's
-## look, darken the cover, make each seat's button send its role, then fit
-## everything to the window (now and on every resize).
+## look, darken the cover, make each seat's button send its role, add the
+## rule-set row, then fit everything to the window (now and on every
+## resize).
 func _ready() -> void:
 	theme = UiKit.make_theme()
 	$Cover.color = Palette.with_alpha(Palette.VOID, 0.82)
 	$Scroll/Center/Card/Col/Seats/Admiral/Col/Pick.pressed.connect(func() -> void: chosen.emit("admiral"))
 	$Scroll/Center/Card/Col/Seats/Pilot/Col/Pick.pressed.connect(func() -> void: chosen.emit("pilot"))
+	_build_rule_sets()
 	resized.connect(_layout)
 	_layout()
+
+
+## Add the rule-set row right under the rules text: a heading, a button for
+## today's game and one per council preset (CouncilPresets.ORDER), then the
+## chosen set's description (a wrapping label, so it joins _wide_texts).
+func _build_rule_sets() -> void:
+	# Step 1: the heading, the button row and the description go in the
+	# card's column, in that order, just below the Rules label.
+	var col: VBoxContainer = $Scroll/Center/Card/Col
+	var at: int = $Scroll/Center/Card/Col/Rules.get_index() + 1
+	var heading := UiKit.label("RULE SET: TODAY'S GAME, OR A COUNCIL PRESET FOR PLAYTESTS.", 12, Palette.MIST)
+	var row := UiKit.hbox(8)
+	_rule_blurb = UiKit.label("", 13, Palette.MIST, true)
+	for node: Control in [heading, row, _rule_blurb]:
+		col.add_child(node)
+		col.move_child(node, at)
+		at += 1
+	_wide_texts.append(_rule_blurb)
+	# Step 2: one toggle button per rule set ("" = today's game). The
+	# chosen one shows pressed (amber).
+	for preset_name: String in [""] + CouncilPresets.ORDER:
+		var pn := preset_name
+		var text := CouncilPresets.TODAY_LABEL if pn == "" else String(CouncilPresets.LABELS[pn])
+		var b := UiKit.button(text, func() -> void: _choose_rules(pn))
+		b.toggle_mode = true
+		row.add_child(b)
+		_rule_buttons[pn] = b
+	_show_rules()
+
+
+## Rule set `preset_name` ("" = today's game) was picked: use it for the
+## coming match (Game.apply_preset()) and show it.
+func _choose_rules(preset_name: String) -> void:
+	Game.apply_preset(preset_name)
+	_show_rules()
+
+
+## Show the rule set in Game.preset as chosen: its button pressed, the
+## others not, and its description under the row. If the game was launched
+## with an unknown --preset (Game.preset_error), say so instead: the match
+## would refuse to start until a rule set is picked here.
+func _show_rules() -> void:
+	for pn: String in _rule_buttons:
+		(_rule_buttons[pn] as Button).set_pressed_no_signal(pn == Game.preset and Game.preset_error == "")
+	if Game.preset_error != "":
+		_rule_blurb.text = "The launch option --preset was not understood: %s. Pick a rule set above before you choose a seat." % Game.preset_error
+	else:
+		_rule_blurb.text = CouncilPresets.TODAY_BLURB if Game.preset == "" else String(CouncilPresets.BLURBS[Game.preset])
 
 
 ## Fit the card to the window: w = the window width minus 40 pixels, but at

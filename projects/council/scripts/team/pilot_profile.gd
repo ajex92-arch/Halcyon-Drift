@@ -27,7 +27,7 @@ extends RefCounted
 
 ## The pilot's name, shown on the screens.
 var callsign := ""
-## Which side they fly for: 0 = Halcyon, 1 = Cinder.
+## Which side they fly for: 0 = Aurelian, 1 = Cinder.
 var team := 0
 ## Their seat number in the team (0, 1, 2 ...). AI pilots use it, for
 ## example, to spread out around a shared point.

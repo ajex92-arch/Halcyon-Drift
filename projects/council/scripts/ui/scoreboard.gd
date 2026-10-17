@@ -29,7 +29,7 @@ var world: World
 var embedded := false
 ## Seconds until the next refresh (counts down from 0.5).
 var _t := 0.0
-## One grid per team (index = team: 0 Halcyon, 1 Cinder). Its first row is
+## One grid per team (index = team: 0 Aurelian, 1 Cinder). Its first row is
 ## the column titles.
 @onready var _grids: Array[GridContainer] = [$Col/Halcyon, $Col/Cinder]
 ## One heading label per team.
@@ -72,7 +72,7 @@ func _refresh() -> void:
 		# Step 1: the heading.
 		var ts := world.teams[t]
 		var ms := world.mothership(t)
-		UiKit.set_text(_heads[t], "%s  ·  %d kills  ·  %d turrets destroyed  ·  mothership %d%%%s" % [Rules.TEAM_NAMES[t], ts.kills, ts.turrets_destroyed, int(ms.hull_frac() * 100.0), _feature_notes(t)])
+		UiKit.set_text(_heads[t], "%s  ·  %d kills  ·  %d turrets destroyed  ·  mothership %d%%%s" % [Rules.TEAM_DISPLAY[t], ts.kills, ts.turrets_destroyed, int(ms.hull_frac() * 100.0), _feature_notes(t)])
 		# Step 2: this team's pilots, best score first.
 		var rows: Array = []
 		for p: PilotProfile in world.profiles:
@@ -102,7 +102,9 @@ func _refresh() -> void:
 
 ## Feature hook: the extra heading text of team `t`: whatever the feature
 ## modules in World.features that have scoreboard_note(team) -> String say
-## (FeatsFeature lists the team's feats). "" when no feature is on.
+## (FeatsFeature lists the team's feats). "" when no feature is on. It goes
+## through Rules.display_label(), in case a note names a team by its
+## internal label.
 func _feature_notes(t: int) -> String:
 	var out := ""
 	if world.features.is_empty():
@@ -110,7 +112,7 @@ func _feature_notes(t: int) -> String:
 	for f: Object in world.features.values():
 		if f.has_method("scoreboard_note"):
 			out += str(f.call("scoreboard_note", t))
-	return out
+	return Rules.display_label(out)
 
 
 ## Write pilot `p` (of team `t`) into row `r` of grid `g` (row 0 is the

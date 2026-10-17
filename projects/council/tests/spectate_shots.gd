@@ -87,7 +87,7 @@ func _process(_dt: float) -> void:
 ## spatial hash (a grid that finds nearby units quickly) gives back within
 ## about 1,500 world units of it (a grid search, so a few slightly farther
 ## ones can count). The ship with the most wins. If there are no pilot
-## ships, it is Halcyon's mothership's position.
+## ships, it is Aurelian's mothership's position.
 func _busiest() -> Vector2:
 	var best := world.mothership(0).global_position
 	var best_n := -1

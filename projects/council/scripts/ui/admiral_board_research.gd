@@ -42,7 +42,9 @@ static func build(b: AdmiralBoard) -> void:
 			if b._ok():
 				b.world.command.build_facility(b.team, fid)
 				b._refresh())
-		b._hover(c, "%s: %s" % [d["label"], d["blurb"]])
+		# The details line comes through Tech.facility_blurb(), which fills
+		# in this match's Fleet Command limit.
+		b._hover(c, "%s: %s" % [d["label"], Tech.facility_blurb(id)])
 		g.add_child(c)
 		b._cards["fac:" + id] = c
 	# Step 2: the research columns side by side: 8 columns share the width

@@ -109,6 +109,7 @@ func setup(w: World, t: int, at: Vector2, facing: float) -> void:
 	team = t
 	kind = Unit.K_MOTHERSHIP
 	size_class = Rules.SIZE_MOTHERSHIP
+	# Internal label: tests print it and no screen shows it; a screen that does must use Rules.display_label().
 	display_name = "%s mothership" % Rules.TEAM_NAMES[t]
 	position = at
 	rotation = facing

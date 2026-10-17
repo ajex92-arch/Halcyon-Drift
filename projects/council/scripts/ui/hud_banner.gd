@@ -87,10 +87,12 @@ func refresh() -> void:
 	elif ts != null and world.mothership(h.team).failure_t > 0.0:
 		sub = "Our mothership's systems are failing: no launches or respawns there for %ds." % int(ceil(world.mothership(h.team).failure_t))
 		col = Palette.CINDER
-	# A feature module's message (title, sub line, tone), last in line.
+	# A feature module's message (title, sub line, tone), last in line. Its
+	# text may name a team by its internal label (Rules.TEAM_NAMES), so it
+	# goes through Rules.display_label() to show the player-facing name.
 	elif not fb.is_empty():
-		title = str(fb[0])
-		sub = str(fb[1])
+		title = Rules.display_label(str(fb[0]))
+		sub = Rules.display_label(str(fb[1]))
 		col = {"amber": Palette.AMBER, "cinder": Palette.CINDER, "veil": Palette.VEIL}.get(str(fb[2]), Palette.ICE)
 	UiKit.set_text(_title, title)
 	UiKit.set_text(_sub, sub)

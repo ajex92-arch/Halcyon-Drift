@@ -671,3 +671,43 @@ much of that back). Next: pass 2 (targeting + admiral) and minion re-targeting.
   ship-size-scaled respawn wait.
 - In progress: pass 3 of the AI fixes (incl. "always park on mid"), a balance-tuning sweep for the open
   design calls, playable builds (Windows on GitHub Releases, browser on GitHub Pages).
+
+## 2026-10-16: performance pass (agent "perf"), ported onto pass 3
+- New launch option `--sim-only` (Game.sim_only), a speed mode for windowless test runs: everything that only draws or sounds is skipped (unit pictures and flame emitters, shot and effect drawing, sound cues, HUD, camera). A windowless run was spending about half of its computer time on that. The match is exactly the same: tests/det_hash.gd gives identical lines with and without it. Careful detail found by that test: Godot's CPUParticles2D takes one number from the shared random sequence when it is made, so ShipVisual takes the same three numbers in this mode.
+- Exact speed-ups (no result changes): AI pilots skip the hull-distance maths for motherships that are clearly far away (PilotFlight.avoid_hulls; pass 3's own distance check there was kept, and the "which way do I want to go" maths now waits until a hull is near), Mothership.keel_arrow() keeps the keel's nose arrow until the ship turns, minion targeting asks the rock check only of an enemy that would become the best target so far (and not again of the target it keeps).
+- tests/perf_probe.gd got `--late` and `--noprof`; tests/det_hash.gd prints "DET_RNG" (the next shared random number) at the end.
+
+### 2026-10-16 evening: the project is now called Halcyon Drift, the asteroid belt the battle is fought in (user decision, text only)
+- The user decided: "Lets change the project name to Halcyon Drift, which we shall say is the name of the
+  asteroid belt we are fighting in." So Halcyon Drift is the project name and also the setting: the battle is
+  fought in the Halcyon Drift, an asteroid belt. The lanes, the asteroid resource nodes and the asteroid jungle
+  are inside it. Nothing else about the belt is decided (no history, factions or extra places were invented).
+- The game folder already used the name (project title, start screen title, HalcyonDrift.exe, doc headers); the
+  old name "Fleet Command 2" was left only at repo level (the repository's root README title; the repository
+  name and the folder names are unchanged on purpose: they are the user's GitHub setting and running paths).
+- Setting added in: docs/DESIGN.md (a "Setting" paragraph at the top, row C20 in the conflicts table, and a new
+  section A16 "Open questions"), README.md (opening paragraph), project.godot (config/description) and the start
+  screen's tagline text (now ends "THE HALCYON DRIFT ASTEROID BELT", was "AN ASTEROID JUNGLE").
+- Not changed on purpose: "Fleet Command" is the late-game admiral module (Fleet Command Module, AdmiralFleetCommand)
+  and keeps its name; the team names Halcyon (amber) and Cinder (red); the user's verbatim documents and older log
+  entries. No game logic changed: only docs, the project description and one label's text.
+- Open question for the user (DESIGN.md A16): the Halcyon team shares its name with the Halcyon Drift; keep it
+  (e.g. the belt's home fleet) or rename the team?
+### 2026-10-16 evening: the good-guy team is now called Aurelian (user decision)
+- The user answered the open question from the project rename: the team that was called Halcyon (team 0, amber)
+  is renamed Aurelian, the user's own pick for an uncommon good-guy name. Cinder (team 1, red) keeps its name, and
+  Halcyon Drift stays the name of the project and of the asteroid belt. Recorded in docs/DESIGN.md (row C21 in A2;
+  A16 is answered) and docs/CODE_GUIDE.md (a "Team names" note and a glossary entry).
+- Everything the player sees says Aurelian. Rules.TEAM_DISPLAY holds the player-facing names and
+  Rules.display_label() swaps the internal label in text that was built from one (the place names
+  "Halcyon Top/Mid/Bottom", the end screen's reason). They are used by the HUD top bar, the end screen, the
+  scoreboard heading, the kill feed and the other feed lines, the map's node labels, the Admiral board's node
+  and waypoint lines, the hangar's repair-bay buttons and the debug overlay; the start screen's seat text and
+  the Admiral's opening hint were changed too. The docs and code comments that name the team say Aurelian.
+  The README files name no team.
+- Kept as the internal label Halcyon on purpose, so every past research log, JSON file and baseline stays
+  comparable: Rules.TEAM_NAMES, Rules.HALCYON and the other identifiers, scene node names (and the node names
+  themselves), log and print output (the SUMMARY line included), JSON keys and values, test output labels, the
+  tools scripts, file names, the user's verbatim documents and the older entries of this file.
+- Display only: the code changes are the new constant and helper and their use at the display sites; no game
+  logic changed.

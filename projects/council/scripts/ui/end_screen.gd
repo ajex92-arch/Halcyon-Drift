@@ -22,13 +22,13 @@ extends Control
 
 ## The game world (set by setup()).
 var world: World
-## The winning team (0 Halcyon, 1 Cinder; -1 until set).
+## The winning team (0 Aurelian, 1 Cinder; -1 until set).
 var winner := -1
 ## Why the match ended, as a sentence from the game.
 var reason := ""
 ## The card's column (the top pilot lines are added to it).
 @onready var _col: VBoxContainer = $Center/Card/Col
-## Each team's column of totals (index = team: 0 Halcyon, 1 Cinder).
+## Each team's column of totals (index = team: 0 Aurelian, 1 Cinder).
 @onready var _teams: Array[VBoxContainer] = [$Center/Card/Col/Teams/Halcyon, $Center/Card/Col/Teams/Cinder]
 
 
@@ -55,14 +55,14 @@ func _ready() -> void:
 		return
 	# Step 2: the title, the reason and the match time.
 	var us := world.viewer_team
-	var title := "%s wins" % Rules.TEAM_NAMES[winner]
+	var title := "%s wins" % Rules.TEAM_DISPLAY[winner]
 	var tint := Palette.team(winner)
 	if us >= 0:
 		title = "Victory" if winner == us else "Defeat"
 		tint = Palette.AMBER if winner == us else Palette.CINDER
 	$Center/Card/Col/Title.text = title
 	$Center/Card/Col/Title.add_theme_color_override("font_color", tint)
-	$Center/Card/Col/Reason.text = "%s  Match time %s." % [reason, Util.clock(world.time)]
+	$Center/Card/Col/Reason.text = "%s  Match time %s." % [Rules.display_label(reason), Util.clock(world.time)]
 	# Step 3: one column of totals per team.
 	for t in 2:
 		_fill_team_totals(t)
@@ -73,7 +73,7 @@ func _ready() -> void:
 	best.sort_custom(func(a: PilotProfile, b: PilotProfile) -> bool: return a.damage_done > b.damage_done)
 	for i in mini(5, best.size()):
 		var p: PilotProfile = best[i]
-		_col.add_child(UiKit.label("%s (%s)  ·  %s K/D/A  ·  %s damage  ·  %d last hits  ·  %s credits earned" % [p.callsign, Rules.TEAM_NAMES[p.team], p.kda(), Util.money(p.damage_done), p.minion_kills, Util.money(p.earned)], 14, Palette.AMBER if p.is_human else Palette.ICE))
+		_col.add_child(UiKit.label("%s (%s)  ·  %s K/D/A  ·  %s damage  ·  %d last hits  ·  %s credits earned" % [p.callsign, Rules.TEAM_DISPLAY[p.team], p.kda(), Util.money(p.damage_done), p.minion_kills, Util.money(p.earned)], 14, Palette.AMBER if p.is_human else Palette.ICE))
 	var me := world.human
 	if me != null and best.find(me) >= 5:
 		_col.add_child(UiKit.label("You: %s K/D/A · %s damage · %d last hits" % [me.kda(), Util.money(me.damage_done), me.minion_kills], 14, Palette.AMBER))
@@ -93,7 +93,7 @@ func _fill_team_totals(t: int) -> void:
 			k += p.kills
 			d += p.deaths
 	var lines := [
-		Rules.TEAM_NAMES[t],
+		Rules.TEAM_DISPLAY[t],
 		"Pilot kills / deaths: %d / %d" % [k, d],
 		"Turrets destroyed: %d" % ts.turrets_destroyed,
 		"Ore delivered: %s" % Util.money(ts.ore_delivered),

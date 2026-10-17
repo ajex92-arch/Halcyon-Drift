@@ -52,7 +52,7 @@ signal credits_earned(profile: RefCounted, amount: float, reason: String)
 ## A dead pilot (`profile`, a PilotProfile) is back in the hangar, ready to
 ## launch. Sent by MatchRules (match_rules.gd); the HUD listens.
 signal respawned(profile: RefCounted)
-## The match is over. `winner` is the winning team (0 = Halcyon,
+## The match is over. `winner` is the winning team (0 = Aurelian,
 ## 1 = Cinder); `reason` is the text, such as "The Cinder mothership was
 ## destroyed." Sent by MatchRules; main.gd and the HUD listen.
 signal match_over(winner: int, reason: String)

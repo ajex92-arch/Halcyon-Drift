@@ -22,8 +22,9 @@ extends RefCounted
 ##     at random.
 ##   - Fleet Command (the team owns the "fleet" facility): free waves stop
 ##     for that team; the admiral buys minions with team money
-##     (Minions.TYPES[type].buy_cost, at most 30 alive, CONTROL_CAP) and
-##     gives them orders through set_order().
+##     (Minions.TYPES[type].buy_cost, at most Minions.control_cap() alive:
+##     CONTROL_CAP 30 unless the fleet_cap variant changes it) and gives
+##     them orders through set_order().
 ##
 ## WHO USES IT: World makes one (World.minion_director) in WorldSetup and
 ## calls tick() every tick. AdmiralCommand calls buy() and set_order();
@@ -140,8 +141,9 @@ func buy(team: int, type_id: String, lane: String) -> String:
 	# Check every reason it can't happen, in order.
 	if not controlled(team):
 		return "Needs the Fleet Command Module"
-	if alive_count(team) >= Minions.CONTROL_CAP:
-		return "Minion cap reached (%d)" % Minions.CONTROL_CAP
+	var cap := Minions.control_cap()
+	if alive_count(team) >= cap:
+		return "Minion cap reached (%d)" % cap
 	var ms := world.mothership(team)
 	if ms == null or not ms.alive:
 		return "The mothership can't launch minions"

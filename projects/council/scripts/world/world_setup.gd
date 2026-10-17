@@ -84,7 +84,7 @@ static func build(w: World, role: String) -> void:
 	w.units_root = w.get_node("Units")
 	w.camera = w.get_node("CameraRig")
 
-	# Step 4: the two teams. Halcyon's admiral seat goes to the human if
+	# Step 4: the two teams. Aurelian's admiral seat goes to the human if
 	# they chose to be admiral, otherwise to the computer.
 	for t in 2:
 		w.teams.append(TeamState.new(t, w))
@@ -105,7 +105,7 @@ static func build(w: World, role: String) -> void:
 		w.nodes.append(n)
 
 	# Step 5: the pilots, 12 per side (Rules.PILOTS_PER_TEAM). A human pilot
-	# takes Halcyon slot 0. Each slot gets a lane role from
+	# takes Aurelian slot 0. Each slot gets a lane role from
 	# PilotAI.ROLE_PLAN; every AI pilot gets its own PilotAI brain.
 	for t in 2:
 		for s in Rules.PILOTS_PER_TEAM:
@@ -138,7 +138,7 @@ static func build(w: World, role: String) -> void:
 			w.admiral_ai[t] = AdmiralAI.new(w, t)
 
 	# Step 7: the starting mining drones (Structures.MINING_DRONE "start",
-	# 4 per team), Halcyon's first. Each one uses a random number.
+	# 4 per team), Aurelian's first. Each one uses a random number.
 	for t in 2:
 		for i in int(Structures.MINING_DRONE["start"]):
 			w.spawn_mining_drone(t, "")

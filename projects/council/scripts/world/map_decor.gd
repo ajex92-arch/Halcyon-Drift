@@ -73,7 +73,7 @@ func _draw() -> void:
 		draw_string(font, mid + Vector2(-900, -260), str(MapLayout.LANES[id]["label"]).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 1800, 180, Palette.with_alpha(Palette.MIST, 0.35))
 	# Ore node names, just above each node.
 	for n in world.nodes:
-		draw_string(font, n.global_position + Vector2(-1000, -MapLayout.NODE_RADIUS - 220), n.node_name.to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 2000, 150, Palette.with_alpha(Palette.ORE, 0.34))
+		draw_string(font, n.global_position + Vector2(-1000, -MapLayout.NODE_RADIUS - 220), Rules.display_label(n.node_name).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 2000, 150, Palette.with_alpha(Palette.ORE, 0.34))
 
 
 ## Draw a corridor as a filled band `half` wide on each side of its centre

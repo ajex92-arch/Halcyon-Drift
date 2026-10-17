@@ -36,7 +36,7 @@ const TOOL_TEXT := {
 
 ## The game world (set by setup()).
 var world: World
-## The team these tools command: the human Admiral is always Halcyon.
+## The team these tools command: the human Admiral is always Aurelian.
 var team := Rules.HALCYON
 ## The armed tool's name (see TOOL_TEXT), or "" when none is armed.
 var tool := ""

@@ -121,7 +121,7 @@ static func refresh_bay_row(h: Hangar, enabled: bool) -> void:
 	h._bay_row.add_child(UiKit.label("Hyperspace launch to:", 13, Palette.MIST))
 	for b: RepairBay in bays:
 		var bay := b
-		h._bay_row.add_child(UiKit.button("Repair bay at %s" % h.world.place_name(b.global_position), func() -> void: launch_at(h, bay), 30))
+		h._bay_row.add_child(UiKit.button("Repair bay at %s" % Rules.display_label(h.world.place_name(b.global_position)), func() -> void: launch_at(h, bay), 30))
 
 
 ## Launch hangar `h`'s pilot (F or the Launch button). Only works when

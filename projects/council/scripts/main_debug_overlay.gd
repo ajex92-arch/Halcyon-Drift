@@ -46,9 +46,9 @@ static func text(world: World) -> String:
 			t += "Docked. Press F1 to buy a Fighter and launch.\n"
 		elif h.state == "dead":
 			t += "Destroyed. Respawning in %ds.\n" % int(ceil(h.respawn_t))
-	# Step 3: both teams (0 = Halcyon, 1 = Cinder), then the tick cost.
+	# Step 3: both teams (0 = Aurelian, 1 = Cinder), then the tick cost.
 	for i in 2:
-		t += "%s treasury %d  mothership %d%%\n" % [Rules.TEAM_NAMES[i], int(world.teams[i].treasury), int(world.mothership(i).hull_frac() * 100.0)]
+		t += "%s treasury %d  mothership %d%%\n" % [Rules.TEAM_DISPLAY[i], int(world.teams[i].treasury), int(world.mothership(i).hull_frac() * 100.0)]
 	t += "sim %.2f ms/tick" % (world.tick_usec / 1000.0)
 	return t
 

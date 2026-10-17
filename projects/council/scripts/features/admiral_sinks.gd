@@ -9,15 +9,21 @@ extends RefCounted
 ##     Module's price (2,000) by 2,000 more, and the module can be built
 ##     (the Capital Ship Facility stands), the AI builds it. From then on the
 ##     free minion waves of that team stop and AdmiralFleetCommand buys
-##     minions with the team's money (up to 30 alive). The mothership is not
-##     weakened by this spending.
+##     minions with the team's money (up to Minions.control_cap() alive: 30
+##     in today's game, 60 in both council presets through fleet_cap). The
+##     mothership is not weakened by this spending.
 ##   - Ward refresh: while the treasury is over 3,000 the AI places a new
 ##     ward at one of its jungle entrances every 45 s, even when it already
 ##     has the 6 wards the limit allows (placing one more quietly retires
 ##     the oldest). Turrets cannot be re-queued: every slot at the nodes is
 ##     already full by then.
 ## Usage counters: fleet_command_built (the module finished) and
-## sink_wards (wards placed by the refresh).
+## sink_wards (wards placed by the refresh). For measuring the Fleet Command
+## limit (the fleet_cap variant) it also counts, without changing anything in
+## the match: fleet_built_s_t0 / fleet_built_s_t1 (the match second each
+## team's module finished) and fleet_minions_bought (minions bought with
+## Fleet Command by either admiral), fleet_bought_t0 / fleet_bought_t1 (the
+## same per team).
 ## REQ-CHANGE: none. The value of the variant is "fleet".
 ##
 ## WHO USES IT: FeatureRegistry installs it for --variant=admiral_sinks:fleet.
@@ -46,15 +52,29 @@ func install(w: World) -> void:
 	world = w
 	world.tick_hooks.append(_tick)
 	Events.facility_done.connect(_on_facility_done)
+	Events.admiral_result.connect(_on_admiral_result)
 	world.tree_exiting.connect(func() -> void:
 		if Events.facility_done.is_connected(_on_facility_done):
-			Events.facility_done.disconnect(_on_facility_done))
+			Events.facility_done.disconnect(_on_facility_done)
+		if Events.admiral_result.is_connected(_on_admiral_result):
+			Events.admiral_result.disconnect(_on_admiral_result))
 
 
-## Fleet Command finished (Events.facility_done): count it.
-func _on_facility_done(_team: int, id: String) -> void:
+## Fleet Command finished (Events.facility_done): count it, and note the
+## match second it finished at ("fleet_built_s_t0" / "fleet_built_s_t1").
+func _on_facility_done(team: int, id: String) -> void:
 	if id == "fleet":
 		Game.count_usage("fleet_command_built")
+		Game.count_usage("fleet_built_s_t%d" % team, int(world.time))
+
+
+## An admiral command finished (Events.admiral_result): count each minion
+## bought with Fleet Command ("fleet_minions_bought", and "fleet_bought_t0" /
+## "fleet_bought_t1" per team). Counting only.
+func _on_admiral_result(team: int, action: String, ok: bool, _message: String) -> void:
+	if action == "minion" and ok:
+		Game.count_usage("fleet_minions_bought")
+		Game.count_usage("fleet_bought_t%d" % team)
 
 
 ## Every tick (a World.tick_hooks entry): the computer admirals think about

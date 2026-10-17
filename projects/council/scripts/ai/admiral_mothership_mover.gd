@@ -42,7 +42,7 @@ const MOVE_GAP := 120.0
 
 ## The game world (motherships, teams, the map, match time).
 var world: World
-## Our team: 0 = Halcyon, 1 = Cinder.
+## Our team: 0 = Aurelian, 1 = Cinder.
 var team := 0
 ## The admiral's lane helper (fleet strength, lane points).
 var lanes: AdmiralLanes
