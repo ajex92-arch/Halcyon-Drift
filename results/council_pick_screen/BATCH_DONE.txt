@@ -1,0 +1,12 @@
+batch: council_pick_screen
+run: 39007265766
+finished: 2026-10-17T09:37:51Z
+runs: 5
+jobs: 25
+expected: 225
+present: 225
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
