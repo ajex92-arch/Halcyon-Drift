@@ -1,0 +1,6 @@
+cores: 4
+setup: os=Linux image=ubuntu24-20261012.334.1 cpu="AMD EPYC 9V45 96-Core Processor" godot=4.7.2 cache=on godot_cache=hit import_cache=hit godot_s=0 import_s=0 setup_s=16 timeout=timeout
+seed 105 exit 0 wall_s 844
+seed 107 exit 0 wall_s 1144
+seed 108 exit 0 wall_s 1207
+seed 106 exit 0 wall_s 1419
