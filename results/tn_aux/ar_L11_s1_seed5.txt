@@ -1,0 +1,25 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+tune: lance_mult=1.1
+features: tune
+arena: ["fighter", "fighter", "fighter"] vs ["lance", "lance", "lance"]
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra", "tune": "on" } rocks=2676 nodes=9 camps=12 route_nodes=347
+  t=  0s A ["fighter 100%", "fighter 100%", "fighter 100%"] | B ["lance 100%", "lance 100%", "lance 100%"]
+  t= 10s A ["fighter 100%", "fighter 100%", "fighter 100%"] | B ["lance 100%", "lance 100%", "lance 100%"]
+  t= 20s A ["fighter 100%", "fighter 100%", "fighter 14%"] | B ["lance 100%", "lance 23%", "lance 100%"]
+  t= 30s A ["fighter 8%", "fighter 100%", "fighter 14%"] | B ["lance 70%", "lance 23%", "lance 100%"]
+  t= 37s Halcyon fighter-2 DOCKED (counts as out)
+  t= 37s Cinder lance-1 DOCKED (counts as out)
+  t= 40s A ["fighter 8%", "fighter 62%"] | B ["lance 52%"]
+  t= 49s Halcyon fighter-0 DOCKED (counts as out)
+  t= 50s A ["fighter 59%"] | B ["lance 35%"]
+  t= 60s A ["fighter 59%"] | B ["lance 35%"]
+t=1:00  sim 72.2 ms/sim-s  worst tick 153.4 ms  units=12 ships=2 minions=0 drones=8 projectiles=0 fps=610
+  Halcyon tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=1/0 avg_cr=259 ms=100% sh=100% flying={ "fighter": 1 }
+  Cinder tr=2220 ore=899 fac=1 tech=0 turrets=0 killed_turrets=0 K/D=0/1 avg_cr=242 ms=100% sh=100% flying={ "lance": 1 }
+  t= 70s A ["fighter 59%"] | B ["lance 35%"]
+  t= 80s A ["fighter 59%"] | B ["lance 35%"]
+  t= 90s A ["fighter 50%"] | B ["lance 11%"]
+  t=100s A ["fighter 50%"] | B ["lance 11%"]
+  t=110s A ["fighter 50%"] | B ["lance 11%"]
+  t=112s Cinder lance-2 DOCKED (counts as out)
+ARENA RESULT after 112s: A alive 1, B alive 0, first kill at 32s
