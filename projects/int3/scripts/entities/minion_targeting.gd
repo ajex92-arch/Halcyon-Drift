@@ -41,9 +41,10 @@ extends RefCounted
 const RETARGET_MARGIN := 600.0
 
 
-## Choose what minion `m` fights: sets m.target (null for nobody). Keeps
-## the current target if it is still worth it; otherwise scores every enemy
-## in aggro range (see HOW IT WORKS above).
+## Choose what minion `m` fights: sets m.target (null for nobody). Scores
+## every enemy in aggro range (score_of(), see HOW IT WORKS above) and keeps
+## the current target, if it is still worth keeping, unless the best new one
+## scores at least RETARGET_MARGIN (600) better.
 static func pick_target(m: Minion) -> void:
 	var anchor := lane_anchor(m)
 	# Step 1: the current target is worth keeping while it is alive, can be

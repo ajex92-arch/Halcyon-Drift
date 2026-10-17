@@ -27,7 +27,7 @@ extends RefCounted
 ## tick() calls maybe_move(), but only after 20:00. The order goes through
 ## AdmiralCommand.move_mothership(), which also checks the rules. The siege
 ## plan (AdmiralSiege) follows the enemy mothership to the lane it is parked
-## on, which is therefore the mid lane.
+## on (the mid lane when the other admiral is an AI too).
 
 ## The lane our mothership always advances up (see HOW IT WORKS). Mid is
 ## the shortest lane (33,600 units against 44,200 for top and bottom), so a

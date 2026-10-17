@@ -89,12 +89,6 @@ func _kind_name(u: Unit) -> String:
 	return "other"
 
 
-## Health left as a 0..1 fraction of hull plus shields (the whole pool).
-func _total_frac(s: Ship) -> float:
-	var mx := s.hull_max + (s.shields.max_total if s.shields != null else 0.0)
-	return (s.hull + s.shield_total()) / mx if mx > 0.0 else 0.0
-
-
 ## Damage dealt by AI pilots (by target kind and by hull) and taken by them
 ## (by attacker kind). `amount` is before the shields, `hull_dmg` after.
 func _on_damage(target: Node, info: RefCounted, amount: float, hull_dmg: float) -> void:
@@ -198,7 +192,7 @@ func _sample() -> void:
 			_add("flip_%s_to_%s" % [h["state"], b.state])
 		# Retreat episodes: how much health we had when we turned back, and
 		# how each one ended (back to the lane, docked, or dead: _on_killed).
-		var tf := _total_frac(s)
+		var tf := s.total_frac()
 		if b.state == "retreat" and h["state"] != "retreat":
 			h["ret_t"] = world.time
 			_add("ret_entries")

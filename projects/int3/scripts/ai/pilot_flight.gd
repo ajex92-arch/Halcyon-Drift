@@ -314,7 +314,16 @@ func avoid_hulls(ship: Ship) -> void:
 	var trig := ship.radius + 140.0 + ship.velocity.length() * clampf(1.2 / maxf(ship.f_turn, 0.3), 0.3, 3.0)
 	for t in 2:
 		var ms := brain.world.mothership(t)
-		if ms == null or not ms.alive or ms.hull_dist(p) > trig or ms.hull_dist(brain.goal) < 600.0:
+		if ms == null or not ms.alive:
+			continue
+		# Cheap early out with the same answer as the hull_dist test below:
+		# the hull surface is never nearer than (distance to the centre -
+		# half_len - beam / 2), so a ship farther out than that plus `trig`
+		# is not near.
+		var far := ms.half_len + ms.beam * 0.5 + trig + 1.0
+		if p.distance_squared_to(ms.global_position) > far * far:
+			continue
+		if ms.hull_dist(p) > trig or ms.hull_dist(brain.goal) < 600.0:
 			continue
 		var a := ms.global_position + Vector2.from_angle(ms.rotation) * ms.half_len
 		var b := ms.global_position - Vector2.from_angle(ms.rotation) * ms.half_len

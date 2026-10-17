@@ -21,7 +21,7 @@ extends RefCounted
 ## `nodes`; JungleDirector reads `camps`; AdmiralBuilder reads `entrances`;
 ## MapDecor and the minimap draw the lanes and the connector. lane_for()
 ## and in_open_lane() are asked by AI pilots (PilotGoals, PilotFlight), the
-## AI admiral (AdmiralBuilder, AdmiralSiege, AdmiralMothershipMover), the
+## AI admiral (AdmiralBuilder, AdmiralSiege), the
 ## command desk (AdmiralCommand), the command overlay, World.place_name()
 ## and some tests. Mining drones, repair bays, wards, AI pilots and the
 ## command desk ask `route` for paths.

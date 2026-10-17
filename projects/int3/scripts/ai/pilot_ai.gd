@@ -293,6 +293,7 @@ func _reset_after_launch() -> void:
 	camp = null
 	evade_t = 0.0
 	fallback_t = 0.0
+	soft_retreat = false
 	path = PackedVector2Array()
 	path_goal = Vector2.INF
 	launched_at = world.time
