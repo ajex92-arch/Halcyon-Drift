@@ -1,0 +1,12 @@
+batch: pd_r4
+run: 39007337741
+finished: 2026-10-17T09:23:31Z
+runs: 1
+jobs: 5
+expected: 45
+present: 45
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
