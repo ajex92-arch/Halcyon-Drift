@@ -1,0 +1,5 @@
+cores: 4
+seed 168 exit 0 wall_s 922
+seed 166 exit 0 wall_s 1004
+seed 167 exit 0 wall_s 1027
+seed 165 exit 0 wall_s 1914
