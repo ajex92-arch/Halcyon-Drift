@@ -1,0 +1,66 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+match: role=spectator variants={ "retreat": "systems_failure", "escort_wing": "extra" } rocks=2676 nodes=9 camps=12 route_nodes=347
+hash t=1505 75 units, 46b246d0
+hash t=1510 137 units, 20fbf316
+hash t=1515 139 units, a320e7e9
+hash t=1520 141 units, 48d9a56a
+hash t=1525 141 units, f60479fe
+hash t=1530 141 units, 7fd34783
+hash t=1535 145 units, 5ee28e9f
+hash t=1540 152 units, 0a17e7e9
+hash t=1545 216 units, 4f8debc3
+hash t=1550 221 units, cf07b99a
+hash t=1555 219 units, f5516032
+hash t=1560 212 units, 220b24da
+hash t=1565 211 units, 34cdf2cb
+hash t=1570 209 units, 3a2b2e89
+hash t=1575 203 units, 3f3d61ad
+hash t=1580 253 units, 766970ff
+hash t=1585 241 units, 5b8e904b
+hash t=1590 228 units, dfdb2561
+hash t=1595 218 units, 5164535b
+hash t=1600 219 units, 19456c12
+hash t=1605 220 units, ce9621c4
+hash t=1610 214 units, 2383158d
+hash t=1615 267 units, 4f24e25b
+hash t=1620 250 units, 510e0515
+hash t=1625 240 units, 63e78597
+hash t=1630 233 units, d5f2b2cc
+hash t=1635 226 units, 2ee86de6
+hash t=1640 220 units, 6c97a662
+hash t=1645 221 units, c74535bc
+hash t=1650 281 units, 35e659f3
+hash t=1655 271 units, 4df36f0f
+hash t=1660 257 units, bd7d8fb6
+hash t=1665 229 units, 2d18b6ef
+hash t=1670 214 units, 1c55cbbe
+hash t=1675 204 units, 4f6c0eb8
+hash t=1680 207 units, ecf7611c
+hash t=1685 259 units, 41e80c49
+hash t=1690 242 units, fbd4a5e2
+hash t=1695 229 units, 25688fe9
+hash t=1700 220 units, d7f72525
+hash t=1705 211 units, 7270e283
+hash t=1710 199 units, a8504756
+hash t=1715 193 units, c3a591a6
+hash t=1720 248 units, a6cf3d3f
+hash t=1725 242 units, f2dac578
+hash t=1730 233 units, 4471aaf3
+hash t=1735 229 units, c08201f3
+hash t=1740 208 units, b114c3a7
+t=29:00  sim 440.7 ms/sim-s  worst tick 20.4 ms  units=208 ships=14 minions=106 drones=22 projectiles=87 fps=86
+  Halcyon tr=8143 ore=17580 fac=8 tech=52 turrets=11 killed_turrets=1 K/D=4/15 avg_cr=2121 ms=100% sh=100% flying={ "lance": 2, "flak": 2, "bomber": 1 }
+  Cinder tr=7328 ore=18721 fac=8 tech=52 turrets=10 killed_turrets=1 K/D=7/11 avg_cr=2384 ms=100% sh=48% flying={ "battlecruiser": 2, "ion": 1, "support": 1, "flak": 1, "bomber": 2, "lance": 2 }
+hash t=1745 191 units, 954e1822
+hash t=1750 195 units, 08bd0d94
+hash t=1755 252 units, c55ca37c
+hash t=1760 253 units, 810757e6
+hash t=1765 241 units, 73ba86f0
+hash t=1770 217 units, ff90804c
+hash t=1775 205 units, d75e8cd8
+hash t=1780 196 units, 837ca7a6
+hash t=1785 188 units, a4da304b
+hash t=1790 240 units, cd2e85d5
+hash t=1795 232 units, b07e0f18
+hash t=1800 226 units, 4bccf106
+DET_HASH END t=1800 226 units, 4bccf106
