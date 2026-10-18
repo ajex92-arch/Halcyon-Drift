@@ -81,7 +81,8 @@ func handle(event: InputEvent) -> void:
 			hud._close_others(null)
 		_handled()
 	# Step 7: C switches the Admiral's camera between free and following
-	# their ship (pilots' cameras always follow their ship).
+	# their ship (a pilot's camera is always free: Space centers it, see
+	# CameraRig, so C does nothing for a pilot).
 	elif event.is_action("center_camera"):
 		if world.human_role == "admiral":
 			world.camera.toggle_free()

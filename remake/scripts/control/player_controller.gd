@@ -14,8 +14,8 @@ extends RefCounted
 ##   W / S: thrust forward / brake and reverse.
 ##   A / D (or Q / E): strafe (slide) left / right.
 ##   Shift: boost.
-##   Left click or Space: fire. Right click or G: the hull's special
-##     ability.
+##   Left click: fire. Right click or G: the hull's special ability.
+##     (Space is not a flying key: it centers the camera, see CameraRig.)
 ##   Arrow keys: shield focus (put more shield on one side). Pressing the
 ##     side that is already focused goes back to balanced.
 ##   1-4: energy routing (weapons, shields, thrusters, balanced).
@@ -53,8 +53,8 @@ func update(ship: Ship, _dt: float) -> void:
 	c.forward = Input.get_action_strength("thrust_forward") - Input.get_action_strength("thrust_back")
 	c.strafe = Input.get_action_strength("strafe_left") - Input.get_action_strength("strafe_right")
 	c.boost = Input.is_action_pressed("boost")
-	# Step 3: guns. Fire while the left mouse button or Space is held.
-	c.fire = world.mouse_fire or Input.is_physical_key_pressed(KEY_SPACE)
+	# Step 3: guns. Fire while the left mouse button is held.
+	c.fire = world.mouse_fire
 	# Step 4: special ability. Only on the press itself (the button was up
 	# last tick and is down now). The ship clears `special` after reading it.
 	var special_now := world.mouse_special or Input.is_physical_key_pressed(KEY_G)

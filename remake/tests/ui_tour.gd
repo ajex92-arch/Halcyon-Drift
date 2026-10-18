@@ -112,10 +112,15 @@ var busy := false
 
 ## main.gd calls this once, right after the World is built. Remember the
 ## role and the picture folder, and keep running even if the game is
-## paused.
+## paused. A pilot's camera stays where it is left (Space centers it), and a
+## fresh window's mouse sits at (0, 0), the screen corner, where the free
+## camera would pan away: so a pilot's tour holds Space the whole time, and
+## the pictures keep the ship (while docked, the mothership) in view.
 func setup(w: World) -> void:
 	world = w
 	role = w.human_role
+	if role == "pilot":
+		Input.action_press("center_on_ship")
 	layout = Game.opt("dump-layout", false) == true
 	dump = layout or Game.opt("dump", false) == true
 	# A headless window is only 64 x 64 pixels; give the dump the real

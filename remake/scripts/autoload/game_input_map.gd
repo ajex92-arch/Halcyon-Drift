@@ -6,7 +6,7 @@ extends RefCounted
 ## HOW IT WORKS: Godot works with "input actions": a named control such as
 ## "fire" that one or more keys or buttons can trigger. Game code then asks
 ## Input.is_action_pressed("fire") instead of asking about one key, so a
-## control can have several keys (fire = Space or the left mouse button).
+## control can have several keys (strafe_left = A or Q).
 ## define_all() goes down the list once at startup. For each action it
 ## makes the action if it doesn't exist yet and adds each key or mouse
 ## button to it. Keys are matched by their place on the keyboard (Godot's
@@ -15,9 +15,10 @@ extends RefCounted
 ##
 ## WHO USES IT: Game._ready() calls define_all() (through
 ## Game._define_actions()). The actions are read by PlayerController (the
-## human's flying), HudInput (the screen keys), CameraRig (zoom keys, and
-## the move keys to pan the free camera) and tests/bot_pilot.gd, which
-## presses them like a player would.
+## human's flying), HudInput (the screen keys), CameraRig (zoom keys, the
+## move keys to pan the free camera, and Space, center_on_ship) and
+## tests/bot_pilot.gd and tests/camera_check.gd, which press them like a
+## player would.
 ##
 ## The controls are defined in code rather than in project.godot so they
 ## are easy to read and tests can press them by name. All functions here
@@ -34,9 +35,8 @@ static func define_all() -> void:
 	_key("strafe_left", [KEY_A, KEY_Q])
 	_key("strafe_right", [KEY_D, KEY_E])
 	_key("boost", [KEY_SHIFT])
-	# Weapons: fire (Space or left mouse) and the hull's special ability
-	# (G or right mouse).
-	_key("fire", [KEY_SPACE])
+	# Weapons: fire (the left mouse button only: Space is the camera key, see
+	# center_on_ship below) and the hull's special ability (G or right mouse).
 	_mouse("fire", MOUSE_BUTTON_LEFT)
 	_key("special", [KEY_G])
 	_mouse("special", MOUSE_BUTTON_RIGHT)
@@ -55,12 +55,16 @@ static func define_all() -> void:
 	_key("use_kit", [KEY_R])
 	_key("assist_toggle", [KEY_V])
 	# Screens: B hangar, F dock (or launch), Tab admiral board, H help,
-	# C camera (the admiral switches free / follow).
+	# C camera (the admiral switches free / follow; the action's name is
+	# older than Space's centering below).
 	_key("hangar", [KEY_B])
 	_key("dock", [KEY_F])
 	_key("admiral_board", [KEY_TAB])
 	_key("help", [KEY_H])
 	_key("center_camera", [KEY_C])
+	# Camera: Space puts the camera on your ship (on the mothership when you
+	# have none); hold it to keep the camera centered as the ship moves.
+	_key("center_on_ship", [KEY_SPACE])
 	# Zoom: = or keypad + zooms in, - or keypad - zooms out. Esc cancels.
 	_key("zoom_in", [KEY_EQUAL, KEY_KP_ADD])
 	_key("zoom_out", [KEY_MINUS, KEY_KP_SUBTRACT])

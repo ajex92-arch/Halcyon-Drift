@@ -34,23 +34,23 @@ const PAGES := {
 	],
 	"Flying": [
 		["Moving", "The mouse aims and your ship turns to face it. W thrusts forward, S brakes and reverses, A / D slide sideways, Shift boosts (strike craft). Hold Ctrl to lock your heading: big ships keep their shields facing a threat while their turrets keep tracking the mouse. V toggles flight assist (off = drift)."],
-		["Shooting", "Left-click or Space fires. Right-click or G uses your ship's ability. Fixed guns fire where the nose points; turrets on bigger ships track the mouse; point-defense guns pick their own targets and shoot down torpedoes."],
+		["Shooting", "Left-click fires. Right-click or G uses your ship's ability. Fixed guns fire where the nose points; turrets on bigger ships track the mouse; point-defense guns pick their own targets and shoot down torpedoes."],
 		["Shields", "Shields have four zones: front, rear, left and right. A hit drains the zone facing the attacker; when it is empty, the hull takes the damage. Arrow keys focus shield strength into one zone (press it again to balance). Shields recharge a few seconds after the last hit. Bigger ships wait longer between focus changes."],
 		["Energy", "1 Weapons (faster fire), 2 Shields (faster recharge, tougher shields), 3 Engines (speed, turning, cheaper boost), 4 Balanced. Bigger ships wait longer between changes."],
 		["Asteroids", "Bumping rocks is harmless at low speed; ramming them fast hurts, bigger ships more. Capital-ship cannons break asteroids."],
 		["Ship sizes", "Strike craft are fast, cheap and reward good flying; they can use the jungle. Corvettes, frigates and capital ships hit hard and see farther, but turn slowly: out of position they die quickly to bombers and flak. They are what breaks a mothership."],
 		["Hangar (B)", "At the mothership (or while waiting to respawn), buy a hull, up to 2 modules, pilot gear (6 slots: flight suit, helmet, stick, cockpit layout, chair, implant) and repair kits. F launches. Inside one of your repair bays' range you can swap modules mid-flight."],
 		["Repair", "R uses a repair kit: a small drone that heals your hull for 10 seconds (it can be shot down). Repair bays heal nearby ships with their drones. Docking at the mothership (F when close) repairs everything."],
-		["Camera", "Mouse wheel or + / - zooms (how far out depends on your ship's size). Push the mouse to the screen edge to peek. The minimap is bottom-right."],
+		["Camera", "Mouse wheel or + / - zooms (how far out depends on your ship's size). The camera stays where you leave it, so you can look anywhere on the map: push the mouse to a screen edge, drag with the middle mouse button, or click the minimap (bottom-right); with no ship, W / A / S / D move it too. Space puts the camera on your ship (on your mothership if you have none). Hold Space to keep it centered as you fly; let go and it is free again. Launching jumps the camera to your new ship."],
 	],
 	"Admiral": [
-		["Your job", "Spend the team treasury to win the map: mining drones, turrets, repair bays, wards and the research tree. Tab opens the Admiral board. Your camera can go anywhere (you still see only what your team sees): move it with WASD, the screen edges, middle-drag, or by clicking the minimap."],
+		["Your job", "Spend the team treasury to win the map: mining drones, turrets, repair bays, wards and the research tree. Tab opens the Admiral board. Your camera can go anywhere (you still see only what your team sees): move it with WASD, the screen edges, middle-drag, or by clicking the minimap. Space centers it on your ship, or on the mothership when you are docked."],
 		["Economy", "The treasury earns a small trickle, 60% of every ore delivery, and bounties for destroyed enemy turrets and bays. Mining drones mine ore at the resource nodes; protect them, and turrets on nodes protect them too."],
 		["Research", "Like Homeworld 2: build mothership modules (Research Module, Corvette / Frigate / Capital Ship Facilities, Platform Control, Sensors, Hyperspace, Fleet Command), then research in each module's column. Pilots can only buy ships you have unlocked."],
 		["Map tools", "Repair bays fly to a spot and anchor for good (jungle too). Wards go only where your team can see. The rally waypoint speeds up and shields our ships inside it, and AI pilots gather there. From 20:00, move the mothership."],
 		["Sieges", "Put the rally waypoint near the enemy mothership to order a siege: our AI frigates, capital ships and bombers converge on that lane and attack it. When a group of enemy frigates or capital ships pushes into OUR base, AI pilots come back and fight them on their own."],
 		["Fleet Command", "Late game, the Fleet Command Module stops free minion waves: instead, buy minions and command them. Drag a box on the map to select, right-click to send them, or use the Fleet tab."],
-		["Flying yourself", "You can launch a ship of your own from the hangar (B) with your personal credits. You can still give orders and look anywhere while flying (C switches the camera between your ship and free), but moving the mothership needs you docked."],
+		["Flying yourself", "You can launch a ship of your own from the hangar (B) with your personal credits. You can still give orders and look anywhere while flying (C switches the camera between your ship and free; Space centers it on your ship, and holding Space keeps it there), but moving the mothership needs you docked."],
 	],
 }
 

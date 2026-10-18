@@ -222,10 +222,14 @@ func place_ward(team: int, point: Vector2) -> String:
 ## mothership (TeamState.siege_lane). A waypoint anywhere else calls any
 ## siege off. With `declare_siege` false (the AI admiral's own waypoint, see
 ## AdmiralWaypoint) only the marker moves and any siege is left alone: the
-## AI starts and ends its sieges itself (AdmiralSiege).
-func set_waypoint(team: int, point: Vector2, declare_siege: bool = true) -> String:
+## AI starts and ends its sieges itself (AdmiralSiege). `by_human` says who
+## placed it: true for a human admiral (the command overlay passes it), false
+## for the AI admiral; it is kept in TeamState.waypoint_by_human, and in the
+## opening AI pilots follow only a human's waypoint. It is a separate
+## argument on purpose: it is not worked out from `declare_siege`.
+func set_waypoint(team: int, point: Vector2, declare_siege: bool = true, by_human: bool = false) -> String:
 	var ts := world.teams[team]
-	ts.set_waypoint(point)
+	ts.set_waypoint(point, by_human)
 	if declare_siege:
 		var ems := world.mothership(Rules.enemy_of(team))
 		if ems != null and ems.alive and ems.hull_dist(point) < 6000.0:

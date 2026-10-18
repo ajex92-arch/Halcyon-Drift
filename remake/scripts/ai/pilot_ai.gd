@@ -21,8 +21,13 @@ extends RefCounted
 ##       lane     hold a spot just behind our minion wave (minions are the
 ##                small robot ships the motherships send down each lane).
 ##                The spot is a fixed STATION (we park there; we don't
-##                circle it). Shoot enemy minions for money (whoever lands
-##                the killing shot, the "last hit", gets paid), and:
+##                circle it). In the OPENING (the first minutes: see
+##                PilotGoals.opening_active()) the station is different:
+##                for the first Rules.AI_OPENING_HOLD seconds near our
+##                mothership, then at our lane's Crossing node, until our
+##                first wave gets there. Shoot enemy minions for money
+##                (whoever lands the killing shot, the "last hit", gets
+##                paid), and:
 ##                push - attack an enemy turret that our minions are
 ##                       "tanking" (standing in its range, so it shoots them
 ##                       and not us) near the front line (big ships lead the
@@ -34,7 +39,10 @@ extends RefCounted
 ##                       and it isn't hiding under an enemy turret (big ships
 ##                       don't chase: they hold and shoot what comes close).
 ##       jungle   clear derelict camps (neutral monster ships in the asteroid
-##                "jungle" between the lanes).
+##                "jungle" between the lanes). Junglers join the opening at
+##                the middle Crossing first (where, like a lane pilot, one
+##                that is hurt and outnumbered falls back), and go to their
+##                camps after.
 ##       retreat  hull is low (or, for a ship smaller than a frigate, hull and
 ##                shields together are under SOFT_RETREAT_BELOW): use a
 ##                repair kit, then fly to a repair bay or home to dock.
@@ -158,6 +166,15 @@ var skip_until := 0.0
 ## plus shields fell under SOFT_RETREAT_BELOW while the hull was still over
 ## 35%, so it ends sooner (see _think()).
 var soft_retreat := false
+## True once this pilot's opening is over for good (PilotGoals
+## .opening_active() sets it): our first minion wave reached the lane's
+## Crossing node, or Rules.AI_OPENING_MAX seconds went by. The arrival is a
+## fact about the team and the lane (TeamState.first_wave_at, noted once), so
+## a pilot that was dead, docked, retreating or flying home when the wave got
+## there is done at its first think after that, whether or not the wave is
+## still alive. It never goes back to false, so a later wave that dies cannot
+## start a second opening.
+var opening_done := false
 
 # --- the parts (see THE PARTS at the top) ----------------------------------------------
 
@@ -382,8 +399,11 @@ func _think(ship: Ship) -> void:
 		evade_t = 2.5
 		evade_from = hunter.global_position
 	# Step 4: outnumbered (odds of -2 or worse) and hurt (below 75% hull) on
-	# the lane: fall back toward our side for 4 seconds.
-	if state == "lane" and fallback_t <= 0.0 and hp < 0.75 and senses.odds(ship) <= -2:
+	# the lane, or as a jungler in the opening (it then does everything a lane
+	# pilot does, see PilotGoals.think_jungle()): fall back toward our side for
+	# 4 seconds. (The opening check comes after the cheap ones. Asking is
+	# harmless: Step 2 asks it every think anyway.)
+	if fallback_t <= 0.0 and hp < 0.75 and (state == "lane" or (state == "jungle" and goals.opening_active())) and senses.odds(ship) <= -2:
 		fallback_t = 4.0
 	intent = ""
 	# Step 5: evading a turret (unless retreating anyway): aim for a point

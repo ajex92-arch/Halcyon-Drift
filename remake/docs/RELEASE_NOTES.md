@@ -4,6 +4,51 @@ What each release of Halcyon Drift changes, newest first. The Windows version of
 each release is on the GitHub Releases page; the browser version always shows the
 newest `main`.
 
+## v0.2.1: a free camera and a new AI opening
+
+### For players
+
+**Pilots can look around the whole map.** Before, only the Admiral and spectators could move the camera freely; a pilot's camera always followed the ship.
+- Move the mouse to a screen edge (a 6-pixel zone; it pans at 80% of the view per second), drag with the middle mouse button, or click the minimap. How far out a pilot can zoom is unchanged (5,200 units across by default).
+- **Space** puts the camera on your ship, or on the spot in front of your mothership when you are docked or dead. Hold Space to keep the camera centered on the ship while you fly; let go and it is free again from there.
+- When your ship launches (also after a hyperspace jump), the camera jumps to it, so a new ship never appears off screen. The Admiral's camera stays where it is.
+- **Space no longer fires.** Shoot with the left mouse button. W/A/S/D/Q/E still fly the ship.
+- The Admiral's free camera and the C key (follow your ship) are unchanged. Spectators: Space does nothing.
+- **Fixed** (found and fixed by reading the code; the automated checks cannot switch windows): losing focus (Alt+Tab or the Windows key) now ends a middle-button drag and lets go of a held fire button, and the camera edge-pans only while the pointer is inside the game window, so it no longer pans by itself with the pointer on a second monitor.
+
+**The computer pilots open the match differently.**
+- **The opening:** for the first 10 seconds every computer pilot waits at a spot past its mothership's bow. Then each one flies to the Crossing of its lane and holds it until the team's first minion wave arrives there, or for at most 3 minutes. In v0.2.0 they drifted out with the wave: the lane pilots' median arrival was 110 seconds; now it is about half a minute. They do not go shopping during the opening.
+- **The flex pilot's** lane rotation now starts on the top lane instead of the middle, for the whole match (it still moves on to the next lane every 90 seconds), so in the opening it holds the top Crossing.
+- **No second opening:** the first wave's arrival is one fact per team and lane, so a pilot who was dead, docked or retreating when the wave arrived does not start its opening again later.
+- **Junglers fall back** from a losing fight in the opening (hurt and outnumbered), like the lane pilots.
+- **The Admiral's flag:** new in v0.2.1, a rally flag that a human Admiral places during the opening pulls the pilots who answer it (seats 4, 5, 6 and the flex pilot) off their Crossings; in v0.2.0 no flag rallied them before 10:00. The computer Admiral's own flag at 1:00 still does not. From 10:00 on, any flag rallies them, as in v0.2.0.
+- **The Crossing turrets:** the computer Admiral now builds its Crossing turret before extra turrets at home. While it holds no Crossing turret, it builds at the Crossing with the most of its own ships (pilots and minions) within 1,500 units, instead of trying the Crossings in map order (in the tests before this change, Aurelian's first one went to the Top Crossing in every match).
+
+### How well it was tested
+
+All numbers below compare v0.2.1 with v0.2.0 on the same six seeds (301-306), in matches between computer players.
+- **The release build** (the AI opening fix and the camera change merged onto v0.2.0, with the camera fix from the release review; only documents changed after these tests): all scripts load, the bot pilot, the support probe and the UI tours for pilot and Admiral: all OK, with no script errors.
+- **Replay test** (seed 7, with the drawing code running): two runs are identical. Play changes on purpose, so there are new reference runs: normal END f957a77a (180 lines), late start END ccbb4bde (60 lines).
+- **Camera:** camera_check for the pilot, Admiral and spectator seats, 0 failures; zoom_check 5,200 units across, as before.
+- **The AI opening:** the opening and Crossing probes on every round of the fix; the new opening_fix_check test (0 failures); and 40-minute matches with the fun, pilot and admiral audits.
+- **Two independent code reviews of the AI change.** The first (rounds 1 and 2) found two defects, which round 3 fixed. The second (round 3) found none.
+- **A release review of the whole release** found no code defect in the AI change and one small one in the camera change (a middle-button drag that stayed on after Alt+Tab). It is fixed, with two related cases (see For players). After the fix, the release-build, replay and camera checks were run again; the replay is identical, so the AI numbers above still stand.
+
+### Known issues
+
+- **A bloodier early game.** This comes from the new opening itself: the pilots meet at the Crossings in the first minute. In the first five minutes, kills rose by about half (99 to 149 over six matches; deaths 125 to 193). Retreats to repair before the first wave arrives went from 2 to 159, so the Crossings thin out between about 0:45 and 1:50.
+- **Stuck ships.** Stuck episodes rose from 2.82 to 4.63 per 100 pilot-minutes. 63 of the 215 come from one bomber stuck in the rocks from 6:35 to the end of one match; without it the rise is 16%. Time in contact with rocks barely moved (+2%). Crash deaths went from 6 to 7. A fix is being worked on.
+- **Fewer matches ended within 40 minutes:** 1 of 6 in v0.2.0, 0 of 6 now. Six matches are too few to tell.
+- **No Crossing turret for one side:** in 3 of 12 team-matches a side built no Crossing turret by 25:00. Each time the other side had taken all three Crossings early; in the two of these matches where its money was logged, this side was also short of money.
+- All match numbers come from matches between computer players.
+
+### For developers
+
+- AI only: PilotGoals (the opening, the first-wave fact TeamState.first_wave_at), PilotAI (the fall-back gate), PilotShopping (no shopping in the opening), AdmiralBuilder (the Crossing turret order, _crossings_in_order), AdmiralWaypoint, AdmiralCommand.set_waypoint(..., by_human), TeamState (waypoint_by_human), Rules (AI_OPENING_HOLD 10 s, AI_OPENING_MAX 180 s). The command overlay passes by_human = true; the computer Admiral passes false.
+- Camera: CameraRig's free mode for every seat; the new action center_on_ship (Space); Space left the "fire" action; ZoomMaxFeature asks CameraRig.zoom_limited(). After the release review: CameraRig._notification() ends a middle drag on focus loss, _pointer_inside() gates the edge pan and the edge peek, and World._notification() lets go of mouse_fire and mouse_special on focus loss.
+- New tests: opening_probe, crossing_probe, opening_fix_check, camera_check.
+- DESIGN rows C24, C25 and A14 (the opening), A15 (the camera).
+
 ## v0.2.0: rule sets
 
 ### For players

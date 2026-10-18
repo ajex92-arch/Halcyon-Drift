@@ -90,7 +90,7 @@ func refresh_slots(h: PilotProfile) -> void:
 func refresh_keys(role: String) -> void:
 	var keys := "H help · P pause"
 	if role == "admiral":
-		keys = "Tab Admiral board · B hangar · C camera · " + keys
+		keys = "Tab Admiral board · B hangar · C camera · Space center camera (hold to follow) · " + keys
 	elif role == "pilot":
-		keys = "B hangar · F dock/launch · R repair kit · hold Tab scores · " + keys
+		keys = "B hangar · F dock/launch · R repair kit · Space center camera (hold to follow) · hold Tab scores · " + keys
 	UiKit.set_text(_keys, keys)

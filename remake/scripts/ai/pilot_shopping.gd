@@ -169,21 +169,27 @@ func next_gear() -> String:
 
 ## Worth a trip home? Returns why ("hull:destroyer" = to buy a destroyer,
 ## "gear:suit_armored" = to buy that gear), or "" for "no, keep fighting".
-## Only when something specific is affordable, not right after launching,
-## and not with enemies close.
+## Only when something specific is affordable, not in the opening, not right
+## after launching, and not with enemies close.
 func wants_shopping(ship: Ship) -> String:
 	var brain := ai
 	var world := brain.world
 	var profile := brain.profile
-	# Step 1: not in the first 150 seconds after a launch. (Playtest: with
+	# Step 1: never in the opening (the first minutes, until our first
+	# wave reaches the Crossing: PilotGoals.opening_active()). A pilot has
+	# shopped at the mothership before it launched, so the opening needs no
+	# trip home.
+	if brain.goals.opening_active():
+		return ""
+	# Step 2: not in the first 150 seconds after a launch. (Playtest: with
 	# 60 s, 4-6 pilots per team were always flying home.)
 	if world.time - brain.launched_at < 150.0:
 		return ""
-	# Step 2: not with an enemy ship or minion within 2,500.
+	# Step 3: not with an enemy ship or minion within 2,500.
 	if world.any_enemy_ship_near(ship.global_position, 2500.0, ship.team):
 		return ""
 	var ts := world.teams[ship.team]
-	# Step 3: big ships and bombers never leave in the middle of our siege
+	# Step 4: big ships and bombers never leave in the middle of our siege
 	# (playtest: three destroyers at full hull left an assault together to
 	# buy battlecruisers the moment they unlocked).
 	if ts.siege_lane != "" and (not ship.is_small() or ship.hull_id == "bomber"):
@@ -191,14 +197,14 @@ func wants_shopping(ship: Ship) -> String:
 	# "Far" = more than 9,000 from our mothership's hull (or no mothership).
 	var ms := world.mothership(ship.team)
 	var far := ms == null or ms.hull_dist(ship.global_position) > 9000.0
-	# Step 4: a better hull from our wish list that we can afford (credits
+	# Step 5: a better hull from our wish list that we can afford (credits
 	# plus half our ship's value as trade-in, with 200 to spare).
 	for h: String in wish_list():
 		if h == ship.hull_id:
 			break
 		if ts.ship_unlocked(h) and profile.credits + ship.bounty_value() * Rules.HULL_TRADE_IN >= float(Ships.HULLS[h]["price"]) + 200.0:
 			return "hull:" + h
-	# Step 5: gear alone is worth the flight only with a good pile of
+	# Step 6: gear alone is worth the flight only with a good pile of
 	# credits (or when we'd want the repair anyway).
 	var g := next_gear()
 	# With the gear_mk2 feature, an upgrade can be worth a trip home too

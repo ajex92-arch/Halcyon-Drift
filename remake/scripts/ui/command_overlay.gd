@@ -143,7 +143,9 @@ func apply_at(p: Vector2) -> void:
 		"ward":
 			msg = cmd.place_ward(team, p)
 		"waypoint":
-			msg = cmd.set_waypoint(team, p)
+			# A human admiral's click: it declares a siege near the enemy
+			# mothership, and it counts as a human's waypoint (by_human).
+			msg = cmd.set_waypoint(team, p, true, true)
 		"move":
 			msg = cmd.move_mothership(team, p)
 		"fleet_move":

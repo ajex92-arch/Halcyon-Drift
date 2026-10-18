@@ -443,6 +443,22 @@ const PILOTS_PER_TEAM := 12
 ## Read it through move_unlock_time(), which lets a feature tune it.
 const MOTHERSHIP_MOVE_UNLOCK := 1200.0
 
+# --- AI pilots: the opening --------------------------------------------------------------
+# How the computer pilots (both teams) play the first minutes (PilotGoals,
+# PilotShopping). The numbers below are the rules; the spots they fly to
+# are worked out in PilotGoals.
+
+## The opening hold (seconds): for this long from the start of the match,
+## every AI pilot stays near its own mothership, so a human player can get
+## their bearings. After it, each pilot flies to its lane's Crossing node
+## and contests it (see PilotGoals.opening_active()).
+const AI_OPENING_HOLD := 10.0
+## The latest the opening can last (seconds of match time). It normally ends
+## earlier, when our first minion wave reaches the pilot's Crossing node;
+## this limit is the safety net for a wave that never gets there (it was
+## destroyed, or the team runs its minions through Fleet Command).
+const AI_OPENING_MAX := 180.0
+
 # --- variants (DESIGN.md A2: unclear conflicts are tested) ----------------------------
 # Where the design left a choice open, the game can run either way. Each
 # "variant" switch picks one of the options. The "C.." codes point at the

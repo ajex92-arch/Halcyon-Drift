@@ -137,5 +137,5 @@ text = "CONTROLS"
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 13
-text = "Mouse aims (the ship turns to face it). W thrust · S brake · A / D slide sideways · Shift boost · click or Space fire · right-click or G ability · Ctrl hold heading (big ships keep their shields facing a threat while turrets track the mouse) · arrow keys focus shields · 1-4 route energy · R repair kit · F dock · B hangar · Tab board · H help."
+text = "Mouse aims (the ship turns to face it). W thrust · S brake · A / D slide sideways · Shift boost · click fire · right-click or G ability · Ctrl hold heading (big ships keep their shields facing a threat while turrets track the mouse) · arrow keys focus shields · 1-4 route energy · R repair kit · F dock · B hangar · Tab board · Space center the camera on your ship (hold to follow it) · screen edge or middle-drag move the camera · H help."
 autowrap_mode = 3

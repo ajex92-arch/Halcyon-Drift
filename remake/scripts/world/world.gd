@@ -525,3 +525,13 @@ func _input(event: InputEvent) -> void:
 			mouse_fire = false
 		elif mb.button_index == MOUSE_BUTTON_RIGHT:
 			mouse_special = false
+
+
+## Godot calls this on window events. When the game loses focus (Alt+Tab,
+## the Windows key) with a mouse button held, its release may never come
+## here, so both buttons count as let go now; otherwise the guns could keep
+## firing after the player comes back.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		mouse_fire = false
+		mouse_special = false

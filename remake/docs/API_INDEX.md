@@ -59,6 +59,13 @@ changes.
 ## scripts/ai/pilot_goals.gd  (class_name PilotGoals extends RefCounted)
 - `func lane_id() -> String`
 - `func lane_front(lane: String, team: int) -> Vector2`
+- `func wave_front_s(lane: String, team: int) -> float`
+- `func rotation_lane_at(t: float) -> String`
+- `func rotation_lane() -> String`
+- `func opening_lane() -> String`
+- `func crossing_node(lane: String) -> ResourceNode`
+- `func opening_active() -> bool`
+- `func opening_goal(ship: Ship) -> Vector2`
 - `func think_lane(ship: Ship) -> void`
 - `func siege_point(lane: String, ship: Ship) -> Vector2`
 - `func think_jungle(ship: Ship) -> void`
@@ -132,6 +139,7 @@ changes.
 ## scripts/camera/camera_rig.gd  (class_name CameraRig extends Camera2D)
 - `func setup(w: World) -> void`
 - `func followed() -> Ship`
+- `func zoom_limited() -> bool`
 - `func zoom_limits() -> Vector2`
 - `func look_at_point(p: Vector2) -> void`
 - `func toggle_free() -> void`
@@ -146,7 +154,7 @@ changes.
 - `func deploy_bay(team: int, point: Vector2) -> String`
 - `func ward_blocker(team: int, point: Vector2) -> String`
 - `func place_ward(team: int, point: Vector2) -> String`
-- `func set_waypoint(team: int, point: Vector2, declare_siege: bool = true) -> String`
+- `func set_waypoint(team: int, point: Vector2, declare_siege: bool = true, by_human: bool = false) -> String`
 - `func move_blocker(team: int) -> String`
 - `func move_mothership(team: int, point: Vector2) -> String`
 - `func buy_minion(team: int, type_id: String, lane: String) -> String`
@@ -916,7 +924,7 @@ changes.
 - `func siege_stage_point(lane: String) -> Vector2`
 - `func siege_assault_point(lane: String) -> Vector2`
 - `func defending(now: float) -> bool`
-- `func set_waypoint(p: Vector2) -> void`
+- `func set_waypoint(p: Vector2, by_human: bool = false) -> void`
 - `func has_waypoint() -> bool`
 - `func in_waypoint(p: Vector2) -> bool`
 - `func note_respawn() -> void`

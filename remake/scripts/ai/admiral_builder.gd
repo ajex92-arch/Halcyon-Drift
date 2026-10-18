@@ -6,7 +6,9 @@ extends RefCounted
 ##
 ## HOW IT WORKS: each function walks a list of spots in a fixed order and
 ## builds at the first good one (or, for guard_inner_nodes(), at every
-## good one). A few words:
+## good one). The one exception: the first Crossing turret of more_turrets()
+## goes to the Crossing where most of our own pilots and minions are. A few
+## words:
 ##   - A "resource node" is an asteroid field with ore. "Inner" nodes sit
 ##     near one mothership (only that side may build there); "middle" nodes
 ##     are on the crossing in the centre of the map (either side may build).
@@ -22,12 +24,21 @@ extends RefCounted
 ## WHO USES IT: AdmiralAI makes one (AdmiralAI.builder) and its tick() calls
 ## these once a second, only when the money and timers allow it.
 
+## How far (world units) from a Crossing a pilot ship or minion of ours still
+## counts as "there" when the admiral picks the Crossing for its first turret
+## (more_turrets()). The same 1,500-unit disc in which an enemy ship stops us
+## from building at the node (TurretData.BUILD_CLEAR_RADIUS).
+const CROSSING_PRESENCE_R := TurretData.BUILD_CLEAR_RADIUS
+
 ## The game world (nodes, bays, wards, the map and the AdmiralCommand).
 var world: World
 ## Our team: 0 = Aurelian, 1 = Vhorr.
 var team := 0
 ## The admiral's lane helper (for points along a lane).
 var lanes: AdmiralLanes
+## A reusable list the spatial hash fills with nearby units (reusing one list
+## avoids making a new one for every question; see _ours_near()).
+var _scratch: Array = []
 
 
 ## Remember the world, our team and the lane helper. AdmiralAI makes this
@@ -67,15 +78,28 @@ func guard_inner_nodes(ts: TeamState) -> void:
 				cmd.build_turret(team, n.node_id, "pd")
 
 
-## Build ONE more turret, when we have spare money. First choice: a free
-## slot at one of our inner nodes (a torp turret if that node already has a
-## turret and we have the research, else a PD turret), keeping 300 credits
-## left over. Second choice: a PD turret at a middle node where we have
-## none yet, if we have 750 credits. With `inner_only` (the weak admiral
-## of the test option --admiral-ai=weak) the second choice is skipped.
+## Build ONE more turret, when we have spare money. First choice: a PD
+## turret at a middle node (a "Crossing") where we have none yet, if we have
+## 750 credits. The Crossings hold the middle of the map, so they come before
+## the extra turrets at home (user decision, 2026-10-17; before, they came
+## after). The FIRST Crossing turret goes where our own ships are (user
+## decision, 2026-10-18: "Where its ships are"); see _crossings_in_order().
+## Second choice: a free slot at one of our inner nodes (a torp
+## turret if that node already has a turret and we have the research, else a
+## PD turret), keeping 300 credits left over. With `inner_only` (the weak
+## admiral of the test option --admiral-ai=weak) the first choice is skipped.
 func more_turrets(ts: TeamState, inner_only: bool = false) -> void:
 	var cmd := world.command
-	# Step 1: our inner nodes, in map order (the node_persist variant: nearest
+	# Step 1: the middle nodes (not for a weak admiral).
+	if not inner_only:
+		for n in _crossings_in_order():
+			# One turret per middle node: more turned the lane centres into
+			# fortresses no wave could get past (playtest 2026-10-13).
+			if n.node_kind == "middle" and n.turret_count(team) < 1:
+				if cmd.turret_blocker(team, n.node_id, "pd") == "" and ts.can_afford(750.0):
+					cmd.build_turret(team, n.node_id, "pd")
+					return
+	# Step 2: our inner nodes, in map order (the node_persist variant: nearest
 	# our mothership first, see _nodes_in_order()).
 	for n: ResourceNode in _nodes_in_order():
 		if n.node_kind == "inner" and n.side == team and n.free_slot() >= 0:
@@ -84,16 +108,48 @@ func more_turrets(ts: TeamState, inner_only: bool = false) -> void:
 			if cmd.turret_blocker(team, n.node_id, ttype) == "" and ts.can_afford(float(TurretData.TURRETS[ttype]["cost"]) + 300.0):
 				cmd.build_turret(team, n.node_id, ttype)
 				return
-	# Step 2: the middle nodes (not for a weak admiral).
-	if inner_only:
-		return
+
+
+## The nodes to try for a Crossing turret, in order. Normally that is the
+## map's own order (World.nodes). Only the FIRST Crossing turret differs:
+## while we hold no Crossing, the allowed one (we have no turret there and
+## AdmiralCommand.turret_blocker has no objection) with the most of our own
+## pilots and minions within CROSSING_PRESENCE_R of it comes first, then the
+## rest in map order. A tie keeps the earlier node in map order, and with none
+## of our ships near any allowed Crossing the whole list stays in map order.
+## Only the world as it is now decides: no random numbers.
+func _crossings_in_order() -> Array:
+	var first: ResourceNode = null
+	var most := 0
 	for n in world.nodes:
-		# One turret per middle node: more turned the lane centres into
-		# fortresses no wave could get past (playtest 2026-10-13).
-		if n.node_kind == "middle" and n.turret_count(team) < 1:
-			if cmd.turret_blocker(team, n.node_id, "pd") == "" and ts.can_afford(750.0):
-				cmd.build_turret(team, n.node_id, "pd")
-				return
+		if n.node_kind != "middle":
+			continue
+		if n.turret_count(team) >= 1:
+			return world.nodes
+		if world.command.turret_blocker(team, n.node_id, "pd") != "":
+			continue
+		var here := _ours_near(n.global_position)
+		if here > most:
+			first = n
+			most = here
+	if first == null:
+		return world.nodes
+	var order: Array = [first]
+	for n in world.nodes:
+		if n != first:
+			order.append(n)
+	return order
+
+
+## How many of our live pilot ships and minions are within
+## CROSSING_PRESENCE_R of point `p`. (The spatial hash may list units a little
+## outside the circle, so the distance is checked.)
+func _ours_near(p: Vector2) -> int:
+	var count := 0
+	for u: Unit in world.unit_hash.query(p, CROSSING_PRESENCE_R, _scratch):
+		if u.alive and u.team == team and (u.kind == Unit.K_SHIP or u.kind == Unit.K_MINION) and u.global_position.distance_to(p) < CROSSING_PRESENCE_R:
+			count += 1
+	return count
 
 
 ## Launch one repair bay, if we are under the team limit

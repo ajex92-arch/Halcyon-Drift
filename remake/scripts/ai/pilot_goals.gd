@@ -12,8 +12,22 @@ extends RefCounted
 ##     turret that our minions aren't tanking. Then choose what to attack:
 ##     the enemy mothership during an assault, a structure to push, or an
 ##     enemy pilot to hunt.
+##   - the opening (opening_active(), opening_goal()): at the start of the
+##     match the station is somewhere else. For the first
+##     Rules.AI_OPENING_HOLD (10) seconds every AI pilot waits near its own
+##     mothership, so a human player can get their bearings. Then it flies
+##     to its lane's Crossing node (the ore node on the centre line) and
+##     contests it, even before any minion has launched. The opening ends
+##     when our first minion wave reaches that Crossing (or at
+##     Rules.AI_OPENING_MAX seconds), and the pilot goes back to the
+##     normal station behind the wave. Junglers count as "mid" for this:
+##     they contest The Crossing in the middle. The flex pilot contests the
+##     Crossing of the lane its rotation starts on, the top lane (see
+##     rotation_lane() and FLEX_ROTATION_SHIFT), and keeps that one for the
+##     whole opening.
 ##   - think_jungle(): small ships pick the nearest derelict camp (camps on
-##     our half of the map first) and clear it.
+##     our half of the map first) and clear it. A jungler joins the opening
+##     first and goes to its camp when the opening ends.
 ##   - think_home(): retreating, or going home to shop: fly to a repair bay
 ##     or to the mothership, and ask to dock when close to it.
 ##
@@ -32,6 +46,40 @@ extends RefCounted
 ##            lane: first "gather" at a staging point, then "assault".
 ##   tanking  our minions stand in an enemy turret's range, so it shoots
 ##            them instead of us.
+##   opening  the first minutes of a match, before our first minion wave
+##            gets to the middle of the map (see the list above).
+##   Crossing one of the three ore nodes on the centre line, x = 20000: the
+##            Top Crossing, The Crossing and the Bottom Crossing (kind
+##            "middle" in MapLayout.NODES).
+
+## How far (world units) short of the point level with a Crossing node on
+## the lane our wave's front minion may still be and count as "arrived".
+## (A little early, so the pilots there turn to escort the wave as it comes
+## up instead of waiting for it to pass.)
+const OPENING_ARRIVE := 300.0
+## In the opening, how far (world units) from the Crossing node's centre we
+## stand, on our side of it, in the first row. It clears the node's ore
+## rocks (radius 560) and the turret spots just outside them.
+const OPENING_STAND_OFF := 800.0
+## The gap (world units) between neighbouring pilots' spots, at the
+## Crossing and at the hold spot by the mothership.
+const OPENING_SPACING := 350.0
+## In the first seconds, how far (world units) past the mothership's bow
+## the nearest row of hold spots lies.
+const OPENING_HOLD_OUT := 600.0
+## When we fall back during the opening, how far (world units) we back off
+## toward our side.
+const OPENING_FALLBACK := 2200.0
+## Moves where the flex pilot's lane rotation starts (user decision,
+## 2026-10-17: "Start rotation on a side lane"). The lane is picked from
+## MapLayout.LANE_ORDER (top, mid, bot) by (seat number + this + the number
+## of 90-second periods so far) modulo 3. With 0 the flex pilot (seat 7)
+## started on the middle lane; with 2 it starts on the top lane and goes on
+## to the middle, then the bottom, then the top again, for the whole match.
+## Both teams use the same number, so the two flex pilots start on the same
+## lane (top stays top when the map is mirrored left to right, so the two
+## sides stay symmetric).
+const FLEX_ROTATION_SHIFT := 2
 
 ## The pilot brain this part belongs to (we read its profile and timers,
 ## and set its goal, target, state and camp). It is reached through a weak
@@ -72,13 +120,7 @@ func lane_front(lane: String, team: int) -> Vector2:
 	var world := brain.world
 	var pts := MapLayout.lane_points(lane, team)
 	# Step 1: the furthest-along live minion of ours on this lane.
-	var best_s := -1.0
-	for m in world.minions:
-		if m.team != team or not m.alive or m.lane != lane:
-			continue
-		var pr := Util.project_on_polyline(m.global_position, pts)
-		if float(pr["dist"]) < 2500.0 and float(pr["s"]) > best_s:
-			best_s = pr["s"]
+	var best_s := wave_front_s(lane, team)
 	# Step 2: no wave out: hold near our inner node on this lane.
 	if best_s < 0.0:
 		for n in world.nodes:
@@ -86,6 +128,144 @@ func lane_front(lane: String, team: int) -> Vector2:
 				return n.global_position + (Util.project_on_polyline(n.global_position, pts)["point"] - n.global_position) * 0.8
 		best_s = Util.polyline_length(pts) * 0.25
 	return Util.polyline_at(pts, best_s)
+
+
+## How far along `lane` (`s`, in world units from `team`'s end) the front of
+## that team's live minion wave has got, or -1 with no wave out. Only
+## minions within 2,500 of the lane line count.
+func wave_front_s(lane: String, team: int) -> float:
+	var pts := MapLayout.lane_points(lane, team)
+	var best_s := -1.0
+	for m in ai.world.minions:
+		if m.team != team or not m.alive or m.lane != lane:
+			continue
+		var pr := Util.project_on_polyline(m.global_position, pts)
+		if float(pr["dist"]) < 2500.0 and float(pr["s"]) > best_s:
+			best_s = pr["s"]
+	return best_s
+
+
+## The lane the flex pilot works at match time `t` (seconds): it moves to the
+## next lane (top, mid, bot, in MapLayout.LANE_ORDER) every 90 seconds, and
+## its seat number plus FLEX_ROTATION_SHIFT sets where it starts (seat 7
+## starts on the top lane).
+func rotation_lane_at(t: float) -> String:
+	return MapLayout.LANE_ORDER[(int(t / 90.0) + ai.profile.slot + FLEX_ROTATION_SHIFT) % 3]
+
+
+## The lane the flex pilot works right now (rotation_lane_at() for the
+## world's clock).
+func rotation_lane() -> String:
+	return rotation_lane_at(ai.world.time)
+
+
+## The lane whose Crossing this pilot contests in the opening: our own lane
+## (lane_id()), which is the middle for junglers; for the flex pilot the lane
+## its rotation starts on, kept for the whole opening (so it does not leave a
+## Crossing at 90 s, just before its wave gets there).
+func opening_lane() -> String:
+	return rotation_lane_at(0.0) if ai.profile.role == "flex" else lane_id()
+
+
+## The Crossing node of `lane` (the "middle" ore node on it), or null.
+func crossing_node(lane: String) -> ResourceNode:
+	for n in ai.world.nodes:
+		if n.node_kind == "middle" and n.lane == lane:
+			return n
+	return null
+
+
+## Is this pilot in the opening? True for the first Rules.AI_OPENING_HOLD
+## seconds, and after that until our first minion wave has reached our lane's
+## Crossing node (the wave's front is level with the node, less
+## OPENING_ARRIVE), or until Rules.AI_OPENING_MAX seconds of match time.
+## The arrival is a fact about the team and the lane, not about this pilot:
+## it is noted once in TeamState.first_wave_at (_note_first_waves()), by
+## whichever pilot of the team looks first, and every pilot's opening ends by
+## it, also a pilot that was dead, docked, retreating or flying home when the
+## wave got there (it used to start a second opening when that wave died
+## before the next one came). When the opening ends it ends for good:
+## PilotAI.opening_done is set and this stays false from then on. The lane is
+## opening_lane(): our own lane, the middle for junglers, and for the flex
+## pilot the lane its rotation starts on.
+func opening_active() -> bool:
+	var brain := ai
+	if brain.opening_done:
+		return false
+	var world := brain.world
+	if world.time >= Rules.AI_OPENING_MAX:
+		brain.opening_done = true
+		return false
+	if world.time < Rules.AI_OPENING_HOLD:
+		return true
+	var lane := opening_lane()
+	if crossing_node(lane) == null:
+		brain.opening_done = true
+		return false
+	var ts: TeamState = world.teams[brain.profile.team]
+	_note_first_waves(ts)
+	if ts.first_wave_at.has(lane):
+		brain.opening_done = true
+		return false
+	return true
+
+
+## Note, in TeamState.first_wave_at, every lane of team `ts` whose first
+## minion wave has now reached that lane's Crossing node (its front is level
+## with the node, less OPENING_ARRIVE) and is not noted yet. It looks at all
+## three lanes, whichever lane the asking pilot flies, so the arrival is
+## noted even when no pilot of that lane is flying at that moment. A lane
+## stays noted for the whole match.
+func _note_first_waves(ts: TeamState) -> void:
+	var now := ai.world.time
+	for lane: String in MapLayout.LANE_ORDER:
+		if ts.first_wave_at.has(lane):
+			continue
+		var node := crossing_node(lane)
+		if node == null:
+			continue
+		var s_node: float = Util.project_on_polyline(node.global_position, MapLayout.lane_points(lane, ts.team))["s"]
+		if wave_front_s(lane, ts.team) >= s_node - OPENING_ARRIVE:
+			ts.first_wave_at[lane] = now
+
+
+## Where to fly during the opening: a spot by our mothership's bow for the
+## first Rules.AI_OPENING_HOLD seconds, then our spot at our lane's
+## Crossing node. The Crossing spot is on our side of the node (toward our
+## mothership), OPENING_STAND_OFF from its centre in the first row and
+## OPENING_SPACING further back in the second row, and spread toward the
+## lane line by seat so pilots do not stack (seat / 2 gives each pilot of a
+## lane its own place, six of them at the middle). While falling back we
+## back off OPENING_FALLBACK toward our side.
+func opening_goal(ship: Ship) -> Vector2:
+	var brain := ai
+	var lane := opening_lane()
+	var node := crossing_node(lane)
+	if brain.world.time < Rules.AI_OPENING_HOLD or node == null:
+		return _opening_hold_spot(ship)
+	var toward := Vector2(-1.0 if ship.team == Rules.HALCYON else 1.0, 0.0)
+	var pts := MapLayout.lane_points(lane, ship.team)
+	var inward := (Vector2(Util.project_on_polyline(node.global_position, pts)["point"]) - node.global_position).normalized()
+	var idx := brain.profile.slot >> 1
+	var col := idx % 3
+	var row := 1 if idx >= 3 else 0
+	var spot := node.global_position + toward * (OPENING_STAND_OFF + OPENING_SPACING * float(row)) + inward * (OPENING_SPACING * float(col))
+	if brain.fallback_t > 0.0:
+		spot += toward * OPENING_FALLBACK
+	return spot
+
+
+## The pilot's own spot for the opening hold: past our mothership's bow, in
+## a grid of 3 rows (deeper out) by 4 columns (side to side) picked by seat,
+## so all 12 seats of a team get a different spot.
+func _opening_hold_spot(ship: Ship) -> Vector2:
+	var ms := ai.world.mothership(ship.team)
+	if ms == null:
+		return ship.global_position
+	var slot := ai.profile.slot
+	var ahead := Vector2.from_angle(ms.rotation)
+	var side := Util.starboard_of(ms.rotation)
+	return ms.global_position + ahead * (ms.half_len + OPENING_HOLD_OUT + OPENING_SPACING * float(slot % 3)) + side * (float(slot % 4) - 1.5) * OPENING_SPACING
 
 
 ## Lane state: choose our station, keep out from under enemy turrets, then
@@ -147,7 +327,11 @@ func think_lane(ship: Ship) -> void:
 ## Set the brain's goal to our station on the lane: behind our wave front
 ## by a distance that grows with our size, spread sideways by seat, then
 ## moved for the admiral's orders, a turret in trouble, or a hold point.
-## Each later step wins over the earlier ones.
+## Each later step wins over the earlier ones. In the opening (see
+## opening_active()) the first station is opening_goal() instead, unless a
+## human admiral's waypoint rally applies to this seat (the AI admiral's
+## waypoint does not count in the opening); the orders in the later steps
+## (turret in trouble, siege, defend, hold point) still win.
 func _pick_station(ship: Ship, ts: TeamState) -> void:
 	var brain := ai
 	var world := brain.world
@@ -156,12 +340,18 @@ func _pick_station(ship: Ship, ts: TeamState) -> void:
 	# next lane every 90 seconds.
 	var lane := lane_id()
 	if profile.role == "flex":
-		lane = MapLayout.LANE_ORDER[int(world.time / 90.0 + float(profile.slot)) % 3]
+		lane = rotation_lane()
 	# Late game (after 10:00): one laner from each lane (the middle seats 4,
 	# 5 and 6) and the flex gather on the admiral's waypoint while it is up.
 	# (Playtest: the odd seats are the whole mid trio, 1, 5 and 9, so mid
-	# stood empty for up to a third of the time.)
-	var rally := ts.has_waypoint() and world.time > 600.0 and (profile.slot in [4, 5, 6] or profile.role == "flex")
+	# stood empty for up to a third of the time.) In the opening the same
+	# seats obey a waypoint too, whatever the time, but only one a HUMAN
+	# admiral placed (TeamState.waypoint_by_human): a human admiral's order
+	# wins over the opening. The AI admiral's own waypoint, which goes up at
+	# 60 s in every match, does not: it would pull those seats off their
+	# Crossings while the waves are still on their way (DESIGN.md C25).
+	var opening := opening_active()
+	var rally := ts.has_waypoint() and (world.time > 600.0 or (opening and ts.waypoint_by_human)) and (profile.slot in [4, 5, 6] or profile.role == "flex")
 	# Feature hook (the group_late variant, GroupLateFeature): after 25:00 it
 	# replaces this rally with its own grouping on the push lane. `grouped`
 	# is empty (nothing changes) unless the feature is on, active for our
@@ -176,27 +366,36 @@ func _pick_station(ship: Ship, ts: TeamState) -> void:
 		lane = world.map.lane_for(ts.waypoint)
 	elif not grouped.is_empty():
 		lane = grouped["lane"]
-	# Step 2: stand back from our wave front: 500 (small), 750 (medium),
-	# 900 (large) or 1,100 (capital), plus 2,200 more while falling back.
-	var pts := MapLayout.lane_points(lane, ship.team)
-	var front := lane_front(lane, ship.team)
-	var pr := Util.project_on_polyline(front, pts)
-	var back := float([500.0, 750.0, 900.0, 1100.0][Rules.size_index(ship.size_class)])
-	if brain.fallback_t > 0.0:
-		back += 2200.0
-	var s_goal := maxf(0.0, float(pr["s"]) - back)
-	if not grouped.is_empty():
-		s_goal = maxf(0.0, float(grouped["s_goal"]) - (2200.0 if brain.fallback_t > 0.0 else 0.0))
-	if rally:
-		# Hold at the waypoint unless the wave front is further on: move up
-		# to 600 short of it, unless our station is already closer or past.
-		var s_wp: float = Util.project_on_polyline(ts.waypoint, pts)["s"]
-		s_goal = maxf(minf(s_goal, s_wp), s_wp - 600.0) if s_goal < s_wp else s_goal
-	brain.goal = Util.polyline_at(pts, s_goal)
-	# Step 3: spread pilots across the lane so they don't stack on one spot
-	# (450 to one side, the middle, or 450 to the other side, by seat).
-	var side := Util.port_of((Util.polyline_at(pts, s_goal + 50.0) - Util.polyline_at(pts, s_goal)).angle())
-	brain.goal += side * float((profile.slot % 3) - 1) * 450.0
+	# The opening (no admiral order, no feature grouping): our own lane
+	# (the middle for junglers and the flex pilot), and the station is the
+	# one opening_goal() gives instead of a spot behind the wave.
+	var pts: PackedVector2Array
+	if opening and not rally and grouped.is_empty():
+		lane = opening_lane()
+		pts = MapLayout.lane_points(lane, ship.team)
+		brain.goal = opening_goal(ship)
+	else:
+		# Step 2: stand back from our wave front: 500 (small), 750 (medium),
+		# 900 (large) or 1,100 (capital), plus 2,200 more while falling back.
+		pts = MapLayout.lane_points(lane, ship.team)
+		var front := lane_front(lane, ship.team)
+		var pr := Util.project_on_polyline(front, pts)
+		var back := float([500.0, 750.0, 900.0, 1100.0][Rules.size_index(ship.size_class)])
+		if brain.fallback_t > 0.0:
+			back += 2200.0
+		var s_goal := maxf(0.0, float(pr["s"]) - back)
+		if not grouped.is_empty():
+			s_goal = maxf(0.0, float(grouped["s_goal"]) - (2200.0 if brain.fallback_t > 0.0 else 0.0))
+		if rally:
+			# Hold at the waypoint unless the wave front is further on: move up
+			# to 600 short of it, unless our station is already closer or past.
+			var s_wp: float = Util.project_on_polyline(ts.waypoint, pts)["s"]
+			s_goal = maxf(minf(s_goal, s_wp), s_wp - 600.0) if s_goal < s_wp else s_goal
+		brain.goal = Util.polyline_at(pts, s_goal)
+		# Step 3: spread pilots across the lane so they don't stack on one spot
+		# (450 to one side, the middle, or 450 to the other side, by seat).
+		var side := Util.port_of((Util.polyline_at(pts, s_goal + 50.0) - Util.polyline_at(pts, s_goal)).angle())
+		brain.goal += side * float((profile.slot % 3) - 1) * 450.0
 	# Step 4: defend our turrets on this lane when enemy pilots are hitting
 	# them (if within 9,000 of us, and not while falling back): park 300
 	# from the turret, toward our end of the lane.
@@ -267,6 +466,15 @@ func think_jungle(ship: Ship) -> void:
 	var brain := ai
 	if not ship.is_small():
 		brain.state = "lane"
+		return
+	# Step 0: the opening. A jungler goes out with the lane pilots first (to
+	# the middle Crossing: lane_id() is "mid" for it) and does everything a
+	# lane pilot does there, including obeying the orders that win over the
+	# opening (defend, hold point). Its camps wait until our first wave
+	# reaches the Crossing; the state stays "jungle", so the camp choice
+	# below simply starts then.
+	if opening_active():
+		think_lane(ship)
 		return
 	# Step 1: our camp is gone (or we have none): choose a new one.
 	if brain.camp == null or not is_instance_valid(brain.camp) or not brain.camp.alive:

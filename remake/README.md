@@ -69,7 +69,7 @@ From a terminal: `godot --path remake -- --preset=within` (or `pick`).
 | W / S | Thrust / brake and reverse |
 | A / D (Q / E) | Slide left / right |
 | Shift | Boost (strike craft) |
-| Left click / Space | Fire |
+| Left click | Fire |
 | Right click / G | Ship ability |
 | Ctrl (hold) | Lock heading, so turrets keep tracking while the hull holds its facing |
 | Arrow keys | Focus shields front / rear / left / right (press again to balance) |
@@ -78,7 +78,9 @@ From a terminal: `godot --path remake -- --preset=within` (or `pick`).
 | F | Dock at the mothership (when close) / launch when docked |
 | B | Hangar |
 | Tab | Admiral board (Admiral) / scoreboard while held (pilots) |
-| C | Admiral: free camera or follow your own ship |
+| Space | Center the camera on your ship (on your mothership when you have no ship); hold it to keep the camera centered as you fly, let go and it is free again |
+| Screen edge, middle-drag, minimap click | Move the camera anywhere on the map (W / A / S / D too, while you are not flying) |
+| C | Admiral: switch the camera between free and following your own ship |
 | V | Flight assist on/off |
 | Wheel, + / - | Zoom (pilots are limited by ship size) |
 | P | Pause |
@@ -138,6 +140,13 @@ godot --headless --path remake --fixed-fps 60 -- --auto --all-ai --no-pilots --n
 
 # Player controls through real input actions
 godot --headless --path remake --fixed-fps 60 -- --auto --role=pilot --bot=input --no-pilots --no-admiral-ai --test=bot_pilot
+
+# The AI opening's rules: the waypoint, no second opening, the first Crossing turret
+godot --headless --path remake --fixed-fps 60 -- --all-ai --seed=301 --test=opening_fix_check
+
+# The camera: Space, the free pilot camera and the zoom-out limit
+# (--role=pilot or admiral; for the spectator use --all-ai instead of --auto --role --bot)
+godot --headless --path remake --fixed-fps 60 -- --auto --role=pilot --bot=input --no-pilots --no-admiral-ai --test=camera_check
 
 # Every script and scene loads
 godot --headless --path remake -- --auto --all-ai --test=load_all

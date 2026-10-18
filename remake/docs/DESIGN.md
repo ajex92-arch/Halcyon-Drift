@@ -98,6 +98,8 @@ Pillars:
 | C21 | Team name: the good-guy team (team 0, amber) was called Halcyon, the same word as the Halcyon Drift (the open question in A16). | **Decided by the user, 2026-10-16:** rename the team to **Aurelian**, the user's own pick for an uncommon good-guy name. Cinder (team 1, red) keeps its name, and Halcyon Drift stays the name of the project and of the asteroid belt. Aurelian is the name in all player-facing text, docs and comments. Done as a split between what the player sees and the internal label: `Rules.TEAM_DISPLAY` holds the player-facing names, and `Rules.display_label()` swaps the label in text that was built from an internal one (the place names "Halcyon Top/Mid/Bottom", the end screen's reason). `Rules.TEAM_NAMES` stays the internal label "Halcyon", together with `Rules.HALCYON`, the scene node names (and the node names themselves), logs, JSON, test output and the tools, so every past research log and baseline stays comparable (docs/CODE_GUIDE.md, "Team names"). Unchanged on purpose: the user's verbatim documents and older log entries. Display only: no game logic touched. |
 | C22 | Fleet Command limit: the requirements file says the late-game module limits friendly minions to 30 (`USER_REQUIREMENTS_2026-10-13.md`); both v0.2.0 rule sets use 60. | **Decided by the user, 2026-10-17:** "Make 60 the requirement." The Fleet Command limit is now **60** (it was 30). Both rule sets, "Within requirements" and "Council's pick", use 60, so they stay within the amended requirements. The standard rules keep v0.1.0's 30 in v0.2.0, because v0.2.0 promises that the default game is unchanged (`fleet_cap` defaults to "30"). Any limit other than 60 is a requirement change (REQ-CHANGE). The user's verbatim requirements file is not edited: this row is the amendment. |
 | C23 | Team 1 display name: the enemy team (team 1, red) was called Cinder. | **Decided by the user, 2026-10-17:** the enemy team's display name changes from Cinder to **Vhorr**, everywhere, like Aurelian (C21). Vhorr is the name in all player-facing text, docs and comments. Done with the same split as C21: `Rules.TEAM_DISPLAY` holds the player-facing names, and `Rules.display_label()` swaps the internal label in text that was built from one (the place names "Cinder Top/Mid/Bottom", the match-over reason). `Rules.TEAM_NAMES` stays the internal label "Cinder", together with `Rules.CINDER`, `Palette.CINDER`, `Roster.CINDER`, the scene node names, logs, JSON, test output and the tools, so every past research log and baseline stays comparable (docs/CODE_GUIDE.md, "Team names"). Unchanged on purpose: the user's verbatim documents and older log entries (C20, C21, A16 and the PROGRESS entries before 2026-10-17 still say Cinder). Display only: no game logic touched. |
+| C24 | AI opening: how the computer pilots play the first minutes. The user's report: "Ive noticed that AI player ships at the start of the game do not immediately head out to contest the center map points, and instead hover around the left map points and wait for the minions to spawn. Even then, many of the AI player ships head back to the mothership to shop before returning to escort the minions to the middle of the map. This is an incorrect behavior. The AI player ships should stay near the mothership for the first 10 seconds of the match to allow the human player to get their bearings, then head to the middle map points to contest them, even before the minions spawn or reach the middle of the map points themselves." | **Decided by the user, 2026-10-17** (ships as v0.2.1): the text above is the requirement, plus the user's answer on the junglers: "Middle first, then camps". Done in the AI layer only (`Rules.AI_OPENING_HOLD` = 10 s, `Rules.AI_OPENING_MAX` = 180 s, `PilotGoals.opening_active()` and `opening_goal()`, `PilotShopping.wants_shopping()`; see A14). The "middle map points" are the three Crossing nodes on the centre line; every AI pilot of both teams contests the one on its lane, the junglers contest the middle one, and the flex pilot the top one (C25). The opening ends per lane when the team's first minion wave reaches that Crossing, and then the junglers peel off to their camps. No trips home to shop in the opening. A human admiral's waypoint (not the AI admiral's own: C25), a siege, a defend call and a test's hold point still win. The simulation core, the win condition and all other rules are unchanged, and the human pilot is unaffected. |
+| C25 | The Crossing turrets and the flex pilot, after the opening fix. The user's answers to the questions of C24, 2026-10-17: "Yes, that is what i want. These middle of the map lane turrets should be priority for the Admiral to build as they help secure map control. If the AI pilots do not try and contest the zone it cannot be captured so the Admiral cannot build a turret there." (The early fight at the Crossings stays as built.) On the Admiral: "Only reorder the extras for now. However it should be made more obvious to both teams that a point is being contested, more obvious as to how long a point needs to be uncontested before it can be build on, and give more opportunity for counterplay." On the flex pilot: "Start rotation on a side lane". A third round of questions, 2026-10-18, after an independent review of the opening fix. On the AI admiral's own waypoint (it goes up at 60 s in every AI match and pulled the waypoint seats 4, 5, 6 and the flex pilot off their Crossings until the waves arrived): "Only a human admiral's". On where each admiral builds its first Crossing turret (the first allowed one in map order gave the Top Crossing to whichever team had the money first: Aurelian took it in 6 of 6 test matches): "Where its ships are". | **Decided by the user, 2026-10-17** (ships as v0.2.1). The code has no capture step: a Crossing is held by whoever has a live turret there, and the build check only needs no enemy turret there, a free slot, no rebuild lock and no enemy ship or minion within 1,500 (ResourceNode.build_blocker). So (1) AdmiralBuilder.more_turrets() now picks the Crossing turret (one PD per Crossing, 750 credits) before the extra turrets at the inner nodes (it was after them); nothing else about turrets changed. (2) The flex pilot's 90-second lane rotation now starts on the top lane (PilotGoals.FLEX_ROTATION_SHIFT = 2): top, mid, bot, then top again, for the whole match; before it was mid, bot, top. Both teams use the same lane, which keeps the two sides symmetric when the map is mirrored left to right. In the opening it stays on the top Crossing. (3) NOT built, kept for a later design item: making it clearer to both teams that a point is contested, how long a point must stay uncontested before it can be built on, and more counterplay. **Third round (decided by the user, 2026-10-18; ships in the same v0.2.1):** (4) In the opening, seats 4, 5, 6 and the flex pilot follow a waypoint only when a human admiral placed it (TeamState.waypoint_by_human, set through the new by_human argument of AdmiralCommand.set_waypoint: the command overlay passes true, the AI admiral false); the AI admiral's own waypoint no longer pulls them off their Crossings. Outside the opening nothing changes: from 10:00 any waypoint rallies them, and a human admiral's waypoint still wins over the opening. (5) The admiral's first Crossing turret goes to the allowed Crossing (no turret of its own there, build check passes) with the most of its own pilots and minions within 1,500 of it (the same disc as the build check's "enemy ships too close"; AdmiralBuilder._crossings_in_order()). A tie keeps the map order (Top, Middle, Bottom), and so does a Crossing choice with none of its ships near any allowed Crossing. Once the team holds a Crossing, the later Crossing turrets and the extra turrets at home follow (1) unchanged. (6) Two fixes from the review, not asked about: the first wave's arrival at a Crossing is noted once per team and lane (TeamState.first_wave_at), so a pilot that was dead, docked or away at that moment can no longer start a second opening when that wave dies; and a jungler in the opening falls back when hurt and outnumbered, as a lane pilot does (it did not before). |
 
 ### A3. Roles and the core loop
 
@@ -455,9 +457,39 @@ Pacing target in AI matches: bombers ~3–4 min, corvettes ~6–8, frigates
   facing the threat and retreat when isolated. AI uses shield focus and
   energy routing. Skill varies per pilot (aim error, reaction, greed).
   **No idle orbiting:** stationary goals are held with a stop, not circled.
+- **The opening (added 2026-10-17, v0.2.1, C24):** for the first 10 seconds
+  (`Rules.AI_OPENING_HOLD`) every AI pilot of both teams waits near its own
+  mothership, so a human player can get their bearings. From 10 s each AI
+  pilot flies to its lane's Crossing node (the three ore nodes on the
+  centre line, x = 20000) and contests it, on its own side of the node and
+  spread by seat, even before any minion has launched. Junglers contest
+  the middle Crossing. The flex pilot contests the top Crossing: its
+  90-second lane rotation (top, mid, bot, then top again) now starts on the
+  top lane instead of the middle one, for the whole match, and it keeps the
+  top Crossing until the opening ends (C25). Both teams use the same lane
+  for it, so the two sides stay symmetric. The opening ends, per lane, when
+  our first minion wave reaches that Crossing (or at
+  `Rules.AI_OPENING_MAX`, 180 s, if it never does): the pilots then station
+  behind the wave front as before, and the junglers go to their camps.
+  The arrival is one fact for the whole team and lane (noted once, by
+  whichever pilot sees it first), not a private matter of each pilot: a
+  pilot that was dead, docked or flying home when the wave got there is
+  done as soon as it flies again, and cannot start a second opening when
+  that wave dies (C25). There are no trips home to shop in the opening
+  (pilots shop before they launch); a retreat for low health still
+  happens, and a pilot that is hurt and outnumbered falls back, junglers
+  too. A waypoint a human admiral placed, a siege, a "defend the
+  mothership" call and a test's hold point still win over the opening. The
+  AI admiral's own waypoint (it goes up at 60 s in every match) does not:
+  it does not pull the waypoint seats (4, 5, 6 and the flex pilot) off
+  their Crossings (C25).
 - **Minions:** low skill: follow lane, simple aggro, simple aim.
 - **Admiral AI:** build plan through the tree, turrets at inner nodes
-  first, drones to target count, bays behind contested lanes, wards at
+  first (one at each; then, with spare money, one PD turret at each middle
+  node, the Crossings, before any extra turret at home: reordered
+  2026-10-17, C25; the first Crossing turret goes to the Crossing where
+  the admiral's own pilots and minions are, 2026-10-18, C25), drones to
+  target count, bays behind contested lanes, wards at
   jungle entrances and the connector, waypoint on the lane being pushed,
   mothership upgrades mid/late (no Fleet Command: it starved AI pushes),
   mothership advance after 20:00 when at least even in fleet strength
@@ -504,9 +536,19 @@ Pacing target in AI matches: bombers ~3–4 min, corvettes ~6–8, frigates
   turrets per node, bays, wards), Mothership (upgrades, move), Fleet
   (waypoint, minion control). Map tools with click-to-place.
 - **Scoreboard** (Tab for pilots), **How to play** (H), **End screen**.
-- **Camera:** pilots follow their ship; max zoom-out scales with ship size
-  (visible width ≈ S 5,200, M 6,400, L 8,000, C 10,000); limited edge peek.
-  Admiral: free camera anywhere, any zoom.
+- **Camera:** every seat has a free camera that stays where the player puts
+  it, anywhere on the map: a screen edge or the middle-mouse drag pans, a
+  minimap click jumps, and W/A/S/D pan only while the human is not flying
+  (flying, they steer the ship). **Space** centers the camera on the ship (no
+  ship, docked or dead: on the spot in front of the mothership); holding it
+  keeps the camera centered while the ship moves, and letting go frees it
+  again from where it is. A pilot's camera also jumps to the ship when it
+  launches. Space is not a fire key any more (left mouse fires). Pilots:
+  max zoom-out scales with ship size (visible width ≈ S 5,200, M 6,400,
+  L 8,000, C 10,000), so a pilot pans a limited window over the whole map.
+  Admiral and spectator: any zoom, the whole map. The Admiral's C key
+  switches to a follow camera (glides after the ship, looks ahead, limited
+  edge peek, a pilot's zoom limit) and back.
 - Wording conventions from v1's clarity pass.
 
 ### A16. Open questions (user decisions)

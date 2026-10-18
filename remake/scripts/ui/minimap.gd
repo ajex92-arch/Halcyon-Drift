@@ -14,9 +14,10 @@ extends Control
 ## waypoint and a box for what the camera shows.
 ## The whole 40,000 x 26,000 world is shrunk to 300 pixels wide: k is that
 ## shrink factor (map pixels per world unit, 300 / 40,000 = 0.0075).
-## Clicks: the Admiral and spectators left-click (or drag) to move the
-## camera there; with an Admiral map tool armed, a left click places it
-## there instead (CommandOverlay.apply_at). A right click gives selected
+## Clicks: everyone left-clicks (or drags) to move the camera there (an
+## Admiral who follows their ship with C keeps the camera on it); with an
+## Admiral map tool armed, a left click places it there instead
+## (CommandOverlay.apply_at). A right click gives selected
 ## Fleet Command minions a move order (CommandOverlay.order_at).
 ##
 ## WHO USES IT: Hud makes it from scenes/ui/minimap.tscn and calls
@@ -92,7 +93,7 @@ func _gui_input(event: InputEvent) -> void:
 			var p := to_world(mb.position)
 			# Left: place the armed map tool, or move the camera and start
 			# a drag. (CameraRig.look_at_point only moves a free camera,
-			# so a pilot's camera stays on their ship.)
+			# so an Admiral who follows their ship stays on it.)
 			if mb.button_index == MOUSE_BUTTON_LEFT:
 				if overlay != null and overlay.tool != "":
 					overlay.apply_at(p)

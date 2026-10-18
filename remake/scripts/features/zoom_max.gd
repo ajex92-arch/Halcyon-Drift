@@ -50,10 +50,11 @@ func install(w: World) -> void:
 	world = w
 
 
-## Every drawn frame: if the human's camera follows a ship and is zoomed out
-## further than the ordinary limit for that ship's size, count the frame.
+## Every drawn frame: if the human's camera has a pilot's zoom limit
+## (CameraRig.zoom_limited()), the human has a ship and the camera is zoomed
+## out further than the ordinary limit for that ship's size, count the frame.
 func _process(_dt: float) -> void:
-	if world == null or world.camera == null or world.camera.free:
+	if world == null or world.camera == null or not world.camera.zoom_limited():
 		return
 	var s := world.camera.followed()
 	if s == null:

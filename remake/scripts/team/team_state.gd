@@ -4,9 +4,10 @@ extends RefCounted
 ## whole side, not to one ship or one pilot, is kept here: the team's
 ## money (the treasury), its tech tree (facilities and research) and the
 ## upgrades research has given, who sits in the admiral's seat, the rally
-## waypoint, the late-game siege and the "defend the base!" call, respawn
-## strain, the mining-drone build line, and a few numbers for the end
-## screen. DESIGN.md A7, A12, A13.
+## waypoint (and whether a human placed it), when each lane's first minion
+## wave got to its Crossing (the AI opening), the late-game siege and the
+## "defend the base!" call, respawn strain, the mining-drone build line, and
+## a few numbers for the end screen. DESIGN.md A7, A12, A13.
 ##
 ## HOW IT WORKS: there are two of these, one per team (World.teams). Every
 ## tick (one small step of the game clock; `dt` is its length in seconds)
@@ -155,6 +156,20 @@ var plan_hook := Callable()
 var waypoint := Vector2.INF
 ## Match time (seconds) when the waypoint runs out.
 var waypoint_until := 0.0
+## True when the waypoint was placed by a human admiral (the order came
+## through the command overlay), false when the AI admiral placed it. In the
+## opening, AI pilots follow only a human's waypoint (PilotGoals._pick_station).
+var waypoint_by_human := false
+
+# --- the AI opening (the real code is in PilotGoals) ----------------------------
+
+## Per lane ("top", "mid", "bot"): the match time (seconds) at which our first
+## minion wave was first seen level with that lane's Crossing node. A lane is
+## missing from the dictionary until then. PilotGoals.opening_active() writes
+## it, once per lane; it is a fact about the team and the lane, not about one
+## pilot, so a pilot that was dead, docked or away when the wave got there
+## still ends its opening as soon as it flies again.
+var first_wave_at := {}
 
 # --- siege and defend (the real code is in TeamSiege and TeamDefense) -----------
 
@@ -379,11 +394,13 @@ func defending(now: float) -> bool:
 
 # --- waypoint -------------------------------------------------------------------
 
-## Put the rally waypoint at `p` for Rules.WAYPOINT_TIME (75 s).
+## Put the rally waypoint at `p` for Rules.WAYPOINT_TIME (75 s), and note
+## whether a human admiral placed it (`by_human`, see waypoint_by_human).
 ## AdmiralCommand.set_waypoint() calls this, for human and AI admirals.
-func set_waypoint(p: Vector2) -> void:
+func set_waypoint(p: Vector2, by_human: bool = false) -> void:
 	waypoint = p
 	waypoint_until = world.time + Rules.WAYPOINT_TIME
+	waypoint_by_human = by_human
 
 
 ## Is a waypoint set, and not run out yet?

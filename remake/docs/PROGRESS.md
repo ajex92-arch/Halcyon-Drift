@@ -814,3 +814,132 @@ much of that back). Next: pass 2 (targeting + admiral) and minion re-targeting.
 - Measured on this same file (seed 7, --speed=4, 1280x720, six pictures from 1:30 to 20:00): units in view
   3, 0, 0, 0, 0, 0 before the fix and 14, 12, 21, 22, 22, 22 after it, 0 failures, no script error.
 - Only the test script changes: no game code, so every match plays exactly as before.
+
+### 2026-10-17/18: the AI opening fix, rounds 1-3 (M-03, for v0.2.1)
+
+- AI opening fix (user report and decision, 2026-10-17; ships as v0.2.1; DESIGN.md C24 and A14). The user saw the AI
+  ships hover around their own inner nodes until the minions spawned, and some fly home to shop before escorting the
+  minions to the middle. Now, for the first 10 seconds (Rules.AI_OPENING_HOLD) every AI pilot of both teams waits near
+  its own mothership; from 10 s each one flies to its lane's Crossing node (the three ore nodes on the centre line) and
+  contests it, even before any minion has launched. Junglers contest the middle Crossing, then go to their camps; the flex pilot
+  contests the top Crossing (its lane rotation now starts on the top lane; second-round entry below). The opening ends per lane when the team's first minion wave reaches that Crossing (or at
+  Rules.AI_OPENING_MAX, 180 s). No trips home to shop in the opening; retreats for low health still happen; an admiral's
+  waypoint, a siege, a defend call and a test's hold point still win. AI layer only (PilotGoals.opening_active() and
+  opening_goal(), PilotShopping.wants_shopping(), PilotAI.opening_done): no change to the simulation core, the win
+  condition or other rules, and the human pilot is unaffected. New test: tests/opening_probe.gd (--test=opening_probe).
+  Measured on seeds 301-306 (all-AI, 300 s), before then after: distance to the own mothership at 10 s, 6,000 on average
+  (none of the 144 pilots within 3,000) then 840 (all within 1,200); first pilots within 1,500 of the Crossing, 92 s at
+  the earliest and only together with the first wave, then at 24-36 s (all 144 pilots, a median of 68-77 s before the wave); shop trips before the first
+  wave, 0 then 0 (the first shop trip of any pilot was at 173 s before and 175 s after, so trips home were never the
+  cause of the empty Crossing); with the fix the junglers choose a camp when the wave arrives (24 of 24). The price is a much earlier and
+  heavier fight, since both teams reach the Crossing at the same time: pilot deaths in the first 300 s went from 125 to
+  232 over the 6 seeds, first blood from minute 1.7 to 0.55, and retreats before the first wave from 2 to 181. Full
+  matches (2,400 s, seeds 301-306, fun_probe, pilot_audit, admiral_audit; none of the fix matches ended in 40 minutes, one
+  baseline match did): kills per minute +9%, deaths per pilot +9%, fights +17%, mining drones lost +7%, admiral decisions
+  unchanged, rock contact -26%, stuck episodes +16% (131 to 152; the count before 10:00 is the same, 16 and 15; 4 and 9
+  before 5:00). Flagged for the user: the stuck episodes, the "skirmish ramps into battle" fun ingredient (-22: the fights
+  now start at once instead of ramping up), and the share of matches that end in 40 minutes (1 of 6, then 0 of 6).
+  Determinism of the final build: see the second-round entry below.
+- New test tests/crossing_probe.gd (--test=crossing_probe): when each team gets a turret at each Crossing node, how long
+  it stands, and, second by second, what the admiral's build check answers there (free, enemy ships near, enemy turret,
+  rebuild lock, full). Measuring only; the AI admiral's turret order is unchanged.
+- AI opening, second round (user decisions of 2026-10-17, DESIGN C25; ships in the same v0.2.1). (1) The AI admiral's
+  AdmiralBuilder.more_turrets() now picks the Crossing turret (one PD turret per middle node, 750 credits) before the
+  extra turrets at the inner nodes; nothing else about its turrets changed (no new build step, no capture rule: the code
+  has none, a Crossing is held by whoever has a live turret there and the build check needs no enemy turret, a free
+  slot, no rebuild lock and no enemy ship or minion within 1,500). (2) The flex pilot's 90-second lane rotation now
+  starts on the top lane (PilotGoals.FLEX_ROTATION_SHIFT = 2): top, mid, bot, instead of mid, bot, top, for the whole
+  match, the same for both teams (top stays top when the map is mirrored left to right); in the opening it keeps the top
+  Crossing. (3) Not built, kept as a later design item: making it clearer to both teams that a point is contested, how
+  long it must stay uncontested before it can be built on, and more counterplay. New test: tests/crossing_probe.gd.
+  Measured on seeds 301-306 against the v0.2.0 game: the opening is as before (every AI pilot within 1,200 of its mothership
+  at 10 s; first pilot at its Crossing at 24-36 s, junglers 27-28 s, the flex pilot 34 s at the top Crossing; 72-77 s before the
+  first wave; no shop trip before the wave); pilot deaths in the first 300 s 125 to 191, first blood minute 1.73 to 0.61.
+  Full matches (2,400 s): kills per minute +1%, deaths per pilot +1%, fights +16%, mining drones lost -2%, rock contact
+  -10%, crash deaths 0.13 to 0.02, admiral decisions 2.92 to 3.08 per minute (the band is 0.5-3.0), stuck episodes per 100
+  pilot-minutes 2.82 to 3.10 (+10%; 131 to 134 in all, but 4 to 23 in the first 5 minutes and 16 to 30 in the first 10,
+  from a few ships stuck again and again near the Crossings: the known asteroid snag, not fixed), matches that end in 40
+  minutes 1 to 2 of 6 (all three ended matches in both builds were won by Vhorr), FUN 62.0 to 61.7. The reorder alone barely
+  moves the Crossing turrets (they are limited by money: the admiral has 300-500 credits at 5-10 minutes and builds extras
+  only over 800 spare): the first turret at a Crossing went up at a median of 530-960 s before and 590-1,360 s after, 22 of
+  36 team-and-node slots had one by 25:00 before and 23 after, and 20 turrets were lost against 11. Determinism: two runs of
+  the final build agree; normal END 6f268d9d (180 hash lines), late END ccbb4bde (60 hash lines). The late run is no
+  longer the v0.1.0 one (4bccf106): the turret order alone gives 880f0eca, with the flex shift ccbb4bde.
+- AI opening, third round (user decisions of 2026-10-18, DESIGN.md C25 items 4 to 6; ships in the same v0.2.1). An
+  independent review of the opening fix found two small defects, which are fixed, and the user answered two questions,
+  which are built. (1) The first wave's arrival at a Crossing is now one fact per team and lane
+  (TeamState.first_wave_at, noted once by PilotGoals._note_first_waves(), which looks at all three lanes whichever
+  pilot asks), not something each pilot had to see itself. A pilot that was dead, docked, retreating or flying home
+  when the wave got there used to start a second opening when that wave died before the next one came; now it is done
+  at its first think. (2) A jungler in the opening falls back when it is hurt and outnumbered, as a lane pilot does:
+  the rule in PilotAI._think() was gated on the lane state, and a jungler's state stays "jungle" while it runs
+  think_lane(). (3) "Only a human admiral's" (the user): in the opening the waypoint seats (4, 5, 6 and the flex
+  pilot) follow a waypoint only when a human admiral placed it (TeamState.waypoint_by_human, set through the new
+  by_human argument of AdmiralCommand.set_waypoint, default false; the command overlay passes true, AdmiralWaypoint
+  false). The AI admiral's own waypoint goes up at 60 s in every match and used to pull those seats off their
+  Crossings. Outside the opening nothing changes: from 10:00 any waypoint rallies those seats, and a human admiral's
+  waypoint still wins over the opening. (4) "Where its ships are" (the user): the admiral's first Crossing turret goes
+  to the allowed Crossing (no turret of its own there, build check passes) with the most of its own pilots and minions
+  within 1,500 of it (AdmiralBuilder._crossings_in_order(); the radius is TurretData.BUILD_CLEAR_RADIUS, the disc of
+  the build check's "enemy ships too close"). A tie, or none of its ships near any allowed Crossing, keeps the map
+  order; once the team holds a Crossing the later Crossing turrets and the extra turrets at home follow the old rules.
+  No random numbers and no clock were added.
+- Measured on seeds 301-306 (all-AI, 300 s, skill jitter), the round-2 build then this one. (1) Pilots that started a
+  second opening: 6 of 144 (89 pilot-seconds in all, one of them for 50 s, in a Bottom-lane opening that ran to the
+  180 s limit) then 0. (2) Fall-backs in the opening by the 24 junglers: 0 then 11 (9 junglers); by the lane roles and
+  the flex pilots 26 then 27. (3) Rally-seat pilots with their goal off the opening spot for more than 10 s: 47 of 48
+  (40 s on average) then 0 of 48 (0.4 s); the share of the window from 60 s to the first wave that these seats spend
+  within 1,500 of their own Crossing 8% then 34% (the other seats 26% then 29%); pilots within 1,500 of their own
+  Crossing, all three Crossings of a team together, at 80 s 2.5 (Aurelian) and 2.7 (Vhorr) then 4.2 and 5.2, at 100 s
+  2.8 and 2.2 then 3.7 and 4.2. Per lane that is still only 1 to 2 pilots, because about three quarters of the pilots
+  (105 of 144 before, 106 after) retreat to repair between 44 s and 110 s (median first retreat at 53 s): the early
+  fight, not the waypoint, empties the Crossings, in both builds. (4) The Crossing that got each team's first turret,
+  seeds 301-306, then and now: Aurelian Top 6, Middle 0, Bottom 0, then Top 3, Middle 1, Bottom 1 (none by 25:00 in
+  1); Vhorr Top 1, Middle 4, Bottom 1, then Top 1, Middle 3, Bottom 0 (none in 2). The same-every-match split is gone.
+  Three of the 12 teams built no Crossing turret by 25:00 (round 2: none): in seeds 301 and 306 Aurelian took all
+  three Crossings by about 12 minutes while Vhorr had 75 to 95 credits at 5 minutes, and in seed 304 Vhorr took all
+  three by 14.6 minutes; 21 of the 36 team-and-node slots had a turret by 25:00 (round 2: 23). The opening itself is
+  as before: first wave at the Crossing 93 to 119 s on average (the Top lane up to 151 s in one seed), no shop trip
+  before the wave, pilot kills and deaths in the 300 s 160 and 191 then 149 and 193.
+- Full matches (2,400 s, seeds 301-306, fun_probe, pilot_audit, admiral_audit), the round-2 build then this one: kills
+  per minute 8.09 then 8.74 (+8%), deaths per pilot per 10 minutes 3.37 then 3.64 (+8%), first blood at minute 0.61
+  both, fights per 10 minutes 6.19 then 6.12, mining drones lost per 10 team-minutes 26.1 then 27.2 (+4%), shots into
+  rocks per 100 pilot-minutes 4.69 then 4.63, admiral decisions per minute 3.08 then 2.75 (back inside the 0.5 to 3.0
+  band; round 2 was just above it), rock contact 0.83 then 0.94 ship-seconds per pilot-minute (+13%), crash deaths 1
+  then 7 events (the v0.2.0 baseline had 6), stuck episodes per 100 pilot-minutes 3.10 then 4.63 (134 then 215; before
+  5:00 23 then 15, before 10:00 30 then 28). The rise in stuck episodes and rock contact is one Vhorr bomber in seed
+  306 that sat in the rocks at (28,356; 15,070) from 6:35 to the end (63 of the 215 episodes, 1,784 stuck seconds,
+  about 690 of the 4,379 rock-contact ship-seconds): without it 152 episodes, 3.3 per 100 pilot-minutes (+6%), rock
+  contact 0.79 (-4%); it is the known asteroid snag, not fixed. Matches that end within 40 minutes: 2 of 6 (both won
+  by Vhorr), then 0 of 6 (the gate flags the fall, as in the first round; n is small). FUN 64.4 then 60.3 (for
+  information; its "decisive match arc" ingredient is 0 without an ended match). Rule-set presets (1,200 s, seeds
+  301-303, within and pick): all 6 matches ran to 20:00 with their result line and no script error (node_persist on
+  for pick, off for within). Script errors in every log of this round: 0.
+- Determinism of this build (seed 7): normal 900 s, two runs identical, 180 hash lines, END t=900 234 units f957a77a
+  (the round-2 build: 6f268d9d; the first line that differs is t=65, when the AI waypoint stopped pulling the rally
+  seats); late 300 s, two runs identical, 60 hash lines, END t=1800 203 units ccbb4bde, the same as round 2 on all 60
+  lines (the opening and the Crossing turret choice do not touch the late start). The normal hash is the new baseline
+  for v0.2.1; the late one is unchanged.
+- New test tests/opening_fix_check.gd (--test=opening_fix_check): in an all-AI match it checks that the AI waypoint
+  leaves the rally seats on their opening spots, that a waypoint placed with by_human pulls Aurelian's seats away and
+  leaves Vhorr's, that a pilot whose opening was put back is done at once when its wave has died, and that the order
+  the admiral tries the Crossings in for its first turret equals an independent count of its own ships (0 failures on
+  seeds 301-306). tests/opening_probe.gd now also records, per pilot, when its opening ended (t_done), the seconds it
+  was back in an opening after its lane's first wave had arrived (reopen_s, one OPENING_FLAG line for each pilot above
+  1 s), its fall-backs, the seconds it held its Crossing (held_s) and the seconds its goal was off the opening spot
+  (goal_off_s), and takes its snapshots per lane; tests/crossing_probe.gd gives the first turret of each team at any
+  Crossing with the build check's answer and the own ships near each Crossing.
+
+### 2026-10-18: pilots can look around the whole map; Space centers the camera on your ship (M-04, for v0.2.1)
+
+- The request (the user, Sunday): all pilots, not only the Admiral, scroll their screen around the entire map, and the space bar centers the camera on your ship; holding it keeps the camera centered as the ship moves. The user's answer on the fire key was "Mouse only": the left mouse button fires and Space only moves the camera.
+- Every seat now starts with the free camera (CameraRig). A pilot pans with a screen edge (within 6 pixels), the middle-mouse drag and minimap clicks (look_at_point works for pilots). W / A / S / D / Q / E still fly the ship while the human flies and pan the camera only when there is no ship, as for the Admiral. A pilot's zoom-out limit is unchanged (PILOT_VIEW_WIDTH by ship size times the zoom_max factor): the new CameraRig.zoom_limited() keeps it (ZoomMaxFeature asks it too). The Admiral's free camera and C switch, and the spectator's camera, are unchanged.
+- New input action center_on_ship (Space). Tap: the camera goes to the ship; with no ship (docked or dead) it goes to the spot in front of the mothership that the old follow camera used. Hold: every frame the camera's goal is the ship's place plus its speed / 12, which is how far the slide lags, so a ship flying steadily stays in the middle; let go: the camera is free again from where it is. A spectator has no ship, so Space does nothing for them.
+- A pilot's camera also jumps to the ship when it launches (a hyperspace jump too), so a new ship is never off screen after the camera was left elsewhere. An Admiral who launches keeps their camera (C15).
+- Space left "fire": the left mouse button is the only fire control. Nothing else read Space (searched scripts, scenes, tests, project.godot and the web export preset).
+- The follow camera (look-ahead, edge peek) stays: the Admiral's C key still uses it, so no code became dead. Texts changed: the key line (pilot and Admiral), the help pages (Shooting, Camera, Admiral), the start screen controls, README Controls and Tests, DESIGN A15, CODE_GUIDE (CameraRig paragraph, glossary, tests), the zoom_max manifest line (E6).
+- New test tests/camera_check.gd (one run per seat: pilot, admiral, spectator). It presses and releases Space and moves the mouse through Godot's own input events and checks the key map, the docked tap, the launch jump, look_at_point, the edge pan, the middle drag, tap, hold (the ship stays within 8 units of the middle at 900 units a second), release, Space not firing, and the zoom-out limits. Two throw-away mutations showed the checks bite: Space back on "fire" fails two checks, and dropping the speed term of the hold fails the hold check (83 units off).
+- The pilot ui tour holds Space for the whole tour (tests/ui_tour.gd): a fresh window's mouse sits at (0, 0), where the free camera pans into the map corner, so the pictures would otherwise show an empty map instead of the ship.
+- Results: run_checks ALL OK (load_all, bot_pilot, support_probe, both ui tours); camera_check 0 failures for the pilot, the Admiral and the spectator seat; zoom_check still 5,200 units across (7,800 with zoom_max:wide, 150 counted frames, for a pilot and for a made-up human with free = false); the layout check at six window sizes for both roles clean (it was clean before); det_hash with the drawing code running (det_check.ps1 -Full, because --sim-only switches the camera off): normal IDENTICAL over 180 lines (END 749aa6eb), late IDENTICAL over 60 lines (END 4bccf106) against v0.2.0's baselines, no script errors. Only test files changed after the det runs.
+- v0.2.1 release (Sun 2026-10-18). A fresh Fable review of the opening fix's round 3 (5e1e926..e87398b) found no defects. It noted three readings: two the user confirmed (the Admiral counts its pilots and its minions near each Crossing, and the rule applies whenever it holds no Crossing turret, rebuilds included), and one that is bounded (a jungler finishing its fall-back flies to its camp without fighting for at most 4 s). The user kept the camera jump at launch and shipped the bloodier opening as is. Against v0.2.0 on seeds 301-306 (40-minute AI matches): stuck episodes 2.82 -> 4.63 per 100 pilot-min (63 of 215 from one bomber stuck from 6:35 in seed 306; +16% without it), rock contact +2%, crash deaths 6 -> 7, matches ended 1/6 -> 0/6, FUN 64.1 -> 60.3.
+- v0.2.1 release review (Opus, Sun 2026-10-18, the release branch against main 7e681a6): no defect in the AI change. In the camera change one low defect (a middle drag stayed on after a focus loss) and two unverified readings of the same kind (the edge pan with the pointer outside the window, fire held through a focus loss); all three are fixed (M-04: CameraRig._notification(), _pointer_inside(), World._notification()). Public text fixed: the opening's kills and deaths were round 1's (now the shipped build's 149 / 193, retreats 159); the human Admiral's flag in the opening is new (v0.2.0 rallied nobody before 10:00); the flex pilot's rotation starts on the top lane for the whole match; no local branch names in the notes; the AI opening fix entries above got their own heading. Checks after the fix (the release branch at 4532997): run_checks ALL OK (load_all, bot_pilot, support_probe, both ui tours); det_check -Full normal IDENTICAL over 180 lines and late IDENTICAL over 60 (END f957a77a and ccbb4bde, as before the fix); camera_check 0 failures for the pilot, the Admiral and the spectator; zoom_check 5,200 units across; no script errors. Only documents changed after these checks.
