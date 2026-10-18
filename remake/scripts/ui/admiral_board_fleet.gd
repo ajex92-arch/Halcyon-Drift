@@ -41,6 +41,9 @@ static func build(b: AdmiralBoard) -> void:
 	var wl := UiKit.label("", 13, Palette.MIST)
 	wr.add_child(wl)
 	b._cards["wp"] = wl
+	# Step 1b: the orders that feature modules add (Sensor Sweep, ...); this
+	# adds nothing in today's game.
+	CommandOrdersUi.build(b)
 	# Step 2: the Fleet Command status line, as wide as the tab.
 	b._content.add_child(UiKit.heading("Fleet Command"))
 	var fl := UiKit.label("", 13, Palette.MIST, true)
@@ -105,6 +108,8 @@ static func refresh(b: AdmiralBoard) -> void:
 	if b._cards.has("wp"):
 		var wl: Label = b._cards["wp"]
 		wl.text = ("Active at %s for %ds" % [Rules.display_label(b.world.place_name(ts.waypoint)), int(ts.waypoint_until - b.world.time)]) if ts.has_waypoint() else "No waypoint set"
+	# Step 1b: the buttons of the orders that feature modules add.
+	CommandOrdersUi.refresh(b)
 	# Step 2: the status line: online, being built, or how to get it.
 	if b._cards.has("fleet_status"):
 		var fl: Label = b._cards["fleet_status"]
@@ -118,12 +123,12 @@ static func refresh(b: AdmiralBoard) -> void:
 ## The Fleet Command status line for board `b` (team state `ts`;
 ## `controlled` = the Fleet Command Module is built):
 ##   - online: free minion waves have stopped; how many minions may be
-##     alive (Minions.CONTROL_CAP), are alive, and are selected;
+##     alive (Minions.control_cap()), are alive, and are selected;
 ##   - being built: its progress (AdmiralBoardResearch.progress_text);
 ##   - otherwise: what the module does and the minion prices.
 static func _status_text(b: AdmiralBoard, ts: TeamState, controlled: bool) -> String:
 	if controlled:
-		return "Fleet Command is online: free minion waves have stopped. Buy minions from the treasury (up to %d alive) and give them orders. Alive: %d. Selected: %d." % [Minions.CONTROL_CAP, b.world.minion_director.alive_count(b.team), b.overlay.selected.size()]
+		return "Fleet Command is online: free minion waves have stopped. Buy minions from the treasury (up to %d alive) and give them orders. Alive: %d. Selected: %d." % [Minions.control_cap(), b.world.minion_director.alive_count(b.team), b.overlay.selected.size()]
 	elif ts.is_building("fleet"):
 		return "The Fleet Command Module is being built (%s)." % AdmiralBoardResearch.progress_text(ts.building, "fleet")
-	return "Late game: build the Fleet Command Module (Research tab, needs the Capital Ship Facility). Free minion waves then stop and you buy minions (fighters %d, bombers %d, escort corvettes %d; up to %d alive) and command them directly." % [int(Minions.TYPES["fighter"]["buy_cost"]), int(Minions.TYPES["bomber"]["buy_cost"]), int(Minions.TYPES["corvette"]["buy_cost"]), Minions.CONTROL_CAP]
+	return "Late game: build the Fleet Command Module (Research tab, needs the Capital Ship Facility). Free minion waves then stop and you buy minions (fighters %d, bombers %d, escort corvettes %d; up to %d alive) and command them directly." % [int(Minions.TYPES["fighter"]["buy_cost"]), int(Minions.TYPES["bomber"]["buy_cost"]), int(Minions.TYPES["corvette"]["buy_cost"]), Minions.control_cap()]

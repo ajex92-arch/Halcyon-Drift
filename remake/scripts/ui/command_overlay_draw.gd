@@ -33,6 +33,10 @@ static func draw(ov: CommandOverlay) -> void:
 	# 1. The team waypoint (everyone on the team sees it).
 	if vt >= 0 and world.teams[vt].has_waypoint():
 		_draw_waypoint(ov, vt, px)
+	# 1b. The marks that feature modules add (Barrage circle, bounty
+	# diamonds, Fortify shimmer ...); nothing in today's game.
+	if not world.command.marks.is_empty():
+		CommandOrders.draw_marks(ov, vt, px)
 	if not ov.is_admiral():
 		return
 	# 2. The Admiral's own marks.
@@ -92,9 +96,12 @@ static func _draw_tool_preview(ov: CommandOverlay, px: float) -> void:
 			rad = Rules.WAYPOINT_RADIUS
 		"move":
 			rad = float(Structures.MOTHERSHIP["length"]) * 0.5
+		_:
+			# An order that a feature module added (CommandOrders).
+			rad = CommandOrders.radius(world, ov.tool)
 	ov.draw_arc(p, rad, 0.0, TAU, 64, Palette.with_alpha(col, 0.8), 2.0 * px, true)
 	ov.draw_circle(p, 6.0 * px, col)
-	_label(ov, p + Vector2(0, 26.0 * px), b if b != "" else CommandOverlay.TOOL_TEXT.get(ov.tool, ""), col, px)
+	_label(ov, p + Vector2(0, 26.0 * px), b if b != "" else ov.tool_text(), col, px)
 
 
 ## Draw text `t` centred on world point `p`, in colour `col` with a dark

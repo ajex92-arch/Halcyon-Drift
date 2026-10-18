@@ -209,6 +209,15 @@ static func set_text(l, text: String) -> void:
 		l.text = text
 
 
+## The width big panel `c` is meant to have: the window's width less its
+## left and right margins (HudPanels.panel_rect sets them). Panels size their
+## cards and paragraphs from this and not from their own `size`: a panel is
+## at least as wide as the cards inside it, so its `size` can never get
+## smaller after the window shrinks.
+static func panel_width(c: Control) -> float:
+	return c.get_viewport_rect().size.x + c.offset_right - c.offset_left
+
+
 ## Give a wrapping label a fixed width `w` (at least 40 pixels). A wrapping
 ## label measures its height at its current width, which is zero until it
 ## is first laid out, so without this it would come out far too tall.

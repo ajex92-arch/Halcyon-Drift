@@ -227,6 +227,10 @@ static func _ship_killed(w: World, ship: Ship, info: DamageInfo, killer: PilotPr
 	var bounty := float(Rules.tune("kill_base", Rules.KILL_BASE)) + value * float(Rules.tune("kill_value_share", Rules.KILL_VALUE_SHARE))
 	if victim != null:
 		bounty += float(Rules.tune("shutdown_per_streak", Rules.SHUTDOWN_PER_STREAK)) * float(maxi(0, victim.streak - 1))
+		# Feature hook (World.bounty_hooks): extra bounty, such as a pilot's
+		# accrued bounty (an empty list adds nothing).
+		for f: Callable in w.bounty_hooks:
+			bounty += float(f.call(victim, ship))
 	var assist_pool := bounty * float(Rules.tune("assist_share", Rules.ASSIST_SHARE))
 	# Step 2: the helpers (not the killer, not the victim's own team).
 	var window := float(Rules.tune("assist_window", Rules.ASSIST_WINDOW))

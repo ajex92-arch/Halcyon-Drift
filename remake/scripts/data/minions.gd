@@ -68,8 +68,19 @@ const WAVE_INTERVAL := 35.0
 ## (0.07 = +7% for every full 5 minutes; it also grows their shield.)
 const SCALING_PER_5MIN := 0.07
 ## Fleet Command module: max alive and costs live in TYPES.buy_cost.
-## This is the most bought minions a team may have alive at once.
+## This is the most bought minions a team may have alive at once. Read it
+## through control_cap(), which lets the fleet_cap rule variant change it.
 const CONTROL_CAP := 30
+
+
+## The most bought minions a team may have alive at once in this match:
+## CONTROL_CAP (30), unless the fleet_cap variant tuned it (FleetCapFeature
+## sets the tuned number "fleet_cap"). It is one rule for the whole match,
+## so the AI admiral (AdmiralFleetCommand) and a human admiral (the board's
+## buy buttons) both end up at MinionDirector.buy(), which asks this, and
+## both teams share the same limit.
+static func control_cap() -> int:
+	return int(Rules.tune("fleet_cap", CONTROL_CAP))
 
 
 ## How much tougher minions made at match time `match_time` (seconds) are:

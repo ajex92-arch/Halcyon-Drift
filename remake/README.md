@@ -12,9 +12,12 @@ only when a mothership is destroyed.
 ## Run it
 
 Open `remake/project.godot` in Godot 4.7 and press Play. You can also run
-it from a terminal:
+it from a terminal. On a fresh copy, import once first: a copy without
+Godot's import cache (the `.godot` folder) shows an empty window, because
+the game's scripts cannot find each other yet.
 
 ```
+godot --headless --path remake --import
 godot --path remake
 ```
 
@@ -30,6 +33,33 @@ match:
   enemy mothership. An AI Admiral commands.
 
 Press **H** in game for the full how-to-play.
+
+### Rule sets
+
+Under the rules text, above the seats, the RULE SET row of the start screen
+picks the rules of the coming match:
+
+- **Standard rules** (chosen at first): the rules of v0.1.0, exactly as before.
+- **Within requirements**: the fun council's changes that keep every
+  requirement of the design (the Fleet Command limit of 60 is the requirement
+  since 2026-10-17, `docs/DESIGN.md` C22): late minions no
+  longer out-scale pilots, the Lance hunts lone big ships, Bomber seats and
+  torpedoes are retuned, the AI admiral spends a big treasury and builds the
+  Hyperspace Module early, a hyperspace launch to a repair bay spools for 4
+  seconds instead of 6 (AI pilots can also jump to a friendly turret near the
+  fight; the hangar offers you repair bays only), gear has Mk II upgrades, and
+  Fleet Command allows up to 60 bought minions.
+- **Council's pick**: "Within requirements" plus persistent nodes (a node
+  whose turret was destroyed stays locked longer, a turret built there again
+  starts at half hull and then only repairs 1% a second, and the AI Admiral
+  rebuilds the nodes nearest its own mothership first).
+
+(The fun council is the project's review step that combined the six fun
+experiments and tested the combinations; `docs/FUN_PLAN.md` section 6.)
+
+From a terminal: `godot --path remake -- --preset=within` (or `pick`).
+`docs/RELEASE_NOTES.md` explains the rule sets in plain words, and
+`FORK_MANIFEST.md` lists every other switch.
 
 ## Controls
 
@@ -70,6 +100,10 @@ Press **H** in game for the full how-to-play.
   - `FUN_PLAN.md`, `FUN_RESEARCH.md` and `FUN_METRICS.md` are the fun
     experiments: the rules, the research behind them, and how fun is
     measured.
+  - `RELEASE_NOTES.md` says what each release changes, in plain words
+    (v0.2.0 adds the rule sets).
+  - `../FORK_MANIFEST.md` and `fork_manifests/` list every switch the fun
+    experiments added and what each one does.
 - `scenes/` holds one scene per entity, world piece and UI screen.
 - `scripts/` holds the code:
   - `data/`: tuning tables (ships, weapons, items, modules, tech, minions,
@@ -80,6 +114,8 @@ Press **H** in game for the full how-to-play.
   - `team/`: team state, pilot profiles and the economy.
   - `ai/`: pilot AI and Admiral AI.
   - `control/`: the player controller and Admiral commands.
+  - `features/`: optional mechanics, one module each, that a match only
+    gets when its variant key (or a rule set) turns it on.
   - `ui/`: the HUD and panels.
   - `audio/`: synthesized sound cues.
 - `tests/` holds headless probes and playtest harnesses. They run through
@@ -111,5 +147,7 @@ godot --path remake --resolution 1280x720 -- --auto --role=pilot --bot=tour --te
 ```
 
 Command-line options are documented at the top of
-`scripts/autoload/game.gd`. They include `--variant=` for the design
-variants that can still be switched (see `Rules.VARIANT_DEFAULTS`).
+`scripts/autoload/game.gd`. They include `--variant=` for the rule
+variants (see `Rules.VARIANT_DEFAULTS`; every switch is listed in
+`FORK_MANIFEST.md`, and all are off unless you set them), and `--preset=` for
+the rule sets (`scripts/data/council_presets.gd`).

@@ -7,126 +7,131 @@ mouse_filter = 0
 theme_type_variation = &"ScoreLook"
 script = ExtResource("1_root")
 
-[node name="Col" type="VBoxContainer" parent="."]
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+mouse_filter = 1
+horizontal_scroll_mode = 0
+
+[node name="Col" type="VBoxContainer" parent="Scroll"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="HalcyonHead" type="Label" parent="Col"]
+[node name="HalcyonHead" type="Label" parent="Scroll/Col"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
 
-[node name="Halcyon" type="GridContainer" parent="Col"]
+[node name="Halcyon" type="GridContainer" parent="Scroll/Col"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 2
+theme_override_constants/v_separation = 0
 columns = 7
 
-[node name="Pilot" type="Label" parent="Col/Halcyon"]
+[node name="Pilot" type="Label" parent="Scroll/Col/Halcyon"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Pilot"
 
-[node name="Ship" type="Label" parent="Col/Halcyon"]
+[node name="Ship" type="Label" parent="Scroll/Col/Halcyon"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Ship"
 
-[node name="KDA" type="Label" parent="Col/Halcyon"]
+[node name="KDA" type="Label" parent="Scroll/Col/Halcyon"]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "K / D / A"
 
-[node name="Minions" type="Label" parent="Col/Halcyon"]
+[node name="Minions" type="Label" parent="Scroll/Col/Halcyon"]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Minions"
 
-[node name="Derelicts" type="Label" parent="Col/Halcyon"]
+[node name="Derelicts" type="Label" parent="Scroll/Col/Halcyon"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Derelicts"
 
-[node name="Earned" type="Label" parent="Col/Halcyon"]
+[node name="Earned" type="Label" parent="Scroll/Col/Halcyon"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Earned"
 
-[node name="Status" type="Label" parent="Col/Halcyon"]
-custom_minimum_size = Vector2(150, 0)
+[node name="Status" type="Label" parent="Scroll/Col/Halcyon"]
+custom_minimum_size = Vector2(185, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Status"
 
-[node name="CinderHead" type="Label" parent="Col"]
+[node name="CinderHead" type="Label" parent="Scroll/Col"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
 
-[node name="Cinder" type="GridContainer" parent="Col"]
+[node name="Cinder" type="GridContainer" parent="Scroll/Col"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 2
+theme_override_constants/v_separation = 0
 columns = 7
 
-[node name="Pilot" type="Label" parent="Col/Cinder"]
+[node name="Pilot" type="Label" parent="Scroll/Col/Cinder"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Pilot"
 
-[node name="Ship" type="Label" parent="Col/Cinder"]
+[node name="Ship" type="Label" parent="Scroll/Col/Cinder"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Ship"
 
-[node name="KDA" type="Label" parent="Col/Cinder"]
+[node name="KDA" type="Label" parent="Scroll/Col/Cinder"]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "K / D / A"
 
-[node name="Minions" type="Label" parent="Col/Cinder"]
+[node name="Minions" type="Label" parent="Scroll/Col/Cinder"]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Minions"
 
-[node name="Derelicts" type="Label" parent="Col/Cinder"]
+[node name="Derelicts" type="Label" parent="Scroll/Col/Cinder"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Derelicts"
 
-[node name="Earned" type="Label" parent="Col/Cinder"]
+[node name="Earned" type="Label" parent="Scroll/Col/Cinder"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12
 text = "Earned"
 
-[node name="Status" type="Label" parent="Col/Cinder"]
-custom_minimum_size = Vector2(150, 0)
+[node name="Status" type="Label" parent="Scroll/Col/Cinder"]
+custom_minimum_size = Vector2(185, 0)
 layout_mode = 2
 theme_type_variation = &"MistText"
 theme_override_font_sizes/font_size = 12

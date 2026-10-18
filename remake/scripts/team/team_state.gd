@@ -45,7 +45,7 @@ extends RefCounted
 
 # --- who we are -----------------------------------------------------------------
 
-## Which side this is: 0 = Aurelian, 1 = Cinder (Rules.TEAM_NAMES holds the internal labels).
+## Which side this is: 0 = Aurelian, 1 = Vhorr (Rules.TEAM_NAMES holds the internal labels).
 var team := 0
 ## The game world (ships, motherships, ore nodes, the match clock).
 var world: World = null
@@ -53,6 +53,13 @@ var world: World = null
 ## (1,500). Mining, the mothership's income and destroyed enemy turrets and
 ## repair bays add to it; the admiral spends it.
 var treasury := Rules.START_TREASURY
+## Feature hook (fork economy_comebacks): when set, spend() calls it with
+## the amount after every successful spend. Not set (the default) = no call.
+var spend_hook := Callable()
+## Fleet Doctrine levels finished (DoctrineFeature, 0..10). Each level gives
+## our pilot ships +2% max hull and +3% shield regeneration (ShipStats). 0 =
+## no doctrine, the normal game.
+var doctrine_level := 0
 ## Who sits in the admiral's seat: "ai" or "human".
 var admiral := "ai"
 ## False while a human admiral is out flying their own ship.
@@ -130,6 +137,18 @@ var minion_buff := 0.0
 ## upgraded instead (EscortWingFeature).
 var wave_corvettes := 0
 
+# --- feature hooks for the AI admiral (docs/FUN_PLAN.md, AdmiralSmartFeature) ---
+
+## Feature hook: the fleet-composition call the AI admiral makes about the
+## enemy fleet: "anti_capital", "anti_strike" or "" (no call: today's
+## game). AI pilots' shopping lists read it (PilotShopping.wish_list).
+var comp_call := ""
+## Feature hook: a function f(ts: TeamState, plan: Array) -> Array that
+## gives the AI admiral's build plan in a different order for this team.
+## AdmiralPlan.next_step() calls it when it is valid. An empty Callable
+## (the default) = the plan as it is written in AdmiralPlan.PLAN.
+var plan_hook := Callable()
+
 # --- waypoint -------------------------------------------------------------------
 
 ## Where the admiral's rally waypoint is (Vector2.INF = never set).
@@ -196,6 +215,11 @@ var kills := 0
 var turrets_destroyed := 0
 ## When each facility and research finished: id -> match time (seconds).
 var unlock_times := {}
+## Feature hook: a different build order for the AI admiral, as a list of
+## [kind, id] steps like AdmiralPlan.PLAN. Empty (the default) = the normal
+## PLAN. Forward Redeploy (RedeployFeature) sets it. AdmiralPlan.next_step()
+## reads it.
+var plan_override: Array = []
 
 # --- the parts (made in _init) --------------------------------------------------
 
@@ -244,6 +268,10 @@ func spend(amount: float) -> bool:
 	if not can_afford(amount):
 		return false
 	treasury -= amount
+	# Feature hook (fork economy_comebacks): a function f(amount) told about
+	# every spend. Not set (the default) = nothing happens.
+	if spend_hook.is_valid():
+		spend_hook.call(amount)
 	return true
 
 

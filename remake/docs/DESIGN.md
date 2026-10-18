@@ -11,7 +11,7 @@ A2). The three lanes, the asteroid resource nodes and the asteroid jungle
 described below are all inside the belt. That is all that is decided about
 it: no history, factions or other places are invented. The two teams are
 Aurelian (team 0, amber; the user's name for it since 2026-10-16, see C21
-in A2 and A16) and Cinder (team 1, red).
+in A2 and A16) and Vhorr (team 1, red; the user's name for it since 2026-10-17, see C23 in A2).
 
 Requirement sources, in priority order (later overrides earlier):
 
@@ -20,6 +20,8 @@ Requirement sources, in priority order (later overrides earlier):
    start with Scout (free) + Fighter, more players, AI pass.
 3. `USER_REQUIREMENTS_2026-10-13.md` — the MOBA restructure (overrides
    everything above where they conflict).
+4. The user's later decisions, recorded in A2 (for example C22, the Fleet
+   Command limit of 60). They override the sources above where they conflict.
 
 Also read `LESSONS_FROM_V1.md` (what v1 got right/wrong, Godot gotchas,
 environment) and `TECH_TREE_REFERENCE.md`.
@@ -94,6 +96,8 @@ Pillars:
 | C19 | "mothership can be moved by a docked admiral from 20:00" — how should the AI admiral use it? | Humans can always move it. AI variants (`ai_ms`): advance (up the push/siege lane when at least even; since 2026-10-16 always up the mid lane), siege (only up its own siege lane, home otherwise), home (never). **Decided: advance.** Full 60-minute AI matches, 2 per variant: advance ended both (43:49, 47:48), siege 1 of 2, home 0 of 2. (2026-10-15: `siege` and `home` were taken out of the code, and with them the `ai_ms` switch. 2026-10-16: the advance lane is now always the mid lane, also during a siege. Following the push or siege lane parked the two motherships on different lanes, top against bottom some 30,000 units apart, and no 30-minute AI match ended; parked on the shortest lane they meet, and two test matches ended after about 24 and 25 minutes. That was on the AI before the pass 1-3 fixes; with them, 0 of 3 normal 30-minute AI matches ended, see docs/AI_DEEP_DIVE.md.) |
 | C20 | Project name and world: the project (repo) was still called Fleet Command 2, and the world had no name. | **Decided by the user, 2026-10-16:** "Lets change the project name to Halcyon Drift, which we shall say is the name of the asteroid belt we are fighting in." So Halcyon Drift is both the project and the asteroid belt the battle is fought in; the lanes, nodes and jungle are inside it. Nothing else about the belt is decided. Unchanged on purpose: "Fleet Command" as the late-game admiral module (A13), the team names Halcyon and Cinder (open question in A16, answered in C21), folder and repo names, and the user's verbatim documents. Text-only change; no game logic touched. |
 | C21 | Team name: the good-guy team (team 0, amber) was called Halcyon, the same word as the Halcyon Drift (the open question in A16). | **Decided by the user, 2026-10-16:** rename the team to **Aurelian**, the user's own pick for an uncommon good-guy name. Cinder (team 1, red) keeps its name, and Halcyon Drift stays the name of the project and of the asteroid belt. Aurelian is the name in all player-facing text, docs and comments. Done as a split between what the player sees and the internal label: `Rules.TEAM_DISPLAY` holds the player-facing names, and `Rules.display_label()` swaps the label in text that was built from an internal one (the place names "Halcyon Top/Mid/Bottom", the end screen's reason). `Rules.TEAM_NAMES` stays the internal label "Halcyon", together with `Rules.HALCYON`, the scene node names (and the node names themselves), logs, JSON, test output and the tools, so every past research log and baseline stays comparable (docs/CODE_GUIDE.md, "Team names"). Unchanged on purpose: the user's verbatim documents and older log entries. Display only: no game logic touched. |
+| C22 | Fleet Command limit: the requirements file says the late-game module limits friendly minions to 30 (`USER_REQUIREMENTS_2026-10-13.md`); both v0.2.0 rule sets use 60. | **Decided by the user, 2026-10-17:** "Make 60 the requirement." The Fleet Command limit is now **60** (it was 30). Both rule sets, "Within requirements" and "Council's pick", use 60, so they stay within the amended requirements. The standard rules keep v0.1.0's 30 in v0.2.0, because v0.2.0 promises that the default game is unchanged (`fleet_cap` defaults to "30"). Any limit other than 60 is a requirement change (REQ-CHANGE). The user's verbatim requirements file is not edited: this row is the amendment. |
+| C23 | Team 1 display name: the enemy team (team 1, red) was called Cinder. | **Decided by the user, 2026-10-17:** the enemy team's display name changes from Cinder to **Vhorr**, everywhere, like Aurelian (C21). Vhorr is the name in all player-facing text, docs and comments. Done with the same split as C21: `Rules.TEAM_DISPLAY` holds the player-facing names, and `Rules.display_label()` swaps the internal label in text that was built from one (the place names "Cinder Top/Mid/Bottom", the match-over reason). `Rules.TEAM_NAMES` stays the internal label "Cinder", together with `Rules.CINDER`, `Palette.CINDER`, `Roster.CINDER`, the scene node names, logs, JSON, test output and the tools, so every past research log and baseline stays comparable (docs/CODE_GUIDE.md, "Team names"). Unchanged on purpose: the user's verbatim documents and older log entries (C20, C21, A16 and the PROGRESS entries before 2026-10-17 still say Cinder). Display only: no game logic touched. |
 
 ### A3. Roles and the core loop
 
@@ -102,7 +106,7 @@ Pillars:
   camera; can also launch a ship). 12 AI pilots fly for Aurelian.
 - **Fly as a Pilot** — joins Aurelian as one of the 12 field pilots. The
   Aurelian Admiral is AI. The choice is locked for the match.
-Cinder is always 12 AI pilots + an AI Admiral.
+Vhorr is always 12 AI pilots + an AI Admiral.
 
 **Pilot loop.** Spawn docked at the mothership → Hangar (CS-style): buy a
 ship (Scout free), up to 2 ship modules, pilot gear, repair kits → launch →
@@ -120,9 +124,10 @@ upgrades, team upgrades, waypoint, late-game direct minion control, and
 ### A4. Map
 
 Theater 40,000 × 26,000 world units, mirror-symmetric about x = 20,000
-(Aurelian left, amber; Cinder right, red). Coordinates below are Aurelian's
-(H = its mothership, short for the internal label Halcyon; C = Cinder's);
-Cinder mirrors x → 40,000 − x.
+(Aurelian left, amber; Vhorr right, red). Coordinates below are Aurelian's
+(H = its mothership, short for the internal label Halcyon; C = Vhorr's, short
+for the internal label Cinder);
+Vhorr mirrors x → 40,000 − x.
 
 - **Motherships:** H at (3,600, 13,000) facing +x. Base clearing radius
   6,000 (no asteroids).
@@ -134,7 +139,7 @@ Cinder mirrors x → 40,000 − x.
   - Connector (the perpendicular lane): x = 20,000 from (20,000, 3,800)
     to (20,000, 22,200), half-width 1,600.
 - **Jungle:** four quadrants between the lanes (TL, BL Aurelian side; TR, BR
-  Cinder side), each ≈ 9,600 × 5,400, densely packed with asteroids
+  Vhorr side), each ≈ 9,600 × 5,400, densely packed with asteroids
   (radius 70–260). Inside: winding paths 220–320 wide joining clearings
   (radius 650) for monster camps. Every entrance from a lane or base is a
   choke 82–90 units wide between rocks, so only small ships (collision
@@ -323,8 +328,13 @@ range > nearest enemy ship. Pilot ships take x0.6 from minions; minions take
 x1.8 from minions (fast wave clashes).
 
 **Fleet Command module** (late): free waves stop; the Admiral buys minions
-(fighter 35, bomber 50, corvette 140), at most 30 alive, and orders them
-(lane / attack-move point / hold).
+(fighter 35, bomber 50, corvette 140), at most 30 alive in the standard
+rules, and orders them (lane / attack-move point / hold). The limit is one
+rule for both teams and for a human or AI Admiral; the `fleet_cap` variant
+changes it. Both rule sets, "Within requirements" and "Council's pick", use
+60, which has been the requirement since the user's decision of 2026-10-17
+(C22 in A2; the standard rules keep v0.1.0's 30), and the board's texts show
+the limit of the match.
 
 ### A9. Turrets (Admiral, at node slots)
 
@@ -586,7 +596,7 @@ remake/
 ### B3. Core types (contract summary — exact signatures live in code)
 
 - `Unit extends CharacterBody2D` — base for every combat entity: `uid`,
-  `team` (0 Aurelian = `Rules.HALCYON`, 1 Cinder, 2 neutral), `kind`, `size_class`, `radius`,
+  `team` (0 Aurelian = `Rules.HALCYON`, 1 Vhorr = `Rules.CINDER`, 2 neutral), `kind`, `size_class`, `radius`,
   `hull`, `hull_max`, `hull_resist`, `shields: ShieldZones` (nullable),
   `vision_radius`, `alive`, `facing()`; `take_hit(info) -> void` (only
   called by Combat); `on_killed(info)`; damage log for assists;

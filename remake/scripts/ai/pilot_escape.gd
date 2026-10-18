@@ -163,7 +163,7 @@ func _plan_escape(ship: Ship, to: Vector2, fine := false, spent := 0) -> void:
 	var field := world.asteroids
 	var p := ship.global_position
 	var route := world.map.route
-	var small := ship.is_small()
+	var small := JungleBigFeature.route_small(ship)
 	# Step 1: the 8 nearest dots we may use, nearest first, then the goal.
 	var order: Array = []
 	for k in route.pos.size():
@@ -383,7 +383,7 @@ func follow(ship: Ship) -> bool:
 		_path = PackedVector2Array()
 		_time_left = 0.0
 		if done and _dot != Vector2.INF:
-			brain.path = brain.world.map.route.path(_dot, _goal, ship.is_small())
+			brain.path = brain.world.map.route.path(_dot, _goal, JungleBigFeature.route_small(ship))
 			brain.path_i = 0
 			brain.path_goal = _goal
 		else:

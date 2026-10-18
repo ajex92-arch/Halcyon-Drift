@@ -5,9 +5,9 @@ extends RefCounted
 ## the ore nodes, monster camps and jungle entrances are. DESIGN.md A4.
 ##
 ## HOW IT WORKS: Aurelian's half is authored here; MapBuilder mirrors it
-## across x = CX for Cinder so neither side gets a better map. ("Mirror" =
+## across x = CX for Vhorr so neither side gets a better map. ("Mirror" =
 ## flip left-right across the centre line, like a reflection.) Lanes are
-## shared polylines from Aurelian's mothership to Cinder's (a "polyline" is
+## shared polylines from Aurelian's mothership to Vhorr's (a "polyline" is
 ## a path of straight pieces joining the listed points in order).
 ## Asteroids are generated around this skeleton by MapBuilder from SEED.
 ## Positions are in world units (1 world unit is about one pixel at normal
@@ -31,7 +31,7 @@ extends RefCounted
 const W := 40000.0
 ## The map's height (world units).
 const H := 26000.0
-## The x of the map's centre line (W / 2). Cinder's half is Aurelian's half
+## The x of the map's centre line (W / 2). Vhorr's half is Aurelian's half
 ## mirrored across it.
 const CX := 20000.0
 ## The "seed" number that starts the map's random number sequence, so the
@@ -39,7 +39,7 @@ const CX := 20000.0
 ## asteroid shapes use SEED + 77).
 const SEED := 4141
 
-## Where each mothership starts, by team (0 Aurelian, 1 Cinder): its
+## Where each mothership starts, by team (0 Aurelian, 1 Vhorr): its
 ## position and its facing, an angle in radians (0 = pointing right, PI =
 ## pointing left, so they face each other).
 const MOTHERSHIPS := [
@@ -51,11 +51,11 @@ const MOTHERSHIPS := [
 ## faintly in the team colour.
 const BASE_CLEAR_RADIUS := 6000.0
 
-## Lane polylines run Aurelian -> Cinder. half = corridor half-width.
+## Lane polylines run Aurelian -> Vhorr. half = corridor half-width.
 ## lane id -> label (the name players see), half (half the corridor's
 ## width, in world units: the open lane is 3600 wide) and points (the
 ## polyline). All three lanes start at Aurelian's mothership and end at
-## Cinder's; the middle lane has a small bend around the centre.
+## Vhorr's; the middle lane has a small bend around the centre.
 const LANES := {
 	"top": {"label": "Top lane", "half": 1800.0, "points": [Vector2(3600, 13000), Vector2(8200, 3800), Vector2(31800, 3800), Vector2(36400, 13000)]},
 	"mid": {"label": "Mid lane", "half": 1800.0, "points": [Vector2(3600, 13000), Vector2(16500, 13000), Vector2(18800, 11600), Vector2(21200, 11600), Vector2(23500, 13000), Vector2(36400, 13000)]},
@@ -70,7 +70,7 @@ const LANE_ORDER := ["top", "mid", "bot"]
 
 ## Resource nodes. "inner" = near a mothership (torpedo turrets allowed);
 ## "middle" = on the crossing (PD only). Aurelian inner nodes are mirrored for
-## Cinder; middle nodes sit on the centre line and are shared.
+## Vhorr; middle nodes sit on the centre line and are shared.
 ## A resource node is a cluster of ore rocks that mining drones harvest,
 ## with turret slots next to it. Fields:
 ##   id, name   the node's id and the name players see. A mirrored copy
@@ -116,6 +116,17 @@ const CAMPS := [
 	{"id": "bl_b", "type": "carrier", "pos": Vector2(13800, 18400), "quad": "bl"},
 	{"id": "bl_c", "type": "gunship", "pos": Vector2(16600, 16900), "quad": "bl"},
 ]
+## The extra camps of the "camp4" variant (fork teamfights_jungle, idea D7):
+## one more camp per quadrant on Halcyon's side, between the lane-side
+## clearing (tl_a / bl_a) and the connector clearing (tl_c / bl_c), in the
+## open part of the jungle. MapBuilderJungle adds them to CAMPS ONLY while
+## Game.variant("camp4") is on (the map is then built differently); with it
+## off this list is never read. Same fields as CAMPS; the type is the
+## existing medium camp, the carrier.
+const CAMPS_EXTRA := [
+	{"id": "tl_d", "type": "carrier", "pos": Vector2(13500, 9900), "quad": "tl"},
+	{"id": "bl_d", "type": "carrier", "pos": Vector2(13500, 16100), "quad": "bl"},
+]
 ## Asteroids are kept at least this far (world units) from each camp's
 ## spot (MapBuilderJungle).
 const CAMP_CLEAR_RADIUS := 650.0
@@ -150,7 +161,7 @@ const CHOKE_GAP := 86.0
 
 
 ## The mirror image of point `p` across the centre line: (W - x, y). This
-## is how Aurelian's half becomes Cinder's. MapBuilder and its parts use it.
+## is how Aurelian's half becomes Vhorr's. MapBuilder and its parts use it.
 static func mirror(p: Vector2) -> Vector2:
 	return Vector2(W - p.x, p.y)
 
@@ -162,7 +173,7 @@ static func mothership_pos(team: int) -> Vector2:
 
 
 ## Lane polyline as walked by `team` (Aurelian walks it as authored).
-## Cinder walks it backwards, so for both teams the list starts at their
+## Vhorr walks it backwards, so for both teams the list starts at their
 ## own mothership and ends at the enemy's.
 static func lane_points(lane: String, team: int) -> PackedVector2Array:
 	var pts := PackedVector2Array(LANES[lane]["points"])

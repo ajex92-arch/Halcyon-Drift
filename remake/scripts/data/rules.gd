@@ -41,19 +41,20 @@ extends RefCounted
 ## Team number 0: Aurelian, the amber team (internal label: Halcyon). Its mothership starts on the left
 ## (west) side of the map. A human player always plays for Aurelian.
 const HALCYON := 0
-## Team number 1: Cinder, the red team. Its mothership starts on the right
+## Team number 1: Vhorr, the red team (internal label: Cinder). Its mothership starts on the right
 ## (east) side of the map.
 const CINDER := 1
 ## Team number 2: neutral. The derelict monsters of the jungle and their
 ## snub fighters belong to no side.
 const NEUTRAL := 2
 ## Internal team labels, by team number (team 2 is "Derelict"): logs, JSON, tools and node names use
-## them, so team 0 stays "Halcyon" here. The names the player sees are in TEAM_DISPLAY.
+## them, so team 0 stays "Halcyon" and team 1 stays "Cinder" here. The names the player sees are in
+## TEAM_DISPLAY.
 const TEAM_NAMES := ["Halcyon", "Cinder", "Derelict"]
 ## Player-facing team names, by team number (same order as TEAM_NAMES): what every screen says, so team 0
-## is "Aurelian". TEAM_NAMES stays the internal label for logs, JSON, tools and node names; text built from
-## it (a place name) goes through display_label() on its way to the screen.
-const TEAM_DISPLAY := ["Aurelian", "Cinder", "Derelict"]
+## is "Aurelian" and team 1 is "Vhorr". TEAM_NAMES stays the internal label for logs, JSON, tools and node
+## names; text built from it (a place name) goes through display_label() on its way to the screen.
+const TEAM_DISPLAY := ["Aurelian", "Vhorr", "Derelict"]
 
 ## The enemy team of `team`: 0 gives 1, and 1 gives 0. The neutral team (2)
 ## has no enemy team, so it gives -1, which means "none".
@@ -63,7 +64,7 @@ static func enemy_of(team: int) -> int:
 
 ## `text` with every internal team label (TEAM_NAMES) swapped for the player-facing name
 ## (TEAM_DISPLAY). Use it on text that is about to be shown on screen and was built from an
-## internal label, such as the place name "Halcyon Mid" or a match-over reason. Logs, JSON and
+## internal label, such as the place name "Halcyon Mid" or "Cinder Mid" or a match-over reason. Logs, JSON and
 ## tools never use it, so they keep the internal label. The name "Halcyon Drift" is never swapped.
 static func display_label(text: String) -> String:
 	const KEEP := "Halcyon Drift"
@@ -457,7 +458,9 @@ const MOTHERSHIP_MOVE_UNLOCK := 1200.0
 ## default here (FeatureRegistry); every default keeps today's game.
 const VARIANT_DEFAULTS := {
 	## C11: what a mothership does the first time its hull drops to 35%
-	## (see MothershipRetreat): "systems_failure" | "none"
+	## (see MothershipRetreat): "systems_failure" | "none" | "last_stand"
+	## (LastStandFeature: shields refill and guns fire x1.5 for 45 s, then the
+	## ship is "breached" and takes x1.25 damage for the rest of the match)
 	"retreat": "systems_failure",
 	## What the Escort Wing research does (docs/FUN_PLAN.md section 5;
 	## EscortWingFeature): "extra" (today's game: one more escort corvette
@@ -465,6 +468,178 @@ const VARIANT_DEFAULTS := {
 	## its 10 minions; its single corvette gets +40% hull and +15% weapon
 	## range instead)
 	"escort_wing": "extra",
+	## endgame_closure fork (docs/FUN_PLAN.md section 5; every key is "off" by
+	## default, so a match is today's game). Each value is listed in the
+	## header of its feature module in scripts/features/.
+	## Sieges that land (SiegeFixFeature): "off" | "gather3" | "full" | "stall"
+	"siege_fix": "off",
+	## Lane breach corvette (BreachFeature): "off" | "on" | "fulldmg"
+	"breach": "off",
+	## Mothership damage-rate cap (MsCapFeature): "off" | "on" | "full"
+	"ms_cap": "off",
+	## Fleet attrition after 40:00 (AttritionFeature): "off" | "on"
+	"attrition": "off",
+	## Surrender vote (SurrenderFeature): "off" | "vote"
+	"surrender": "off",
+	## Extra super minion in a breached lane's waves (BreachExtraFeature):
+	## "off" | "on"
+	"breach_extra": "off",
+	## Softer mothership (MsSoftFeature): "off" | "hull" | "shield" | "mult"
+	"ms_soft": "off",
+	## Fewer free minion waves late (WavesLateFeature): "off" | "slow" | "none"
+	"waves_late": "off",
+	## Late minions launch from the lane ends (LanespawnFeature): "off" | "on"
+	"lanespawn": "off",
+	## Weapon-aware target choice (EffFeature): "off" | "on"
+	"eff": "off",
+	## Mothership siege rule (MsNosmallFeature): "off" | "nosmall" (small
+	## non-bomber ships stop sieging the mothership)
+	"ms": "off",
+	## combat_roles fork (FORK_MANIFEST.md in remake/). Every key below defaults to
+	## "off", today's game.
+	## E1, MinionCapFeature: "on" = a minion's hit on a pilot ship counts as
+	## at most +15% strong (Reinforced Waves ignored for that hit)
+	"minion_cap": "off",
+	## E2, EscortPdFeature: "on" = big ships' anti-strike-craft guns fire at
+	## x(0.6 + 0.2 x support), shields x0.7 when alone; ESCORTED / ISOLATED
+	"escort_pd": "off",
+	## E3, LanceRoleFeature: "on" = Lance beam x1.35 on a big ship's rear
+	## shield zone; Lance pilots hunt isolated big ships
+	"lance_role": "off",
+	## E4, RoutingPayoffFeature: "on" = holding Weapons / Shields / Thrusters
+	## long enough charges a one-shot bonus
+	"routing_payoff": "off",
+	## E5, JungleBigFeature, REQ-CHANGE ("a jungle ... only small ships can
+	## travel through"): "medium" = MEDIUM ships may use the jungle, "all" =
+	## LARGE and CAPITAL too (wider gates and paths)
+	"jungle_big": "off",
+	## E6, ZoomMaxFeature, REQ-CHANGE (zoom lock close to the ship): "wide" =
+	## the human camera may zoom out 1.5x further, "xwide" = 2x
+	"zoom_max": "off",
+	## Carry-overs, BomberRoleFeature: "seats" = seats 6 and 10 fly Fighters,
+	## "torp" = pilot torpedoes x0.6 (not x0.35) to small craft, "both"
+	"bomber_role": "off",
+	## A1 Lane Slipstream (SlipstreamFeature, docs: FORK_MANIFEST.md): "off"
+	## (today's game) | "on" (pilots behind their own team's front run up to
+	## twice as fast on the lane, at most 1,000 u/s) | "flat" (every hull
+	## runs at 1,100 u/s; REQ-CHANGE: heavier ships travel slower) | "probe"
+	## (nobody slips; only the arrival times of big ships are measured)
+	"slipstream": "off",
+	## A2 Forward Redeploy (RedeployFeature): "off" | "on" (hyperspace comes
+	## right after the Frigate Facility in the admiral's plan, jumps may land
+	## at a bay or a turret, 4 s spool, AI pilots jump to the front)
+	"redeploy": "off",
+	## A3 Recall (RecallFeature): "off" | "on" (key T: a 8-12 s channel that
+	## docks the ship from anywhere; AI pilots recall when far from home)
+	"recall": "off",
+	## A4 Size-scaled respawn (SizeRespawnFeature): "off" | "size" (the wait
+	## is x0.6 / 0.85 / 1.1 / 1.3 for a small / medium / large / capital hull)
+	"respawn": "off",
+	## A5 Respawn at a forward site (RespawnSiteFeature): "off" | "bay" (the
+	## new ship appears at a safe forward repair bay) | "waypoint" (at the
+	## admiral's waypoint ring); REQ-CHANGE: kits are bought at the mothership
+	"respawn_site": "off",
+	## A6 Kits and gear sold at repair bays (BayShopFeature): "off" | "on";
+	## REQ-CHANGE: kits are bought at the mothership
+	"bay_shop": "off",
+	## A7 Steeper late respawn curve (SteepRespawnFeature): "off" | "steep"
+	## (6 s + 0.9 s per minute, at most 50 s  ->  8 s + 1.8 s per minute, at
+	## most 90 s); DESIGN: the research rejected it
+	"respawn_curve": "off",
+	## Deep-dive option bayA (BayBackFeature): "off" | "on" (the AI admiral
+	## places its repair bays 0.22 of the way down the lane, not 0.33)
+	"bayA": "off",
+	## Economy and comeback ideas (fork economy_comebacks; every one is off by
+	## default and has its own feature module in scripts/features/).
+	## C1 income from play (EconPlayFeature): "off" | "play" (slower passive
+	## income, more pay for kills, turrets and minions, a bonus for pilots
+	## near a destroyed turret)
+	"econ": "off",
+	## C2 accrued pilot bounties and comeback structure bounties
+	## (ComebackBountiesFeature): "off" | "on" | "equal" (the same, but the
+	## structure payout is split equally among all 12 pilots)
+	"bounties": "off",
+	## C3 Mk II gear tier (GearMk2Feature): "off" | "on"
+	"gear_mk2": "off",
+	## C4 buyback: pay to respawn at once (BuybackFeature): "off" | "on"
+	"buyback": "off",
+	## C5 Fleet Doctrine, a repeatable admiral research (DoctrineFeature):
+	## "off" | "on"
+	"doctrine": "off",
+	## C6 catch-up income or shared team income (CatchupFeature): "off" |
+	## "income" | "share"
+	"catchup": "off",
+	## C7 pilots mining (PilotMiningFeature): "off" | "hold" | "extractor"
+	"pilot_mining": "off",
+	## C8 the mothership weakens after big treasury spends
+	## (MsSpendWeakFeature): "off" | "on"
+	"ms_spend_weak": "off",
+	## C9 push/morale meter that strengthens new minion waves
+	## (MoraleFeature): "off" | "on"
+	"morale": "off",
+	## Fork teamfights_jungle (docs/FUN_PLAN.md section 5, fork D). Every key
+	## defaults to "off" (today's game); "on" switches the idea on.
+	## D1, GroupLateFeature: after 25:00 the third laners and the flex pilot
+	## group on the push lane; junglers join sieges and defence. "off" | "on"
+	"group_late": "off",
+	## D2, SalvageCoreFeature: the carrier camp nearest the connector in each
+	## quarter becomes a Derelict Battleship; its last-hitter carries a
+	## Salvage Core that strengthens friendly minions. "off" | "on"
+	"salvage_core": "off",
+	## D3, JungleScaleFeature: camp rewards and derelict strength grow with
+	## match time; AI junglers gank hurt pilots after 20:00. "off" | "on"
+	"jungle_scale": "off",
+	## D4, NodePersistFeature (owns the turret rebuild-lock lever): rebuild
+	## lock 60 -> 150 s, rebuilt turrets start at 50% hull and repair 1% per
+	## second. "off" | "on"
+	"node_persist": "off",
+	## D5, EpicNeutralFeature (REQ-CHANGE: no timed events): a timed Derelict
+	## Dreadnought at the Crossing. "off" | "dreadnought" (a team boon) |
+	## "elder" (as dreadnought, but the first kill after 30:00 grants the
+	## Elder Core instead)
+	"epic": "off",
+	## D6, BeaconsFeature (REQ-CHANGE: no timed events / capture points):
+	## two salvage beacons with a sensor-blackout reward. "off" | "on"
+	"beacons": "off",
+	## D7, Camp4Feature + MapBuilderJungle (DESIGN, map-generation change):
+	## a fourth derelict camp per quarter. "off" | "on"
+	"camp4": "off",
+	## D8, FeatsFeature (DESIGN): early feats of strength and the 14:00
+	## Vanguard reward. "off" | "on"
+	"feats": "off",
+	## Admiral command assets (fork admiral_command, F1, AdmiralAssetsFeature):
+	## "off" | "on" (Sensor Sweep + Supply Drop) | "full" (also Mothership
+	## Barrage) | "xray" (like "on", but the Sweep sees through asteroids:
+	## REQ-CHANGE "players cannot see through asteroids")
+	"assets": "off",
+	## Bounty orders (F2, AdmiralOrdersFeature): "off" | "on" (the admiral pays
+	## a bounty on an enemy turret or repair bay)
+	"orders": "off",
+	## Fortify (F3, FortifyFeature): "off" | "on" (a free admiral button that
+	## makes our turrets and mothership take x0.2 damage for 4 s)
+	"fortify": "off",
+	## Reactive AI admiral and fleet-composition calls (F4, AdmiralSmartFeature):
+	## "off" | "on" (AI-only: the build plan reacts to the enemy fleet and
+	## the pilots' shopping lists follow a composition call)
+	"admiral_smart": "off",
+	## Mothership move rules (F5, MsMoveFeature): "off" | "early" (engines online
+	## at 12:00 instead of 20:00) | "flying" (an admiral who flies their own
+	## ship may order the move; REQ-CHANGE "moved by a docked admiral")
+	"ms_move": "off",
+	## Defenders' home-field vision (F6, HomeVisionFeature, DESIGN): "off" | "on"
+	"home_vision": "off",
+	## Mutiny / admiral swap (F7, MutinyFeature, REQ-CHANGE "locked into not
+	## being the admiral"): "off" | "on"
+	"mutiny": "off",
+	## Extra treasury sinks for the AI admiral (deep-dive carry-over,
+	## AdmiralSinksFeature): "off" | "fleet" (build Fleet Command, refresh wards)
+	"admiral_sinks": "off",
+	## Fleet Command minion limit (FleetCapFeature): the most bought minions a
+	## team may have alive at once, as a whole number written as text. The
+	## default "30" is today's limit (Minions.CONTROL_CAP) and installs nothing;
+	## any other whole number, such as "45" or "10", sets the limit for both
+	## teams (the AI admiral and a human admiral alike)
+	"fleet_cap": "30",
 }
 
 
@@ -547,8 +722,17 @@ const TUNABLES := {
 	"mothership_move_unlock": "match time in seconds from which motherships may move (MOTHERSHIP_MOVE_UNLOCK, 1200; move_unlock_time())",
 	"mothership_move_gap": "seconds between the AI admiral's advance moves of the mothership (AdmiralMothershipMover.MOVE_GAP, 120)",
 	"mothership_advance_frac": "how far up the mid lane the AI moves the mothership, as a fraction (AdmiralMothershipMover.ADVANCE_FRAC, 0.35)",
+	"mothership_move_needs_dock": "true = an admiral must be docked (not flying a ship) to order a mothership move (AdmiralCommand.move_blocker; default true)",
 	# Minion waves (MinionDirector).
 	"wave_interval": "seconds between free minion waves (Minions.WAVE_INTERVAL, 35; MinionDirector)",
+	# Damage to a mothership from large and capital pilot ships (CombatScaling).
+	"mothership_attacker_large": "damage multiplier against a mothership for hits from large and capital pilot ships (MOTHERSHIP_ATTACKER, 2.0; CombatScaling)",
+	# Pilot torpedoes (BomberRoleFeature, the bomber_role variant).
+	"torp_small_mult": "damage multiplier of a PILOT's torpedo against small craft (the torp row of DAMAGE, 0.35; BomberRoleFeature)",
+	# The Fleet Command minion limit (FleetCapFeature, the fleet_cap variant).
+	"fleet_cap": "most bought minions a team may have alive at once, Fleet Command mode (Minions.CONTROL_CAP, 30; Minions.control_cap())",
+	# The hyperspace spool-up as the Hyperspace Module's card shows it (RedeployFeature).
+	"hyperspace_spool": "seconds a hyperspace launch spools up, for the Hyperspace Module's card text only (World.HYPERSPACE_SPOOL, 6; Tech.facility_blurb(); RedeployFeature sets its own SPOOL, 4)",
 }
 
 

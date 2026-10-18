@@ -22,14 +22,17 @@ extends RefCounted
 ##     at random.
 ##   - Fleet Command (the team owns the "fleet" facility): free waves stop
 ##     for that team; the admiral buys minions with team money
-##     (Minions.TYPES[type].buy_cost, at most 30 alive, CONTROL_CAP) and
-##     gives them orders through set_order().
+##     (Minions.TYPES[type].buy_cost, at most Minions.control_cap() alive:
+##     CONTROL_CAP 30 unless the fleet_cap variant changes it) and gives
+##     them orders through set_order().
 ##
 ## WHO USES IT: World makes one (World.minion_director) in WorldSetup and
 ## calls tick() every tick. AdmiralCommand calls buy() and set_order();
 ## the AI admiral, the admiral's board, the command overlay and the HUD
 ## ask controlled(), alive_count() and next_wave. EscortWingFeature sets
-## escort_upgrade.
+## escort_upgrade. tick() sends Events.minion_launched for each free-wave
+## minion it launches; BreachFeature, BreachExtraFeature and LanespawnFeature
+## listen (nobody does by default).
 
 ## The match we send minions into.
 var world: World
@@ -87,6 +90,9 @@ func tick(_dt: float) -> void:
 	for q: Array in queue:
 		if world.time >= float(q[0]):
 			var m := _spawn(int(q[1]), q[2], q[3])
+			# Tell the feature modules that listen (nobody does by default).
+			if m != null:
+				Events.minion_launched.emit(m, next_wave)
 			if q.size() > 4 and m != null:
 				EscortWingFeature.upgrade(m)
 		else:
@@ -135,8 +141,9 @@ func buy(team: int, type_id: String, lane: String) -> String:
 	# Check every reason it can't happen, in order.
 	if not controlled(team):
 		return "Needs the Fleet Command Module"
-	if alive_count(team) >= Minions.CONTROL_CAP:
-		return "Minion cap reached (%d)" % Minions.CONTROL_CAP
+	var cap := Minions.control_cap()
+	if alive_count(team) >= cap:
+		return "Minion cap reached (%d)" % cap
 	var ms := world.mothership(team)
 	if ms == null or not ms.alive:
 		return "The mothership can't launch minions"

@@ -12,7 +12,7 @@ extends RefCounted
 ##      numbers).
 ##   3. Write the node into the map. An "inner" node (near a mothership) is
 ##      authored for Aurelian only, so it is written twice: once as it is
-##      and once mirrored for Cinder ("hal_top" and "cin_top", say). A
+##      and once mirrored for Vhorr ("hal_top" and "cin_top", say). A
 ##      "middle" node sits on the centre line and is shared, so it is
 ##      written once.
 ##   4. Keep later rocks out: lane wall rocks must stay out of the node
@@ -45,7 +45,7 @@ func run() -> void:
 		var slot_pos := _slot_positions(p, lane, slots)
 		var ores := _ore_rocks(p, 6 if nd["id"] == "c_mid" else MapLayout.ORE_ROCKS, nd["kind"] == "middle")
 		# Step 3: an inner node is written for both teams (t = 0 Aurelian as
-		# authored, t = 1 Cinder mirrored), with its slots and ore mirrored too.
+		# authored, t = 1 Vhorr mirrored), with its slots and ore mirrored too.
 		if nd["kind"] == "inner":
 			for t in 2:
 				var mp := p if t == 0 else MapLayout.mirror(p)
@@ -76,7 +76,7 @@ func run() -> void:
 
 
 ## Add one node to the map's node list (MapInfo.nodes). `side` is the
-## owning team (0 Aurelian, 1 Cinder) or -1 for a shared middle node;
+## owning team (0 Aurelian, 1 Vhorr) or -1 for a shared middle node;
 ## `value` is how rich the node is (from MapLayout.NODES); `slot_pos` are
 ## its turret slots and `ore` its ore rocks ([{pos, r}]).
 func _add_node(id: String, nm: String, pos: Vector2, kind: String, side: int, lane: String, value: float, slot_pos: PackedVector2Array, ore: Array) -> void:

@@ -24,7 +24,7 @@ extends RefCounted
 
 ## The game world (nodes, bays, wards, the map and the AdmiralCommand).
 var world: World
-## Our team: 0 = Aurelian, 1 = Cinder.
+## Our team: 0 = Aurelian, 1 = Vhorr.
 var team := 0
 ## The admiral's lane helper (for points along a lane).
 var lanes: AdmiralLanes
@@ -38,6 +38,16 @@ func _init(w: World, t: int, l: AdmiralLanes) -> void:
 	lanes = l
 
 
+## The ore nodes in the order the turret builders visit them: the map's own
+## order (World.nodes), except under the "node_persist" variant
+## (NodePersistFeature), where the node nearest our own mothership comes
+## first, so a lost turret near home is rebuilt before a far one.
+func _nodes_in_order() -> Array:
+	if not world.features.is_empty() and world.features.has("node_persist"):
+		return world.features["node_persist"].call("nodes_by_distance", team)
+	return world.nodes
+
+
 ## Put a PD turret at each of our inner nodes that has no turret of ours
 ## yet, while we have 450 credits (the PD turret's price). This runs early
 ## in the admiral's think, before the tech plan, so the base gets its first
@@ -49,7 +59,7 @@ func _init(w: World, t: int, l: AdmiralLanes) -> void:
 ## the same order every second.
 func guard_inner_nodes(ts: TeamState) -> void:
 	var cmd := world.command
-	for n in world.nodes:
+	for n: ResourceNode in _nodes_in_order():
 		if n.node_kind == "inner" and n.side == team and n.turret_count(team) == 0:
 			if cmd.turret_blocker(team, n.node_id, "pd") != "":
 				continue
@@ -61,18 +71,22 @@ func guard_inner_nodes(ts: TeamState) -> void:
 ## slot at one of our inner nodes (a torp turret if that node already has a
 ## turret and we have the research, else a PD turret), keeping 300 credits
 ## left over. Second choice: a PD turret at a middle node where we have
-## none yet, if we have 750 credits.
-func more_turrets(ts: TeamState) -> void:
+## none yet, if we have 750 credits. With `inner_only` (the weak admiral
+## of the test option --admiral-ai=weak) the second choice is skipped.
+func more_turrets(ts: TeamState, inner_only: bool = false) -> void:
 	var cmd := world.command
-	# Step 1: our inner nodes, in map order.
-	for n in world.nodes:
+	# Step 1: our inner nodes, in map order (the node_persist variant: nearest
+	# our mothership first, see _nodes_in_order()).
+	for n: ResourceNode in _nodes_in_order():
 		if n.node_kind == "inner" and n.side == team and n.free_slot() >= 0:
 			var ttype := "torp" if ts.turret_torp and n.turret_count(team) >= 1 else "pd"
 			# Allowed here, and we can pay for it with 300 credits to spare?
 			if cmd.turret_blocker(team, n.node_id, ttype) == "" and ts.can_afford(float(TurretData.TURRETS[ttype]["cost"]) + 300.0):
 				cmd.build_turret(team, n.node_id, ttype)
 				return
-	# Step 2: the middle nodes.
+	# Step 2: the middle nodes (not for a weak admiral).
+	if inner_only:
+		return
 	for n in world.nodes:
 		# One turret per middle node: more turned the lane centres into
 		# fortresses no wave could get past (playtest 2026-10-13).
@@ -97,8 +111,15 @@ func place_bay() -> void:
 	# lane whose spot has no bay of ours yet. The spot is 900 units off the
 	# lane line (up for mid and top, down for bot) so minions don't fight
 	# over it.
-	for lane: String in ["mid", "top", "bot"]:
-		var p := lanes.lane_point(lane, 0.33)
+	# The places to try: [lane, fraction of the lane]. Features that have a
+	# bay_spots() function (Forward Redeploy, bayA) may change the list.
+	var spots: Array = [["mid", 0.33], ["top", 0.33], ["bot", 0.33]]
+	for f in world.features.values():
+		if f.has_method("bay_spots"):
+			spots = f.bay_spots(world, team, spots, lanes)
+	for spot: Array in spots:
+		var lane: String = spot[0]
+		var p := lanes.lane_point(lane, float(spot[1]))
 		p += Vector2(0, -900.0 if lane != "bot" else 900.0)
 		# A bay of ours within 1,500 units already covers this spot.
 		var covered := false
@@ -126,7 +147,7 @@ func place_ward() -> void:
 		return
 	# Step 2: go through the jungle entrances. Which side owns an entrance
 	# goes by its quarter of the map ("tl"/"bl" = Aurelian's left half,
-	# "tr"/"br" = Cinder's right half). Some entrances sit exactly on the
+	# "tr"/"br" = Vhorr's right half). Some entrances sit exactly on the
 	# centre line, and each side has its own copy of those, so judging by
 	# the x position alone would hand all of them to one team.
 	for e: Dictionary in world.map.entrances:

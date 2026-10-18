@@ -41,7 +41,7 @@ static func refresh_card(h: Hangar, c: CardButton, shop: bool) -> void:
 ## to buy them. A refusal shows as a toast; a purchase plays the "buy"
 ## sound (Events.cue). Then refresh.
 static func buy(h: Hangar) -> void:
-	if not h.can_shop():
+	if not h.can_shop_goods():
 		Events.toast.emit("Repair kits are bought at the mothership.")
 		return
 	var err := h.profile.buy_kit()

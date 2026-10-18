@@ -81,13 +81,16 @@ func _good_bad(team: int) -> Color:
 
 ## A plain feed message (Events.feed). `tone` is "good", "bad" or "info";
 ## `team` is whose news it is (-1 = everyone's). We hide the enemy's own
-## good and bad news, and also their "free mining drone" info lines.
+## good and bad news, and also their "free mining drone" info lines. The
+## feature modules build their messages from the internal team labels
+## (Rules.TEAM_NAMES, and place names such as "Halcyon Mid"), so the line
+## goes through Rules.display_label() to show the player-facing names.
 func on_feed(text: String, tone: String, team: int) -> void:
 	if team >= 0 and _vt() >= 0 and team != _vt() and tone != "info":
 		return
 	if team >= 0 and _vt() >= 0 and team != _vt() and text.contains("free mining drone"):
 		return
-	add_line(text, Palette.MIST if tone == "info" else Palette.ICE)
+	add_line(Rules.display_label(text), Palette.MIST if tone == "info" else Palette.ICE)
 
 
 ## Something died (Events.unit_killed). `info` is the DamageInfo of the
@@ -130,7 +133,7 @@ func _ship_cause(s: Ship, d: DamageInfo, killer: PilotProfile) -> String:
 	elif d.kind == Rules.W_COLLISION:
 		cause = "%s's %s crashed into an asteroid" % [vname, hull]
 	elif d.source != null and is_instance_valid(d.source):
-		# Name the thing that fired, with its team: "a Cinder turret", "an Aurelian minion",
+		# Name the thing that fired, with its team: "a Vhorr turret", "an Aurelian minion",
 		# "the Aurelian mothership" or "a derelict gunship".
 		var what: String = Unit.KIND_NAMES[d.source.kind]
 		if d.source.kind == Unit.K_MOTHERSHIP:

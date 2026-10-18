@@ -13,6 +13,9 @@ extends RefCounted
 ##     happened and a warning sound plays.
 ##   - "none": nothing happens (tests/ms_duel.gd uses it to measure the
 ##     mothership's raw strength; tests/endgame.gd can compare the two).
+##   - "last_stand": nothing happens here; LastStandFeature
+##     (scripts/features/last_stand.gd) does its own once-per-match
+##     emergency (shields refill, guns faster, then a weak spot).
 ## It can never happen twice (Mothership.retreat_used). This is a "static
 ## library": it keeps no memory of its own; the timer lives on the
 ## Mothership.
@@ -44,7 +47,9 @@ static func check(ms: Mothership) -> void:
 		return
 	# Step 1: the "retreat" game option. "none" just uses it up.
 	ms.retreat_used = true
-	if Game.variant("retreat") == "none":
+	# Only "systems_failure" does anything here: "none" does nothing and
+	# "last_stand" is run by its own feature module (LastStandFeature).
+	if Game.variant("retreat") != "systems_failure":
 		return
 	# Step 2: raise the hull back to the threshold and fail systems for a
 	# while.

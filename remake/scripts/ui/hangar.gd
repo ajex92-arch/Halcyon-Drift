@@ -15,7 +15,7 @@ extends PanelContainer
 ##   BayRow: the hyperspace launch row, empty until HangarLaunch fills it;
 ##   Tabs (Ships, Modules, Gear, Kits): one button per tab, 110 pixels
 ##     wide; each button's text is its tab's name;
-##   Scroll > Content: the scroll area (at least 300 pixels tall) and the
+##   Scroll > Content: the scroll area (at least 120 pixels tall) and the
 ##     column inside it that holds the current tab's cards;
 ##   SlotsHeading, then Slots: the heading and the row for the pilot's 6
 ##     gear slot cards.
@@ -156,6 +156,16 @@ func can_shop() -> bool:
 	return m == "dock" or m == "dead"
 
 
+## May the pilot buy repair kits and gear right now? At the mothership
+## (can_shop), or, with the Bay shop feature on, in flight inside a repair
+## bay's range when BayShopFeature allows it (hulls and modules still need
+## the mothership).
+func can_shop_goods() -> bool:
+	if can_shop():
+		return true
+	return mode() == "bay" and world.features.has("bay_shop") and (world.features["bay_shop"] as BayShopFeature).human_can_shop(self)
+
+
 ## Show tab `t` (one tab button's text): colour its button amber, throw
 ## away the old cards, build the new tab's cards and fill them in at once.
 ## Other files call it too (the HUD after a resize, tests/ui_tour.gd).
@@ -186,9 +196,11 @@ func _set_tab(t: String) -> void:
 
 ## The width in pixels of one card when `cols` cards sit side by side: the
 ## panel's width minus 60 (but at least 600), less the 8-pixel gaps
-## between cards, shared out and rounded down.
+## between cards, shared out and rounded down. The panel's width is the one
+## it is meant to have (UiKit.panel_width), not its `size`: the cards make
+## the panel at least as wide as they are, so `size` could never shrink.
 func _card_width(cols: int) -> float:
-	var w := maxf(600.0, size.x - 60.0)
+	var w := maxf(600.0, UiKit.panel_width(self) - 60.0)
 	return floorf((w - float(cols - 1) * 8.0) / float(cols))
 
 
@@ -238,6 +250,7 @@ func _refresh() -> void:
 		return
 	var m := mode()
 	var shop := can_shop()
+	var goods := can_shop_goods()
 	var ts := world.teams[profile.team]
 	UiKit.set_text(_title, "Hangar  ·  %s credits" % Util.money(profile.credits))
 	# Step 1: the status line, the Launch button, and the hyperspace row
@@ -257,9 +270,9 @@ func _refresh() -> void:
 		elif key.begins_with("mod:"):
 			HangarModules.refresh_card(self, c, key.substr(4), m)
 		elif key.begins_with("gear:"):
-			HangarGear.refresh_card(self, c, key.substr(5), shop)
+			HangarGear.refresh_card(self, c, key.substr(5), goods)
 		elif key == "kit":
-			HangarKits.refresh_card(self, c, shop)
+			HangarKits.refresh_card(self, c, goods)
 	# Step 3: the Modules tab's note, then the gear slots.
 	if _cards.has("note"):
 		HangarModules.refresh_note(self, _cards["note"], m)

@@ -70,10 +70,14 @@ const K_MONSTER := 8
 ## Kind number: a snub fighter (SnubFighter), a small neutral fighter that a
 ## Derelict Carrier launches.
 const K_SNUB := 9
+## Kind number: a pilot's personal ore extractor (PilotExtractor; only with
+## the pilot_mining:extractor feature). It is in World.units but in no
+## kind list.
+const K_EXTRACTOR := 10
 ## A readable name for each kind number, in the same order as the K_*
 ## numbers above (KIND_NAMES[K_TURRET] is "turret"). The HUD, World's speed
 ## measurements and some tests print these.
-const KIND_NAMES := ["ship", "minion", "mining drone", "repair drone", "ward", "turret", "repair bay", "mothership", "derelict", "snub fighter"]
+const KIND_NAMES := ["ship", "minion", "mining drone", "repair drone", "ward", "turret", "repair bay", "mothership", "derelict", "snub fighter", "extractor"]
 
 # --- who and what this unit is ---------------------------------------------------------
 

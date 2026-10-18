@@ -11,15 +11,18 @@ extends PanelContainer
 ## it for 3.5 seconds; tick() counts that time down and fades the box out
 ## over the last 0.6 seconds. Normally the box sits 150 pixels above the
 ## bottom edge. While a big panel is open it drops to 6 pixels above the
-## bottom (the strip that only has key hints) so it doesn't cover the
-## panel. It is also kept as the HUD's last child, so it draws on top of
-## everything.
+## bottom (the strip HudLayout keeps free for it) so it doesn't cover the
+## panel; while the scoreboard (which has no such strip) is held open, or
+## the match is over, it waits, hidden, and its time stops. A text too long
+## for the room it has (HudLayout.toast_width: in flight it must stay clear
+## of the minimap) wraps onto more lines. It is also kept as the HUD's last
+## child, so it draws on top of everything.
 ##
 ## WHO USES IT: the HUD's scene (scenes/ui/hud.tscn) holds it and
 ## Hud.setup() gives it the HUD. Hud.toast() (connected to Events.toast,
 ## so any script can pop a hint up) calls show_text(), and Hud._process()
 ## calls tick() every frame. It asks the Hud whether a panel is open
-## (Hud._any_panel_open).
+## (Hud._any_panel_open) and HudLayout how wide it may be.
 
 ## The HUD this widget belongs to (Hud.setup() sets it).
 var hud: Hud
@@ -27,6 +30,11 @@ var hud: Hud
 @onready var _label: Label = $Text
 ## Seconds the hint has left to show (0 = hidden).
 var _t := 0.0
+
+
+## Godot calls this when the box joins the HUD: let long text wrap.
+func _ready() -> void:
+	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 
 ## Show `text` for 3.5 seconds (a new hint replaces the old one).
@@ -38,10 +46,18 @@ func show_text(text: String) -> void:
 
 
 ## Put the box in its spot: 6 pixels above the bottom while a big panel is
-## open, else 150. We shrink the box to a point first; its minimum size
+## open, else 150, and make it no wider than HudLayout allows (the text
+## wraps instead). We shrink the box to a point first; its minimum size
 ## then grows it back, centred and upward from that point.
 func place() -> void:
-	var y := -6.0 if hud._any_panel_open() else -150.0
+	var open := hud._any_panel_open()
+	var y := -HudLayout.TOAST_LIFT if open else -HudLayout.TOAST_LIFT_FLIGHT
+	# The label is as wide as its text, or as wide as the box may be less
+	# the box's own space on the left and right.
+	var font := _label.get_theme_font("font")
+	var text_w := font.get_string_size(_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, _label.get_theme_font_size("font_size")).x
+	var room := hud.layout.toast_width(open) - get_theme_stylebox("panel").get_minimum_size().x
+	UiKit.pin_width(_label, minf(ceilf(text_w) + 2.0, room))
 	offset_left = 0.0
 	offset_right = 0.0
 	offset_top = y
@@ -56,6 +72,13 @@ func place() -> void:
 ## at 0 it hides.
 func tick(dt: float) -> void:
 	if _t > 0.0:
+		# While the scoreboard is held open the hint waits (it would sit over
+		# the table), and its time does not run. Once the match is over it
+		# waits for good (the end screen has the whole window).
+		var waiting := (hud.scoreboard != null and hud.scoreboard.visible) or hud.end_screen != null
+		visible = not waiting
+		if waiting:
+			return
 		_t -= dt
 		modulate.a = clampf(_t / 0.6, 0.0, 1.0)
 		place()

@@ -14,7 +14,9 @@ extends RefCounted
 ##      - a mothership: x0.5 from minions (Rules.MOTHERSHIP_MINION_MULT);
 ##        from anyone else, by the attacker's size
 ##        (Rules.MOTHERSHIP_ATTACKER: small x0.3, medium x0.8, large and
-##        capital x2.0, others x1.0). So strike craft barely scratch it and
+##        capital x2.0 (a tuned number, "mothership_attacker_large"; the
+##        ms_soft:mult variant raises it), others x1.0). So strike craft
+##        barely scratch it and
 ##        big ships tear it apart.
 ##      - a turret: x0.35 from minions (Rules.TURRET_MINION_MULT). From a
 ##        pilot, x0.3 when no minion of the pilot's team is within 1800
@@ -57,7 +59,12 @@ func final_amount(target: Unit, info: DamageInfo) -> float:
 		if info.source_is_minion:
 			amount *= Rules.MOTHERSHIP_MINION_MULT
 		else:
-			amount *= float(Rules.MOTHERSHIP_ATTACKER[clampi(info.source_size, 0, 6)])
+			var att := float(Rules.MOTHERSHIP_ATTACKER[clampi(info.source_size, 0, 6)])
+			# Large and capital attackers: a feature (ms_soft:mult) may raise
+			# the x2.0 (tuned "mothership_attacker_large").
+			if info.source_size == Rules.SIZE_LARGE or info.source_size == Rules.SIZE_CAPITAL:
+				att = float(Rules.tune("mothership_attacker_large", att))
+			amount *= att
 	elif target.kind == Unit.K_TURRET:
 		# Backdoor protection: only checked for pilots (the minion search
 		# is skipped for everyone else).

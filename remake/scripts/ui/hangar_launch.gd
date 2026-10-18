@@ -77,6 +77,11 @@ static func refresh_button(h: Hangar, m: String) -> void:
 	# when docked or when a bay launch is possible.
 	h._launch.visible = m == "dock" or m == "dead" or m == "offline" or m == "bay_launch"
 	h._launch.disabled = m != "dock" and m != "bay_launch"
+	# Buyback (BuybackFeature): a dead pilot's button buys the respawn.
+	if m == "dead" and BuybackFeature.current() != null:
+		h._launch.disabled = not BuybackFeature.can_buy(h.profile)
+		h._launch.text = BuybackFeature.button_text(h.profile)
+		return
 	# Step 2: the button's text.
 	if m == "bay_launch":
 		h._launch.text = "Launch from a repair bay (F)"
@@ -127,6 +132,14 @@ static func refresh_bay_row(h: Hangar, enabled: bool) -> void:
 ## success.
 static func launch(h: Hangar) -> bool:
 	var m := h.mode()
+	# Buyback (BuybackFeature): the button of a dead pilot buys the respawn.
+	if m == "dead" and BuybackFeature.current() != null:
+		var err := BuybackFeature.press(h.profile)
+		if err != "":
+			Events.toast.emit(err)
+		else:
+			Events.cue.emit("buy", Vector2.ZERO)
+		return false
 	if m != "dock" and m != "bay_launch":
 		return false
 	# Step 1: no ship chosen yet: take the free Scout.

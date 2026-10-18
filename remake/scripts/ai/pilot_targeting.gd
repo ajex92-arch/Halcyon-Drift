@@ -20,6 +20,10 @@ extends RefCounted
 ##     enemy turret, or the enemy mothership). Feature modules may change
 ##     how the turrets are scored (World.push_weight_hooks); with none, the
 ##     nearest one wins, as always.
+##   - Two feature modules reach in here when their variant is on (nothing
+##     changes otherwise): EffFeature adds a weapon-aware term to every
+##     score in pick_target(), and MsNosmallFeature makes small non-bomber
+##     ships leave the enemy mothership alone (pick_target and push_target).
 ##   - prey() finds an enemy pilot worth hunting (one behind a rock scores
 ##     700 worse, as in pick_target()).
 ##   - All three pass over the one unit that PilotCombat gave up on because
@@ -115,6 +119,9 @@ func pick_target(ship: Ship, r: float) -> Unit:
 	# A bomber in the lane leaves small craft alone: its torpedoes do x0.35
 	# to them and miss 8 times in 10 (minions, drones, wards and small pilots).
 	var bomber_lane := ship.hull_id == "bomber" and brain.state == "lane"
+	# Feature hook (eff:on): the weapon-aware target score, see EffFeature.
+	var eff_on := world.features.has("eff")
+	var best_adj := 0.0
 	for u: Unit in world.unit_hash.query(ship.global_position, r * STICK_RANGE if stick_on else r, _scratch):
 		# Step 1: only live, visible enemies truly within r (the pilot we
 		# stick to: within STICK_RANGE times r).
@@ -179,6 +186,11 @@ func pick_target(ship: Ship, r: float) -> Unit:
 				s += 100.0
 			Unit.K_MONSTER, Unit.K_SNUB:
 				s += 100.0
+		# Feature hook (eff:on): prefer targets our main gun hurts most.
+		var adj := 0.0
+		if eff_on:
+			adj = EffFeature.adjust(ship, u)
+			s += adj
 		# The pilot we are shooting now counts STICK_BONUS better.
 		if stick_on and u == prev:
 			s -= STICK_BONUS
@@ -192,14 +204,20 @@ func pick_target(ship: Ship, r: float) -> Unit:
 					continue
 			best_s = s
 			best = u
+			best_adj = adj
 	# Step 4: the enemy mothership, once we are in range (80% of r from its
 	# hull). It isn't in the spatial hash, so it is checked on its own. Big
 	# ships and bombers want it much more (+100 instead of +900).
 	var ems := world.mothership(1 - ship.team)
-	if ems != null and ems.alive and ems.hull_dist(ship.global_position) < r * 0.8:
+	# (ms:nosmall: small non-bomber ships leave the mothership alone.)
+	if ems != null and ems.alive and ems.hull_dist(ship.global_position) < r * 0.8 and not (world.features.has("ms") and MsNosmallFeature.skips(ship)):
 		var s2 := ems.hull_dist(ship.global_position) + (100.0 if ship.size_class >= Rules.SIZE_LARGE or ship.hull_id == "bomber" else 900.0)
 		if s2 < best_s:
 			best = ems
+			best_adj = 0.0
+	# eff:on: count the picks where the weapon-aware term moved the score a lot.
+	if eff_on and best != null and absf(best_adj) >= EffFeature.MATERIAL:
+		Game.count_usage("eff_picks")
 	brain.lock_target = best
 	return best
 
@@ -258,6 +276,9 @@ func push_target(ship: Ship, station: Vector2) -> Unit:
 	var ems := world.mothership(1 - ship.team)
 	if ems != null and ems.alive and ems.hull_dist(station) < PUSH_RANGE + 1500.0:
 		if not ship.is_small() or ship.hull_id == "bomber" or brain.senses.minions_at_hull(ems, ship.team, 2500.0) >= 3:
+			# (ms:nosmall: a small non-bomber ship never pushes the mothership.)
+			if world.features.has("ms") and MsNosmallFeature.skips(ship):
+				return null
 			return ems
 	return null
 

@@ -211,7 +211,7 @@ func _init(w: World, p: PilotProfile) -> void:
 	# Step 2: skill, between 0.5 and 0.95. It varies by seat but is the same
 	# for both teams (playtest: a team term here gave the same role a
 	# different skill on each side, and identical 3v3 fighter squads went
-	# 15-5 to Cinder).
+	# 15-5 to Vhorr).
 	skill = 0.5 + 0.45 * fmod(float(s) * 0.618 + 0.15, 1.0)
 	# Fun tests only (--skill-jitter): nudge the seat's skill by its own
 	# random amount, the same for this seat on both teams (SkillJitter;
@@ -264,7 +264,11 @@ func update_docked(dt: float) -> void:
 ## the mid lane); the jump pays when the bay is closer to it than the
 ## launch point by more than the ship flies during the 6 s spool plus 1,500
 ## world units.
-func _hyperspace_bay() -> RepairBay:
+func _hyperspace_bay() -> Unit:
+	# Feature hook (Forward Redeploy): it chooses a bay or a turret near the
+	# pilot's destination itself (RedeployFeature.pick_site).
+	if world.features.has("redeploy"):
+		return (world.features["redeploy"] as RedeployFeature).pick_site(self)
 	# Step 1: we need our mothership and the module.
 	var ts := world.teams[profile.team]
 	var ms := world.mothership(profile.team)
@@ -391,16 +395,41 @@ func _think(ship: Ship) -> void:
 		lock_target = null
 		systems.set_energy_and_shields(ship)
 		return
-	# Step 6: the normal job for our state (PilotGoals).
-	match state:
-		"retreat", "home":
-			goals.think_home(ship, ms)
-		"jungle":
-			goals.think_jungle(ship)
-		_:
-			goals.think_lane(ship)
+	# Step 6: the normal job for our state (PilotGoals), unless a feature
+	# module with a pilot_think() takes over this think (see
+	# _feature_takes_over(); no feature is on by default).
+	if world.features.is_empty() or not _feature_takes_over(ship):
+		match state:
+			"retreat", "home":
+				goals.think_home(ship, ms)
+			"jungle":
+				goals.think_jungle(ship)
+			_:
+				goals.think_lane(ship)
+	# Feature hooks (World.pilot_think_hooks; none unless a feature is on):
+	# they may change the goal and the target chosen above.
+	for f: Callable in world.pilot_think_hooks:
+		f.call(ship, self)
 	# Step 7: set the energy routing and shield focus (PilotSystems).
 	systems.set_energy_and_shields(ship)
+
+
+## Feature hook: does a feature module take over this think? Asks every
+## feature in World.features that has a function
+## pilot_think(brain: PilotAI, ship: Ship) -> bool, in install order, until
+## one answers true (it then has set the goal, target and intent itself, as
+## the normal job for our state would). Only called while at least one
+## feature is on, and only in the "lane" and "jungle" states (a retreating or
+## shopping pilot is left alone). Used by the fork teamfights_jungle's
+## modules (GroupLateFeature, SalvageCoreFeature, JungleScaleFeature,
+## EpicNeutralFeature, BeaconsFeature).
+func _feature_takes_over(ship: Ship) -> bool:
+	if state != "lane" and state != "jungle":
+		return false
+	for f: Object in world.features.values():
+		if f.has_method("pilot_think") and f.call("pilot_think", self, ship):
+			return true
+	return false
 
 
 # --- forwarding ----------------------------------------------------------------------------

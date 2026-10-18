@@ -77,6 +77,11 @@ func tick(dt: float) -> void:
 			if p.respawn_t <= 0.0:
 				p.state = "docked"
 				p.respawn_t = 0.0
+				# Feature hook (Forward Redeploy): a jump to a bay or a
+				# turret lands next to it (RedeployFeature.finish).
+				if p.spool_site != null:
+					(world.features["redeploy"] as RedeployFeature).finish(p)
+					continue
 				var bay := p.spool_bay
 				p.spool_bay = null
 				world.launch(p, bay if bay != null and is_instance_valid(bay) and bay.alive else null)

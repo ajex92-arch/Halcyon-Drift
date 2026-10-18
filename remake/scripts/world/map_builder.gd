@@ -27,7 +27,7 @@ extends RefCounted
 ##   7. Route graph (MapBuilderRoute): the road map for AI ships and drones.
 ##
 ## Fair for both sides: everything is made on Aurelian's half of the map
-## (x < CX, the left half) and then mirrored onto Cinder's half, so the two
+## (x < CX, the left half) and then mirrored onto Vhorr's half, so the two
 ## sides are exactly the same. "Mirrored" means flipped left-to-right
 ## across the centre line x = CX, like a reflection (MapLayout.mirror()).
 ##
@@ -111,7 +111,7 @@ var gates: Array = []
 ## Every rock so far, before mirroring, as [{p, r, node, mirror}]:
 ## p = centre, r = radius (world units), node = true for ore rocks (which
 ## can't be destroyed), mirror = true if step 6 should also add a mirror
-## copy on Cinder's half.
+## copy on Vhorr's half.
 var rocks: Array = []
 
 
@@ -145,7 +145,7 @@ func _run() -> MapInfo:
 ## and list the lanes and the connector as corridors for the later steps.
 func _bases_and_lanes() -> void:
 	# Where each team's mothership sits and which way it faces (team 0 is
-	# Aurelian, team 1 is Cinder).
+	# Aurelian, team 1 is Vhorr).
 	for t in 2:
 		info.mothership_pos.append(MapLayout.MOTHERSHIPS[t]["pos"])
 		info.mothership_facing.append(float(MapLayout.MOTHERSHIPS[t]["facing"]))
@@ -163,7 +163,7 @@ func _bases_and_lanes() -> void:
 
 ## Step 6: copy every rock into the map's rock lists (rock_pos, rock_r,
 ## rock_node; the same index in each list is the same rock). A rock marked
-## `mirror` also gets a copy on Cinder's half, unless it sits right on the
+## `mirror` also gets a copy on Vhorr's half, unless it sits right on the
 ## centre line (within 1 world unit), where its copy would land on itself.
 func _emit_rocks() -> void:
 	for rk: Dictionary in rocks:

@@ -32,6 +32,16 @@ extends RefCounted
 
 ## The game world (teams, nodes, units, the map).
 var world: World
+## Feature hook: extra admiral orders that feature modules add (Sensor Sweep,
+## Supply Drop, Barrage, Bounty, Fortify). order id -> a Dictionary that
+## CommandOrders describes. The admiral board, the map tools and the HUD
+## read this list to show a button, a map tool, a status tag and a help
+## line for each order. Empty (the default) = the orders of today's game.
+var orders := {}
+## Feature hook: marks that feature modules want drawn on the map and the
+## minimap (a ring with a label, such as the red Barrage circle). Each is
+## a Dictionary that CommandOrders.add_mark() makes. Empty by default.
+var marks: Array = []
 
 
 ## World makes this once and passes itself in.
@@ -238,7 +248,9 @@ func move_blocker(team: int) -> String:
 	var unlock := Rules.move_unlock_time()
 	if world.time < unlock:
 		return "The mothership's engines come online at %s" % Util.clock(unlock)
-	if not world.teams[team].admiral_docked:
+	# A feature (ms_move:flying) may let an admiral who flies a ship give the
+	# order too: Rules.tune("mothership_move_needs_dock", true).
+	if not world.teams[team].admiral_docked and bool(Rules.tune("mothership_move_needs_dock", true)):
 		return "The admiral must be docked to move the mothership"
 	# Mothership.can_move(): the engines are online and it isn't in the
 	# middle of a hyperspace jump.

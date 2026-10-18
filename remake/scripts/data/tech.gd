@@ -23,7 +23,10 @@ extends RefCounted
 ##   time      how long it takes to build [seconds]
 ##   req_fac   facilities that must be built first (a list of ids)
 ##   req_tech  research that must be finished first (a list of ids)
-##   blurb     what it does, in words for players
+##   blurb     what it does, in words for players; read it through
+##             facility_blurb(), which fills in "{fleet_cap}" (the Fleet
+##             Command limit of this match) and "{spool}" (the seconds a
+##             hyperspace launch spools up in this match)
 ## A research item's fields:
 ##   label, cost [credits], time [seconds] and blurb, as above
 ##   column    the board column it sits in (one of COLUMNS)
@@ -102,9 +105,9 @@ const FACILITIES := {
 	"sensors": {"label": "Advanced Sensors Array", "cost": 700.0, "time": 30.0, "req_fac": ["research"], "req_tech": [],
 		"blurb": "+20% vision for every friendly unit; opens sensor research."},
 	"hyperspace": {"label": "Hyperspace Module", "cost": 1200.0, "time": 40.0, "req_fac": ["research", "corvette"], "req_tech": [],
-		"blurb": "Pilots can launch straight to any friendly repair bay (6s spool-up)."},
+		"blurb": "Pilots can launch straight to any friendly repair bay ({spool}s spool-up)."},
 	"fleet": {"label": "Fleet Command Module", "cost": 2000.0, "time": 60.0, "req_fac": ["capital"], "req_tech": [],
-		"blurb": "Direct minion control. Free minion waves stop; buy up to 30 minions and order them."},
+		"blurb": "Direct minion control. Free minion waves stop; buy up to {fleet_cap} minions and order them."},
 }
 
 ## Research columns, in board order. "research" = General, "flagship" =
@@ -221,6 +224,19 @@ static func column_facility(column: String) -> String:
 ## admiral board's research cards show it.
 static func blurb(id: String) -> String:
 	return str(Rules.tune("tech_blurb:" + id, TECHS[id]["blurb"]))
+
+
+## The description of mothership module (facility) `id` for players: its
+## "blurb", with "{fleet_cap}" replaced by the most bought minions a team may
+## have alive in this match (Minions.control_cap(): 30 in the standard rules,
+## another number under the fleet_cap variant) and "{spool}" by the seconds a
+## hyperspace launch spools up (World.HYPERSPACE_SPOOL, 6, unless the redeploy
+## variant tuned "hyperspace_spool" to 4), so the Fleet Command and Hyperspace
+## Module cards never show a stale number. The admiral board's module cards
+## show it.
+static func facility_blurb(id: String) -> String:
+	var spool := int(Rules.tune("hyperspace_spool", World.HYPERSPACE_SPOOL))
+	return String(FACILITIES[id]["blurb"]).format({"fleet_cap": Minions.control_cap(), "spool": spool})
 
 
 ## Why a research item can't be queued, or "" if it can. `planned` = done +

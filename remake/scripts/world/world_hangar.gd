@@ -77,20 +77,24 @@ func launch(p: PilotProfile, at_bay: RepairBay = null) -> Ship:
 ## up for World.HYPERSPACE_SPOOL seconds (6), then appears at repair bay
 ## `bay` (MatchRules.tick finishes it). Returns "" or why not (shown to the
 ## player).
-func hyperspace_launch(p: PilotProfile, bay: RepairBay) -> String:
+func hyperspace_launch(p: PilotProfile, bay: Unit) -> String:
+	# Feature hook (Forward Redeploy): the jump may go to a repair bay or a
+	# turret and spools for 4 s (RedeployFeature.start).
+	if world.features.has("redeploy"):
+		return (world.features["redeploy"] as RedeployFeature).start(p, bay)
 	# Check every reason it can't happen, in order.
 	if p.state != "docked":
 		return "You must be docked at the mothership"
 	if not world.teams[p.team].facilities.has("hyperspace"):
 		return "Needs the Hyperspace Module"
-	if bay == null or not is_instance_valid(bay) or not bay.alive or not bay.is_anchored():
+	if bay == null or not is_instance_valid(bay) or not bay.alive or not (bay as RepairBay).is_anchored():
 		return "That repair bay is gone"
 	if p.hull_id == "":
 		return "Pick a ship first"
 	# Start the spool: respawn_t doubles as the spool countdown.
 	p.state = "spooling"
 	p.respawn_t = World.HYPERSPACE_SPOOL
-	p.spool_bay = bay
+	p.spool_bay = bay as RepairBay
 	return ""
 
 
@@ -126,7 +130,9 @@ func swap_module_in_bay(p: PilotProfile, id: String) -> String:
 
 ## Dock flying ship `s` at its mothership if it is close enough. Returns
 ## true if it docked. A human gets a short message when they can't.
-func try_dock(s: Ship) -> bool:
+## `from_anywhere` (only the Recall feature passes true) skips the distance
+## test: the ship docks wherever it is.
+func try_dock(s: Ship, from_anywhere: bool = false) -> bool:
 	# The mothership must be working, and the ship within its dock radius
 	# of the hull.
 	var ms := world.mothership(s.team)
@@ -134,7 +140,7 @@ func try_dock(s: Ship) -> bool:
 		if s.profile.is_human:
 			Events.toast.emit("Can't dock: the mothership is offline.")
 		return false
-	if ms.hull_dist(s.global_position) > ms.dock_radius():
+	if not from_anywhere and ms.hull_dist(s.global_position) > ms.dock_radius():
 		if s.profile.is_human:
 			Events.toast.emit("Fly closer to the mothership to dock.")
 		return false

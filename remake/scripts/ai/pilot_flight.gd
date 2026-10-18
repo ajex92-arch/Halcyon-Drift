@@ -26,7 +26,8 @@ extends RefCounted
 ##     asks it so that nobody shoots into a rock.
 ##
 ## WHO USES IT: PilotCombat (steer and fight call travel, avoid_rocks and
-## target_hidden). It reads the route graph (world.map.route), the
+## target_hidden). travel() asks SiegeFixFeature.throttle() when the
+## siege_fix variant is on. It reads the route graph (world.map.route), the
 ## asteroid field (world.asteroids) and the motherships' hulls
 ## (World.mothership(), Mothership.hull_dist; avoid_hulls), and makes a
 ## PilotEscape part for the rock pockets. The planned route itself lives on the brain
@@ -151,7 +152,7 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 		use_route = _line_blocked
 	if use_route:
 		if brain.path_goal == Vector2.INF or brain.path_goal.distance_to(to) > 600.0 or brain.path.is_empty():
-			brain.path = world.map.route.path(p, to, ship.is_small())
+			brain.path = JungleBigFeature.plan_route(world.map.route, ship, p, to)
 			brain.path_i = 0
 			brain.path_goal = to
 		if not brain.path.is_empty():
@@ -288,6 +289,11 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 				c.boost = false
 	# Step 9: steer around mothership hulls and rocks just ahead.
 	avoid_rocks(ship)
+	# Step 10: the siege_fix:full feature holds a siege ship back that runs far
+	# ahead of its fleet, so the slow capital ships arrive together
+	# (SiegeFixFeature.throttle). Nothing happens unless that feature is on.
+	if world.features.has("siege_fix"):
+		(world.features["siege_fix"] as SiegeFixFeature).throttle(ship)
 
 
 ## Slide along a mothership hull instead of flying into it. A mothership is

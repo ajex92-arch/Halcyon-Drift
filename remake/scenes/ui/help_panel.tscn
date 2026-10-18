@@ -52,7 +52,7 @@ mouse_filter = 0
 text = "Close (H)"
 
 [node name="Scroll" type="ScrollContainer" parent="Col"]
-custom_minimum_size = Vector2(0, 360)
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 1

@@ -22,7 +22,7 @@ extends PanelContainer
 @onready var _clock: Label = $Row/Middle/Clock
 ## "Next minion wave 0:21" (or that free waves have stopped).
 @onready var _wave: Label = $Row/Middle/Wave
-## Each team's mothership hull bar (index = team: 0 Aurelian, 1 Cinder).
+## Each team's mothership hull bar (index = team: 0 Aurelian, 1 Vhorr).
 @onready var _ms_bars: Array[ProgressBar] = [$Row/Halcyon/Hull, $Row/Cinder/Hull]
 ## Each team's name, hull percent and any mothership trouble.
 @onready var _ms_labels: Array[Label] = [$Row/Halcyon/Name, $Row/Cinder/Name]
@@ -64,14 +64,22 @@ func _refresh_team(world: World, t: int, vt: int) -> void:
 	_ms_bars[t].value = ms.hull_frac()
 	# Step 1: mothership trouble. At 35% hull a mothership can have one
 	# emergency, a "systems failure" (it counts down in seconds).
-	# "Strained" means too many pilots respawned at once.
+	# "Strained" means too many pilots respawned at once. "Plating holding"
+	# means the ms_cap variant is capping the hull damage right now.
 	var extra := ""
 	if ms.failure_t > 0.0:
 		extra = "  SYSTEMS FAILURE %ds" % int(ceil(ms.failure_t))
 	elif ts.strain_t > 0.0:
 		extra = "  STRAINED"
-	# Step 2: the name line, "Aurelian (us)  87%  STRAINED". Cinder's is
-	# written the other way round ("STRAINED  87%  Cinder (enemy)"), so on
+	elif ms.incoming_mults.has("ms_cap"):
+		# The ms_cap variant (MsCapFeature) is holding the hull damage down.
+		extra = "  PLATING HOLDING"
+	# The status tags of the orders that feature modules add (for example
+	# "FORTIFIED 3s"); none in today's game.
+	if not world.command.orders.is_empty():
+		extra += CommandOrders.hud_tag(world, t, vt)
+	# Step 2: the name line, "Aurelian (us)  87%  STRAINED". Vhorr's is
+	# written the other way round ("STRAINED  87%  Vhorr (enemy)"), so on
 	# both sides the team name sits at the outer edge.
 	var tname: String = Rules.TEAM_DISPLAY[t]
 	if vt >= 0:

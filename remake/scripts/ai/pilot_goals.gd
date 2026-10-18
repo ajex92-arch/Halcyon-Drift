@@ -162,8 +162,20 @@ func _pick_station(ship: Ship, ts: TeamState) -> void:
 	# (Playtest: the odd seats are the whole mid trio, 1, 5 and 9, so mid
 	# stood empty for up to a third of the time.)
 	var rally := ts.has_waypoint() and world.time > 600.0 and (profile.slot in [4, 5, 6] or profile.role == "flex")
+	# Feature hook (the group_late variant, GroupLateFeature): after 25:00 it
+	# replaces this rally with its own grouping on the push lane. `grouped`
+	# is empty (nothing changes) unless the feature is on, active for our
+	# team, and wants this seat to move.
+	var grouped := {}
+	if not world.features.is_empty() and world.features.has("group_late"):
+		var grp: Object = world.features["group_late"]
+		if grp.call("active", ship.team):
+			rally = false
+			grouped = grp.call("plan_for", ship, profile)
 	if rally:
 		lane = world.map.lane_for(ts.waypoint)
+	elif not grouped.is_empty():
+		lane = grouped["lane"]
 	# Step 2: stand back from our wave front: 500 (small), 750 (medium),
 	# 900 (large) or 1,100 (capital), plus 2,200 more while falling back.
 	var pts := MapLayout.lane_points(lane, ship.team)
@@ -173,6 +185,8 @@ func _pick_station(ship: Ship, ts: TeamState) -> void:
 	if brain.fallback_t > 0.0:
 		back += 2200.0
 	var s_goal := maxf(0.0, float(pr["s"]) - back)
+	if not grouped.is_empty():
+		s_goal = maxf(0.0, float(grouped["s_goal"]) - (2200.0 if brain.fallback_t > 0.0 else 0.0))
 	if rally:
 		# Hold at the waypoint unless the wave front is further on: move up
 		# to 600 short of it, unless our station is already closer or past.
@@ -269,6 +283,10 @@ func think_jungle(ship: Ship) -> void:
 			# Lance's.
 			if lone and (d as Derelict).ctype == "carrier" and ship.hull_id != "lance":
 				continue
+			# Feature hook: a feature module may rule a camp out (see
+			# _feature_allows_camp()); none is on by default.
+			if not brain.world.features.is_empty() and not _feature_allows_camp(ship, d as Derelict):
+				continue
 			# Our side's quadrants first.
 			var mine := (d.global_position.x < MapLayout.CX) == (ship.team == Rules.HALCYON)
 			var dist := d.global_position.distance_to(ship.global_position) + (0.0 if mine else 6000.0)
@@ -288,6 +306,18 @@ func think_jungle(ship: Ship) -> void:
 		brain.state = "lane"
 
 
+## Feature hook: may jungler `ship` clear camp `d`? Asks every feature in
+## World.features that has allow_camp(brain, ship, d) -> bool; one "false" is
+## enough to rule the camp out. (GroupLateFeature keeps junglers near the
+## push lane; SalvageCoreFeature keeps a lone jungler off the Battleship.)
+func _feature_allows_camp(ship: Ship, d: Derelict) -> bool:
+	var brain := ai
+	for f: Object in brain.world.features.values():
+		if f.has_method("allow_camp") and not f.call("allow_camp", brain, ship, d):
+			return false
+	return true
+
+
 ## Retreat and home states: shoot only what is within 900 while we leave,
 ## and fly to a repair bay (only when retreating, and only when the bay is
 ## less than 60% as far as the mothership) or else to 200 past the
@@ -295,6 +325,11 @@ func think_jungle(ship: Ship) -> void:
 func think_home(ship: Ship, ms: Mothership) -> void:
 	var brain := ai
 	var c := ship.controls
+	# Feature hooks: Recall (channel a recall far from home, and hold still
+	# while it runs) and Bay shop (shop at a forward bay) may take over.
+	for f in brain.world.features.values():
+		if f.has_method("ai_think_home") and f.ai_think_home(brain, ship, ms):
+			return
 	brain.target = brain.targeting.pick_target(ship, 900.0)
 	var bay := brain.world.best_bay(ship.team, ship.global_position)
 	# Big ships can't fly into the jungle: a bay anchored there is out of

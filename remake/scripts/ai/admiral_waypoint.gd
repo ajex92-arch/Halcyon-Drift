@@ -20,7 +20,7 @@ extends RefCounted
 
 ## The game world (for the match time and the AdmiralCommand).
 var world: World
-## Our team: 0 = Aurelian, 1 = Cinder.
+## Our team: 0 = Aurelian, 1 = Vhorr.
 var team := 0
 ## The admiral's lane helper (push lane, front, points along a lane).
 var lanes: AdmiralLanes

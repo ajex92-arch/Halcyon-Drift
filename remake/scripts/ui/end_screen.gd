@@ -22,13 +22,13 @@ extends Control
 
 ## The game world (set by setup()).
 var world: World
-## The winning team (0 Aurelian, 1 Cinder; -1 until set).
+## The winning team (0 Aurelian, 1 Vhorr; -1 until set).
 var winner := -1
 ## Why the match ended, as a sentence from the game.
 var reason := ""
 ## The card's column (the top pilot lines are added to it).
 @onready var _col: VBoxContainer = $Center/Card/Col
-## Each team's column of totals (index = team: 0 Aurelian, 1 Cinder).
+## Each team's column of totals (index = team: 0 Aurelian, 1 Vhorr).
 @onready var _teams: Array[VBoxContainer] = [$Center/Card/Col/Teams/Halcyon, $Center/Card/Col/Teams/Cinder]
 
 

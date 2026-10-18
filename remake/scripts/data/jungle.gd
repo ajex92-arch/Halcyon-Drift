@@ -43,6 +43,14 @@ const CAMPS := {
 		"aggro": 700.0, "leash": 2500.0, "reward": 110.0, "respawn": 80.0, "snubs": 0},
 	"carrier": {"label": "Derelict Carrier", "hull": 1000.0, "radius": 70.0, "turrets": 1, "weapon": "monster_gun",
 		"aggro": 700.0, "leash": 2500.0, "reward": 200.0, "respawn": 120.0, "snubs": 2, "snub_every": 12.0},
+	# battleship and dreadnought (fork teamfights_jungle): only made under the
+	# "salvage_core" and "epic" variants (SalvageCoreFeature, EpicNeutralFeature);
+	# the map never lists them. "pack" = a team job: a lone AI jungler leaves it
+	# alone (the feature's allow_camp()).
+	"battleship": {"label": "Derelict Battleship", "hull": 4000.0, "radius": 95.0, "turrets": 3, "weapon": "battleship_gun",
+		"aggro": 800.0, "leash": 2500.0, "reward": 450.0, "respawn": 300.0, "snubs": 3, "snub_every": 10.0, "pack": true},
+	"dreadnought": {"label": "Derelict Dreadnought", "hull": 9000.0, "radius": 130.0, "turrets": 4, "weapon": "dreadnought_gun",
+		"aggro": 800.0, "leash": 2500.0, "reward": 0.0, "respawn": 360.0, "snubs": 4, "snub_every": 12.0, "pack": true},
 }
 
 ## The snub fighter a Carrier launches. Fields: label, hull, speed [world

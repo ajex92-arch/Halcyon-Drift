@@ -8,7 +8,10 @@ extends Control
 ## coloured by who holds them (with a dot per turret), the fog of war (the
 ## dark cover over places our team can't see: FogView's picture), the
 ## motherships, every unit our team can see right now, our own ship (ring
-## and nose line), the rally waypoint and a box for what the camera shows.
+## and nose line), chevrons that feature modules ask for (a breached lane,
+## FeatureRegistry.minimap_chevrons()), the rings and diamonds of feature
+## modules that have minimap_marks(vt) (_draw_feature_marks), the rally
+## waypoint and a box for what the camera shows.
 ## The whole 40,000 x 26,000 world is shrunk to 300 pixels wide: k is that
 ## shrink factor (map pixels per world unit, 300 / 40,000 = 0.0075).
 ## Clicks: the Admiral and spectators left-click (or drag) to move the
@@ -152,10 +155,23 @@ func _draw() -> void:
 			col = Palette.with_alpha(col, 0.3)
 		draw_line(to_map(ms.global_position - f), to_map(ms.global_position + f), col, maxf(3.0, ms.beam * k), true)
 	_draw_units(vt)
+	# Marks from feature modules (lane breach chevrons ...): a chevron in the
+	# owner's colour, pointing the way that team attacks. Only when a feature
+	# is on.
+	if not world.features.is_empty():
+		for mk: Dictionary in FeatureRegistry.minimap_chevrons(world):
+			var mt := int(mk["team"])
+			_chevron(to_map(mk["pos"]), Palette.team(mt), 1.0 if mt == Rules.HALCYON else -1.0)
+	# Rings and diamonds from feature modules (the Dreadnought, beacons).
+	_draw_feature_marks(vt)
 	# The rally waypoint: an amber ring as big as its real area.
 	if vt >= 0 and world.teams[vt].has_waypoint():
 		var wp := to_map(world.teams[vt].waypoint)
 		draw_arc(wp, Rules.WAYPOINT_RADIUS * k, 0.0, TAU, 20, Palette.AMBER, 1.2, true)
+	# The marks that feature modules add (Barrage circle, bounty diamonds,
+	# Fortify shimmer ...); nothing in today's game.
+	if not world.command.marks.is_empty():
+		CommandOrders.draw_minimap(self, vt)
 	# The camera's view: the part of the world the screen shows right now
 	# (window size / zoom), cut to the minimap's edges. Then a border.
 	var cam := world.camera
@@ -181,6 +197,9 @@ func _draw_units(vt: int) -> void:
 		if vt >= 0 and u.team != vt and not u.visible_to(vt):
 			if not (u.is_structure() and (u.seen_mask & (1 << vt)) != 0):
 				continue
+		# A feature module may black a contact out (the beacons variant).
+		if not world.features.is_empty() and _feature_hides(u, vt):
+			continue
 		var m := to_map(u.global_position)
 		var col := Palette.team(u.team)
 		match u.kind:
@@ -206,6 +225,41 @@ func _draw_units(vt: int) -> void:
 		var m := to_map(me.global_position)
 		draw_arc(m, 5.0, 0.0, TAU, 16, Palette.ICE, 1.5, true)
 		draw_line(m, m + Vector2.from_angle(me.rotation) * 8.0, Palette.ICE, 1.5, true)
+
+
+## Draw a chevron (a ">" or "<") at minimap spot `m` in colour `col`;
+## `dir` is 1.0 for ">" (pointing right) and -1.0 for "<".
+func _chevron(m: Vector2, col: Color, dir: float) -> void:
+	draw_polyline(PackedVector2Array([m + Vector2(-3.0 * dir, -5.0), m + Vector2(3.0 * dir, 0.0), m + Vector2(-3.0 * dir, 5.0)]), col, 2.0, true)
+
+
+## Feature hook: does a feature module black unit `u` out of the minimap
+## for the team `vt` we see as? Asks every feature in World.features that
+## has minimap_hides(u, vt) -> bool (BeaconsFeature, during a blackout).
+func _feature_hides(u: Unit, vt: int) -> bool:
+	for f: Object in world.features.values():
+		if f.has_method("minimap_hides") and f.call("minimap_hides", u, vt):
+			return true
+	return false
+
+
+## Feature hook: draw the marks of the feature modules that have
+## minimap_marks(vt) -> Array of {pos, color, shape ("ring" or "diamond"),
+## r}: the Dreadnought and the salvage beacons.
+func _draw_feature_marks(vt: int) -> void:
+	if world.features.is_empty():
+		return
+	for f: Object in world.features.values():
+		if not f.has_method("minimap_marks"):
+			continue
+		for mk: Dictionary in f.call("minimap_marks", vt):
+			var m := to_map(mk["pos"])
+			var col: Color = mk["color"]
+			var r := float(mk.get("r", 4.0))
+			if str(mk.get("shape", "ring")) == "diamond":
+				draw_colored_polygon(PackedVector2Array([m + Vector2(0, -r), m + Vector2(r, 0), m + Vector2(0, r), m + Vector2(-r, 0)]), col)
+			else:
+				draw_arc(m, r, 0.0, TAU, 16, col, 1.5, true)
 
 
 ## Draw the line through world points `pts` on the minimap, `width` pixels

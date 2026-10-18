@@ -39,9 +39,17 @@ func _init(builder: MapBuilder) -> void:
 
 ## Lay out the camps, the entrances and the paths (see HOW IT WORKS).
 func run() -> void:
+	# The camps to lay out: MapLayout.CAMPS, plus (only for the "camp4"
+	# variant, fork teamfights_jungle idea D7) MapLayout.CAMPS_EXTRA. With the
+	# variant off this is MapLayout.CAMPS itself, so the map is built exactly
+	# as before.
+	var camp_list: Array = MapLayout.CAMPS
+	var camp4 := Game.variant("camp4")
+	if camp4 != "" and camp4 != "off":
+		camp_list = MapLayout.CAMPS + MapLayout.CAMPS_EXTRA
 	# Step 1: camps. A mirrored camp's id swaps its quarter: "tl_a" becomes
 	# "tr_a", "bl_b" becomes "br_b".
-	for cd: Dictionary in MapLayout.CAMPS:
+	for cd: Dictionary in camp_list:
 		var p: Vector2 = cd["pos"]
 		mb.info.camps.append({"id": cd["id"], "type": cd["type"], "pos": p, "quad": cd["quad"]})
 		var mq: String = "tr" if cd["quad"] == "tl" else "br"
@@ -78,7 +86,7 @@ func run() -> void:
 	for q: String in ["tl", "bl"]:
 		# The points to join: this quarter's entrances, then its camps.
 		var pts: Array = (by_quad[q] as Array).duplicate()
-		for cd: Dictionary in MapLayout.CAMPS:
+		for cd: Dictionary in camp_list:
 			if cd["quad"] == q:
 				pts.append(cd["pos"])
 		var edges := _mst(pts)
@@ -93,7 +101,7 @@ func run() -> void:
 			_add_path(PackedVector2Array([a, mid, b]))
 
 
-## Add a jungle path to the map, followed by its mirror copy on Cinder's
+## Add a jungle path to the map, followed by its mirror copy on Vhorr's
 ## half.
 func _add_path(pl: PackedVector2Array) -> void:
 	mb.info.jungle_paths.append(pl)

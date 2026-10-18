@@ -50,6 +50,9 @@ static func build(b: AdmiralBoard) -> void:
 	for id: String in Tech.ORDER:
 		if Tech.TECHS[id]["column"] == "flagship":
 			g.add_child(AdmiralBoardResearch.tech_card(b, id, cw))
+	# Step 4: with Fleet Doctrine (DoctrineFeature) its button comes last.
+	if DoctrineFeature.current() != null:
+		DoctrineFeature.build_card(b)
 
 
 ## Rewrite the Mothership tab on board `b`: the status block, the move
@@ -71,6 +74,9 @@ static func refresh(b: AdmiralBoard) -> void:
 		ml.text = why
 	# Step 3: the Flagship cards are research cards ("tech:" keys).
 	AdmiralBoardResearch.refresh(b)
+	# Step 4: the Fleet Doctrine button (only with DoctrineFeature).
+	if DoctrineFeature.current() != null:
+		DoctrineFeature.refresh_card(b)
 
 
 ## The lines of the status block for mothership `ms` of team state `ts`,

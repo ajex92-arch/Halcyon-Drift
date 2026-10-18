@@ -105,6 +105,11 @@ const WEAPONS := {
 	"bay_pd": {"label": "Bay PD", "kind": "pd", "rate": 6.0, "dmg": 4.0, "speed": 1600.0, "life": 0.44, "spread": 0.05, "radius": 2.5, "pellets": 1, "energy": 0.0, "turn": 5.0, "prefer": "torp_small"},
 	"monster_gun": {"label": "Derelict gun", "kind": "bolt", "rate": 1.2, "dmg": 6.0, "speed": 1000.0, "life": 0.9, "spread": 0.05, "radius": 3.5, "pellets": 1, "energy": 0.0, "turn": 2.0},
 	"snub_gun": {"label": "Snub gun", "kind": "bolt", "rate": 2.5, "dmg": 4.0, "speed": 1050.0, "life": 0.6, "spread": 0.08, "radius": 2.6, "pellets": 1, "energy": 0.0},
+	# battleship_gun and dreadnought_gun (fork teamfights_jungle): the big
+	# derelicts of the "salvage_core" and "epic" variants (Jungle.CAMPS
+	# "battleship" and "dreadnought"). Nothing uses them while those are off.
+	"battleship_gun": {"label": "Battleship gun", "kind": "bolt", "rate": 2.0, "dmg": 12.0, "speed": 1000.0, "life": 1.0, "spread": 0.05, "radius": 3.8, "pellets": 1, "energy": 0.0, "turn": 2.0},
+	"dreadnought_gun": {"label": "Dreadnought gun", "kind": "bolt", "rate": 3.0, "dmg": 15.0, "speed": 1200.0, "life": 1.0, "spread": 0.05, "radius": 4.2, "pellets": 1, "energy": 0.0, "turn": 2.0},
 
 	# --- mothership ---------------------------------------------------------------------------
 	# ms_pd and ms_cannon: the mothership's starting guns. ms_heavy, ms_flak

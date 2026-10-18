@@ -118,6 +118,11 @@ static func recompute(ship: Ship, full_heal: bool) -> void:
 	# Step 7: defence pools. A bigger or smaller hull keeps the same
 	# fraction of hull points; armour resist is capped at 0.75.
 	var new_hull_max := float(def["hull"]) * stats.mul("hull_pct") * (1.0 + 0.15 * armor)
+	# Fleet Doctrine (DoctrineFeature): +2% max hull and +3% shield refill
+	# per finished level; nothing at level 0.
+	if t != null and t.doctrine_level > 0:
+		new_hull_max *= 1.0 + DoctrineFeature.HULL_PER_LEVEL * float(t.doctrine_level)
+		ship.regen_mult *= 1.0 + DoctrineFeature.REGEN_PER_LEVEL * float(t.doctrine_level)
 	if absf(new_hull_max - ship.hull_max) > 0.01:
 		var frac := ship.hull / ship.hull_max if ship.hull_max > 0.0 else 1.0
 		ship.hull_max = new_hull_max
@@ -148,3 +153,9 @@ static func recompute(ship: Ship, full_heal: bool) -> void:
 	if full_heal:
 		shields.fill()
 		energy.value = energy.max_value
+
+	# Step 10: feature hook (Lane Slipstream): a ship running in the
+	# slipstream gets a higher top speed and no boost. Ship.slip is false
+	# unless --variant=slipstream is on.
+	if ship.slip:
+		WorldSlipstream.apply(ship)

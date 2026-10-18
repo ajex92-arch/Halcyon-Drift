@@ -67,7 +67,7 @@ var time := 0.0
 ## "play" while the match runs, "end" once a mothership is destroyed (the
 ## tick then stops moving anything).
 var phase := "play"
-## The team that won (0 = Aurelian, 1 = Cinder), or -1 while still playing.
+## The team that won (0 = Aurelian, 1 = Vhorr), or -1 while still playing.
 var winner := -1
 ## What the human at the keyboard plays: "pilot" | "admiral" | "spectator".
 var human_role := "pilot"
@@ -101,7 +101,7 @@ var minion_director: MinionDirector
 var jungle_director: JungleDirector
 ## The admiral's order desk (a human admiral and the AI admirals both use it).
 var command: AdmiralCommand
-## The computer admiral of each team, [Aurelian, Cinder]. null where a human
+## The computer admiral of each team, [Aurelian, Vhorr]. null where a human
 ## is admiral (or with the "no-admiral-ai" test switch).
 var admiral_ai: Array = [null, null]
 ## The AI pilot brains: PilotProfile -> PilotAI (no entry for the human).
@@ -187,6 +187,32 @@ var push_weight_hooks: Array[Callable] = []
 ## or remove entries from inside one of them. Empty (the default) = nothing
 ## extra runs.
 var tick_hooks: Array[Callable] = []
+## Feature hook (fork economy_comebacks): functions f(ship: Ship, brain:
+## PilotAI) -> void that run inside every AI pilot's think (PilotAI._think),
+## after the normal job for its state has chosen a goal and a target and
+## before the energy routing is set. A feature may change brain.goal,
+## brain.target, brain.lock_target and brain.intent there. Empty (the
+## default) = the brain thinks exactly as before.
+var pilot_think_hooks: Array[Callable] = []
+## Feature hook (fork economy_comebacks): functions f(victim: PilotProfile,
+## ship: Ship) -> float that Economy._ship_killed asks when a pilot's ship
+## is destroyed. Each returns extra bounty credits that are added to the
+## kill's bounty (so the assist share grows with it). Empty (the default) =
+## the bounty is exactly as before.
+var bounty_hooks: Array[Callable] = []
+## Feature hook: extra sight sources, such as the admiral's Sensor Sweep.
+## Each entry is a Dictionary {"team": team number, "pos": Vector2 (world
+## position), "r": sight radius in world units, "until": match time in
+## seconds}. WorldVisibility.viewers() adds every live entry of the team to
+## its list of seeing units, so the fog is lit with the usual line of sight
+## (rocks block it). Empty (the default) = nothing extra is seen. The
+## feature that adds entries also removes the expired ones.
+var vision_sources: Array = []
+## Feature hook: functions f(team: int, unit: Unit, radius: float) -> float
+## that change how far one friendly unit sees (WorldVisibility.viewers()
+## runs every function in turn on the radius the last one gave back; 0 or
+## less = that unit lights nothing). Empty (the default) = normal sight.
+var vision_mods: Array[Callable] = []
 
 # --- parts (see THE PARTS at the top) --------------------------------------------------------
 
@@ -248,7 +274,7 @@ func launch(p: PilotProfile, at_bay: RepairBay = null) -> Ship:
 
 ## Start a hyperspace launch to repair bay `bay`. Returns "" or the reason
 ## it can't (shown to the player).
-func hyperspace_launch(p: PilotProfile, bay: RepairBay) -> String:
+func hyperspace_launch(p: PilotProfile, bay: Unit) -> String:
 	return hangar.hyperspace_launch(p, bay)
 
 
@@ -258,9 +284,10 @@ func swap_module_in_bay(p: PilotProfile, id: String) -> String:
 	return hangar.swap_module_in_bay(p, id)
 
 
-## Dock ship `s` at its mothership if it is close enough. True if it docked.
-func try_dock(s: Ship) -> bool:
-	return hangar.try_dock(s)
+## Dock ship `s` at its mothership if it is close enough (or from anywhere,
+## with `from_anywhere`: only the Recall feature). True if it docked.
+func try_dock(s: Ship, from_anywhere: bool = false) -> bool:
+	return hangar.try_dock(s, from_anywhere)
 
 
 # --- spawning (real code: WorldSpawner) ------------------------------------------------------

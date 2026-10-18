@@ -5,11 +5,14 @@ extends PanelContainer
 ## credits earned and what they are doing now.
 ##
 ## HOW IT WORKS: the layout is the scene scenes/ui/scoreboard.tscn: a box
-## (the "ScoreLook" look) holding one column, Col > HalcyonHead, Halcyon,
-## CinderHead, Cinder. Each team has a heading line and a grid (a table)
+## (the "ScoreLook" look) holding a scroll area, Scroll, with one column in
+## it, Col > HalcyonHead, Halcyon, CinderHead, Cinder. Each team has a
+## heading line and a grid (a table)
 ## whose first row is the column titles (Pilot, Ship, K / D / A, Minions,
 ## Derelicts, Earned, Status); each title's minimum width in the scene is
-## its column's width in pixels. Twice a second while it is on screen,
+## its column's width in pixels. The box is as tall as its table, unless
+## `max_height` is smaller (a short window): then the table scrolls inside
+## the box. Twice a second while it is on screen,
 ## _refresh() rewrites the headings (team kills, turrets destroyed,
 ## mothership hull) and one row per pilot, best first (kills count 3,
 ## assists 1). Rows are added or removed so each grid always has exactly
@@ -27,22 +30,35 @@ var world: World
 ## background box of its own and lets the mouse pass through. Must be set
 ## before the node joins the scene.
 var embedded := false
+## The tallest the box may be, in pixels (HudPanels sets it from the window's
+## height). A taller table scrolls inside the box. Ignored when embedded,
+## where the Admiral board scrolls the table itself.
+var max_height := INF:
+	set(v):
+		max_height = v
+		_fit()
 ## Seconds until the next refresh (counts down from 0.5).
 var _t := 0.0
-## One grid per team (index = team: 0 Aurelian, 1 Cinder). Its first row is
+## The scroll area that holds the table.
+@onready var _scroll: ScrollContainer = $Scroll
+## The table's column (headings and grids).
+@onready var _col: VBoxContainer = $Scroll/Col
+## One grid per team (index = team: 0 Aurelian, 1 Vhorr). Its first row is
 ## the column titles.
-@onready var _grids: Array[GridContainer] = [$Col/Halcyon, $Col/Cinder]
+@onready var _grids: Array[GridContainer] = [$Scroll/Col/Halcyon, $Scroll/Col/Cinder]
 ## One heading label per team.
-@onready var _heads: Array[Label] = [$Col/HalcyonHead, $Col/CinderHead]
+@onready var _heads: Array[Label] = [$Scroll/Col/HalcyonHead, $Scroll/Col/CinderHead]
 
 
 ## Called once when the node joins the scene: inside the Admiral board,
-## drop our box and let the mouse pass through; give each team's heading
-## the team's colour.
+## drop our box and let the mouse pass through (and do not scroll: the board
+## does); give each team's heading the team's colour.
 func _ready() -> void:
 	if embedded:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		_scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	for t in 2:
 		_heads[t].add_theme_color_override("font_color", Palette.team(t))
 
@@ -51,6 +67,19 @@ func _ready() -> void:
 func setup(w: World) -> void:
 	world = w
 	_refresh()
+
+
+## Make the scroll area as tall as the table, but no taller than the box may
+## be (max_height less the box's own padding). A scroll area asks for only
+## the height it is given, so this is what makes a tall table scroll
+## instead of making the box taller than the window.
+func _fit() -> void:
+	if embedded or _col == null:
+		return
+	var room := max_height - get_theme_stylebox("panel").get_minimum_size().y
+	var h := minf(_col.get_combined_minimum_size().y, room)
+	if absf(_scroll.custom_minimum_size.y - h) > 0.5:
+		_scroll.custom_minimum_size = Vector2(0, h)
 
 
 ## Every frame: while on screen, refresh twice a second (every 0.5 s).
@@ -72,7 +101,7 @@ func _refresh() -> void:
 		# Step 1: the heading.
 		var ts := world.teams[t]
 		var ms := world.mothership(t)
-		UiKit.set_text(_heads[t], "%s  ·  %d kills  ·  %d turrets destroyed  ·  mothership %d%%" % [Rules.TEAM_DISPLAY[t], ts.kills, ts.turrets_destroyed, int(ms.hull_frac() * 100.0)])
+		UiKit.set_text(_heads[t], "%s  ·  %d kills  ·  %d turrets destroyed  ·  mothership %d%%%s" % [Rules.TEAM_DISPLAY[t], ts.kills, ts.turrets_destroyed, int(ms.hull_frac() * 100.0), _feature_notes(t)])
 		# Step 2: this team's pilots, best score first.
 		var rows: Array = []
 		for p: PilotProfile in world.profiles:
@@ -98,6 +127,23 @@ func _refresh() -> void:
 		for r in rows.size():
 			var p: PilotProfile = rows[r]
 			_fill_row(g, r, p, t, vt)
+	# Step 5: the table may now be taller or shorter.
+	_fit()
+
+
+## Feature hook: the extra heading text of team `t`: whatever the feature
+## modules in World.features that have scoreboard_note(team) -> String say
+## (FeatsFeature lists the team's feats). "" when no feature is on. It goes
+## through Rules.display_label(), in case a note names a team by its
+## internal label.
+func _feature_notes(t: int) -> String:
+	var out := ""
+	if world.features.is_empty():
+		return out
+	for f: Object in world.features.values():
+		if f.has_method("scoreboard_note"):
+			out += str(f.call("scoreboard_note", t))
+	return Rules.display_label(out)
 
 
 ## Write pilot `p` (of team `t`) into row `r` of grid `g` (row 0 is the

@@ -74,6 +74,7 @@ func _draw() -> void:
 		return
 	_draw_diamond()
 	_draw_bars()
+	RoleHud.draw(self, ship)
 
 
 ## Draw the left half: four shield arcs, the ship icon and the focus line.
@@ -188,6 +189,8 @@ func _draw_bars() -> void:
 		extra += "  ·  ACE %ds" % int(ship.ace_t)
 	if ship.emp_t > 0.0:
 		extra += "  ·  ENGINES STALLED"
+	if ship.slip:
+		extra += "  ·  SLIPSTREAM"
 	_text(Vector2(x, y + 10), spd + boost + extra, 11, Palette.MIST)
 
 

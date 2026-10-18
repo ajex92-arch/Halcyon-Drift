@@ -132,6 +132,9 @@ func sell_slot(i: int) -> void:
 	# Kits: half price for each kit in the stack. Gear: half its price.
 	if s["id"] == Items.KIT["id"]:
 		profile.credits += float(Items.KIT["price"]) * Rules.SELL_BACK * float(s["count"])
+	elif s.has("mk"):
+		# A Mk II item (GearMk2Feature) sells for half of everything paid.
+		profile.credits += GearMk2Feature.total_paid(String(s["id"])) * Rules.SELL_BACK
 	else:
 		profile.credits += float(Items.ITEMS[s["id"]]["price"]) * Rules.SELL_BACK
 	profile.inventory[i] = {}

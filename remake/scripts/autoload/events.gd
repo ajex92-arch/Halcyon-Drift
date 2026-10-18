@@ -53,9 +53,16 @@ signal credits_earned(profile: RefCounted, amount: float, reason: String)
 ## launch. Sent by MatchRules (match_rules.gd); the HUD listens.
 signal respawned(profile: RefCounted)
 ## The match is over. `winner` is the winning team (0 = Aurelian,
-## 1 = Cinder); `reason` is the text, such as "The Cinder mothership was
-## destroyed." Sent by MatchRules; main.gd and the HUD listen.
+## 1 = Vhorr); `reason` is the text, such as "The Cinder mothership was
+## destroyed." (internal label; the end screen swaps it for Vhorr). Sent by MatchRules; main.gd and the HUD listen.
 signal match_over(winner: int, reason: String)
+## A minion (`m`, a Minion) has just launched from its mothership with a
+## minion wave (not one bought with Fleet Command). Sent by MinionDirector
+## right after the minion is made and before it takes its first step; only
+## feature modules listen (BreachFeature, BreachExtraFeature,
+## LanespawnFeature). `wave_id` is the director's next_wave at that moment,
+## the same number for every minion of one wave.
+signal minion_launched(m: Node, wave_id: float)
 ## A sound cue at world position `pos` (in world units; 1 world unit is
 ## about one pixel at normal zoom). Vector2.ZERO means an interface sound
 ## that is always heard. The names sent today: "fire", "pd", "flak",

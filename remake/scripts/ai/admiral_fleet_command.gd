@@ -6,8 +6,8 @@ extends RefCounted
 ## money instead.
 ##
 ## HOW IT WORKS: once a second it buys up to 4 minions, in the FLEET_MIX
-## order, while we have fewer than Minions.CONTROL_CAP (30) alive and can
-## pay with 300 credits to spare. They are sent down the lane we are
+## order, while we have fewer than Minions.control_cap() alive (30 unless
+## the fleet_cap variant changes it) and can pay with 300 credits to spare. They are sent down the lane we are
 ## pushing (or, when no lane is being pushed, a lane that changes every
 ## minute).
 ##
@@ -28,7 +28,7 @@ const FLEET_MIX := ["fighter", "fighter", "bomber", "fighter", "bomber", "corvet
 
 ## The game world (minions, the MinionDirector, the AdmiralCommand).
 var world: World
-## Our team: 0 = Aurelian, 1 = Cinder.
+## Our team: 0 = Aurelian, 1 = Vhorr.
 var team := 0
 ## The admiral's lane helper (for the lane we're pushing).
 var lanes: AdmiralLanes
@@ -57,7 +57,8 @@ func run(ts: TeamState) -> void:
 	# Step 2: buy one at a time until we hit the cap, bought 4, run short
 	# of money, or a purchase fails.
 	var bought := 0
-	while md.alive_count(team) < Minions.CONTROL_CAP and bought < 4:
+	var cap := Minions.control_cap()
+	while md.alive_count(team) < cap and bought < 4:
 		var type_id: String = FLEET_MIX[next_i % FLEET_MIX.size()]
 		if not ts.can_afford(float(Minions.TYPES[type_id]["buy_cost"]) + 300.0):
 			break

@@ -19,7 +19,8 @@ extends Control
 ##   MePanel     top left: HudMePanel: you (credits, or the Admiral's
 ##               treasury), K/D/A, ship, and a short log of what just
 ##               paid you
-##   Feed        top right: HudFeed: the kill / event feed
+##   Feed        top right, under the top bar: HudFeed: the kill / event
+##               feed
 ##   Banner      centre: HudBanner: big messages (respawn timer, docked, a
 ##               turret targeting you, mothership trouble, the armed
 ##               Admiral map tool, pause)
@@ -41,7 +42,10 @@ extends Control
 ## Big panels: Hangar (B), Admiral board (Tab, admiral), Scoreboard (hold
 ## Tab, pilots), Help (H) and the End screen. They are made from their own
 ## scenes when first needed. HudPanels keeps only one of them open at a
-## time. HudInput routes the keys: Esc closes panels or cancels a map
+## time. HudLayout keeps the pieces out of each other's way: it moves the
+## top bar, the gear slots and the ship readout aside when the window is
+## narrow, and hides the pieces a big panel would cover while it is open.
+## HudInput routes the keys: Esc closes panels or cancels a map
 ## tool, C switches the Admiral's camera between free and following their
 ## ship, P pauses, F launches when docked (in flight, PlayerController
 ## uses F to dock instead). DESIGN.md A15 shows the layout.
@@ -99,6 +103,8 @@ var end_screen: EndScreen = null
 @onready var slots: HudSlots = $Slots
 ## Part: opens and closes the big panels (only one at a time).
 var panels: HudPanels
+## Part: keeps the HUD's pieces out of each other's way.
+var layout: HudLayout
 ## Part: decides what each menu key does.
 var router: HudInput
 
@@ -121,7 +127,9 @@ func setup(w: World) -> void:
 	overlay = OVERLAY_SCENE.instantiate()
 	world.add_child(overlay)
 	overlay.setup(world)
+	layout = HudLayout.new(self)
 	panels = HudPanels.new(self)
+	resized.connect(layout.apply)
 	router = HudInput.new(self)
 	# Step 2: tell the widgets (already in the scene) what they show.
 	me_panel.world = w
@@ -195,9 +203,11 @@ func _unhandled_input(event: InputEvent) -> void:
 # --- events ----------------------------------------------------------------------
 
 ## Pop up a short hint for 3.5 seconds (see HudToast). Connected to
-## Events.toast, so any script can show one.
+## Events.toast, so any script can show one. Not once the match is over:
+## the end screen has the whole window.
 func toast(text: String) -> void:
-	toast_box.show_text(text)
+	if end_screen == null:
+		toast_box.show_text(text)
 
 
 ## Someone respawned. If it is the human pilot, open the hangar so they can
@@ -223,11 +233,13 @@ func _on_admiral_result(team: int, action: String, ok: bool, message: String) ->
 
 
 ## The match ended: unpause, close every panel and map tool, and show the
-## end screen on top of everything.
+## end screen on top of everything (a pop-up hint still showing goes: it
+## would be drawn over the end screen's text).
 func _on_match_over(winner: int, reason: String) -> void:
 	get_tree().paused = false
 	_close_others(null)
 	overlay.disarm()
+	toast_box.visible = false
 	end_screen = END_SCENE.instantiate()
 	end_screen.setup(world, winner, reason)
 	add_child(end_screen)
@@ -267,3 +279,6 @@ func _refresh() -> void:
 	# Step 3: gear slots for pilots (and for an Admiral flying a ship).
 	slots.slots_box.visible = h != null and (world.human_role == "pilot" or ship != null)
 	slots.refresh_keys(world.human_role)
+	# Step 4: move the pieces out of each other's way (after step 2, which
+	# may have shown the ship readout again).
+	layout.apply()

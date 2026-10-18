@@ -58,7 +58,7 @@ const FLEET_MIX := AdmiralFleetCommand.FLEET_MIX
 
 ## The game world (all ships, nodes, teams and the AdmiralCommand).
 var world: World
-## Which team this admiral runs: 0 = Aurelian, 1 = Cinder.
+## Which team this admiral runs: 0 = Aurelian, 1 = Vhorr.
 var team := 0
 ## Seconds until the next think. The two teams start half a second apart
 ## (0.5 s and 1.0 s) so they don't think on the same frame, then each
@@ -74,6 +74,12 @@ var waypoint_t := 60.0
 ## Seconds until we may try to launch another repair bay (at most one try
 ## every 40 s).
 var bay_t := 0.0
+## True for a deliberately weak admiral (test option --admiral-ai=weak, see
+## AdmiralWeak). Always false in the game itself.
+var weak := false
+## Seconds until a weak admiral may start another plan step (counts down;
+## unused when `weak` is false).
+var weak_plan_t := 0.0
 
 ## Our parts (see the list at the top), made once in _init().
 ## Questions about lanes and fleet strength (the other parts share it).
@@ -95,6 +101,7 @@ func _init(w: World, t: int) -> void:
 	world = w
 	team = t
 	think_t = 0.5 + float(t) * 0.5
+	weak = AdmiralWeak.is_weak(t)
 	# The lane helper first: every other part is handed it.
 	lanes = AdmiralLanes.new(w, t)
 	builder = AdmiralBuilder.new(w, t, lanes)
@@ -113,6 +120,7 @@ func tick(dt: float) -> void:
 	ward_t -= dt
 	waypoint_t -= dt
 	bay_t -= dt
+	weak_plan_t -= dt
 	if think_t > 0.0:
 		return
 	think_t = 1.0
@@ -134,6 +142,9 @@ func tick(dt: float) -> void:
 	# Step 3: the tech plan. If we can't afford the next step yet, keep
 	# half its price back ("reserve") so spare spending doesn't starve it.
 	var step := AdmiralPlan.next_step(ts)
+	# A weak admiral (test option) starts a plan step only every 90 s.
+	if weak and weak_plan_t > 0.0:
+		step = {}
 	var reserve := 0.0
 	if not step.is_empty():
 		reserve = float(step["cost"])
@@ -143,6 +154,7 @@ func tick(dt: float) -> void:
 			else:
 				cmd.research(team, step["id"])
 			reserve = 0.0
+			weak_plan_t = AdmiralWeak.WEAK_PLAN_GAP
 	# Step 4: spend spare money (the treasury minus half the plan's reserve).
 	# Another drone if we're under the target...
 	var spare := ts.treasury - reserve * 0.5
@@ -154,14 +166,14 @@ func tick(dt: float) -> void:
 		spare -= 200.0
 	# ...one more turret with over 800 spare...
 	if spare > 800.0:
-		builder.more_turrets(ts)
+		builder.more_turrets(ts, weak)
 	# ...a repair bay (once researched, a try at most every 40 s) with over
 	# 500 spare, and a ward (a try at most every 45 s) while the treasury
-	# holds over 300.
-	if ts.repair_bays and bay_t <= 0.0 and spare > 500.0:
+	# holds over 300. (A weak admiral places neither.)
+	if ts.repair_bays and bay_t <= 0.0 and spare > 500.0 and not weak:
 		bay_t = 40.0
 		builder.place_bay()
-	if ward_t <= 0.0 and ts.treasury > 300.0:
+	if ward_t <= 0.0 and ts.treasury > 300.0 and not weak:
 		ward_t = 45.0
 		builder.place_ward()
 	# Step 5: the waypoint, when its timer runs out.
@@ -173,11 +185,13 @@ func tick(dt: float) -> void:
 	# 75 s.
 	if ts.defending(world.time) and ts.siege_lane == "":
 		waypoint_t = minf(waypoint_t, 1.0)
-	# Step 6: sieges.
-	_siege(ts)
+	# Step 6: sieges (a weak admiral declares none).
+	if not weak:
+		_siege(ts)
 	# Step 7: moving our mothership, once its engines are online (20:00,
-	# Rules.move_unlock_time(), which a feature module may tune).
-	if world.time > Rules.move_unlock_time():
+	# Rules.move_unlock_time(), which a feature module may tune). A weak
+	# admiral never moves it.
+	if world.time > Rules.move_unlock_time() and not weak:
 		mothership_mover.maybe_move()
 	# Step 8: Fleet Command, only if our team owns the module.
 	if world.minion_director.controlled(team):

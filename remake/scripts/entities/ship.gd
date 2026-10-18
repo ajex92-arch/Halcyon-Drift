@@ -164,6 +164,10 @@ var thrust_port := 0.0
 var thrust_star := 0.0
 ## True while boosting this tick (also shown by the HUD).
 var boosting := false
+## Feature hook (Lane Slipstream, WorldSlipstream): true while this ship runs
+## in the slipstream, which raises its top speed (ShipStats calls
+## WorldSlipstream.apply()). Always false unless --variant=slipstream is on.
+var slip := false
 
 
 ## Set up a freshly made ship. Called by World.launch() with the world `w`,

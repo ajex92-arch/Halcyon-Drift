@@ -27,7 +27,7 @@ extends RefCounted
 
 ## The pilot's name, shown on the screens.
 var callsign := ""
-## Which side they fly for: 0 = Aurelian, 1 = Cinder.
+## Which side they fly for: 0 = Aurelian, 1 = Vhorr.
 var team := 0
 ## Their seat number in the team (0, 1, 2 ...). AI pilots use it, for
 ## example, to spread out around a shared point.
@@ -54,6 +54,11 @@ var ship: Ship = null
 var respawn_t := 0.0
 ## The repair bay a hyperspace launch will arrive at (null = none).
 var spool_bay: RepairBay = null
+## Feature hook (Forward Redeploy, RedeployFeature): the repair bay or turret
+## a redeploy jump will land at (null = none; always null unless
+## --variant=redeploy is on). MatchRules.tick hands it to
+## RedeployFeature.finish() when the spool ends.
+var spool_site: Unit = null
 ## An AI pilot's job: "top", "mid" or "bot" (a lane), "jungle" or "flex".
 ## A human admiral's own record says "admiral".
 var role := "mid"
@@ -131,7 +136,14 @@ func gear_stats() -> StatBlock:
 		for s: Dictionary in inventory:
 			if s.is_empty() or s["id"] == Items.KIT["id"]:
 				continue
-			_gear_stats.add_dict(Items.ITEMS[s["id"]]["stats"])
+			# A Mk II item (GearMk2Feature; its slot entry has an "mk" key)
+			# counts GearMk2Feature.STAT_MULT times as much.
+			if s.has("mk"):
+				var st: Dictionary = Items.ITEMS[s["id"]]["stats"]
+				for k: String in st:
+					_gear_stats.add(k, float(st[k]) * GearMk2Feature.STAT_MULT)
+			else:
+				_gear_stats.add_dict(Items.ITEMS[s["id"]]["stats"])
 	return _gear_stats
 
 

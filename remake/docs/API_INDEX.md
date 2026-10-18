@@ -10,7 +10,7 @@ changes.
 
 ## scripts/ai/admiral_builder.gd  (class_name AdmiralBuilder extends RefCounted)
 - `func guard_inner_nodes(ts: TeamState) -> void`
-- `func more_turrets(ts: TeamState) -> void`
+- `func more_turrets(ts: TeamState, inner_only: bool = false) -> void`
 - `func place_bay() -> void`
 - `func place_ward() -> void`
 
@@ -115,11 +115,13 @@ changes.
 - `signal credits_earned(profile: RefCounted, amount: float, reason: String)`
 - `signal respawned(profile: RefCounted)`
 - `signal match_over(winner: int, reason: String)`
+- `signal minion_launched(m: Node, wave_id: float)`
 - `signal cue(name: String, pos: Vector2)`
 - `signal admiral_result(team: int, action: String, ok: bool, message: String)`
 - `signal damage_applied(target: Node, info: RefCounted, amount: float, hull_dmg: float)`
 
 ## scripts/autoload/game.gd  (extends Node)
+- `func apply_preset(preset_name: String) -> void`
 - `func opt(key: String, default_value = null)`
 - `func variant(key: String) -> String`
 - `func count_usage(key: String, n: int = 1) -> void`
@@ -206,6 +208,10 @@ changes.
 - `static func money(v: float) -> String`
 - `static func clock(seconds: float) -> String`
 
+## scripts/data/council_presets.gd  (class_name CouncilPresets extends RefCounted)
+- `static func is_preset(preset_name: String) -> bool`
+- `static func variant_string(preset_name: String) -> String`
+
 ## scripts/data/items.gd  (class_name Items extends RefCounted)
 - `static func by_category(cat: String) -> Array`
 
@@ -215,6 +221,7 @@ changes.
 - `static func lane_points(lane: String, team: int) -> PackedVector2Array`
 
 ## scripts/data/minions.gd  (class_name Minions extends RefCounted)
+- `static func control_cap() -> int`
 - `static func scaling(match_time: float) -> float`
 
 ## scripts/data/modules.gd  (class_name Modules extends RefCounted)
@@ -244,6 +251,7 @@ changes.
 ## scripts/data/tech.gd  (class_name Tech extends RefCounted)
 - `static func column_facility(column: String) -> String`
 - `static func blurb(id: String) -> String`
+- `static func facility_blurb(id: String) -> String`
 - `static func tech_blocker(id: String, facilities: Dictionary, planned: Dictionary) -> String`
 - `static func facility_blocker(id: String, facilities: Dictionary, done: Dictionary) -> String`
 - `static func ship_unlocked(ship_id: String, facilities: Dictionary, done: Dictionary) -> bool`
@@ -438,13 +446,392 @@ changes.
 - `static func pick_target(m: WeaponMount, r: float) -> void`
 - `static func target_point(m: WeaponMount) -> Vector2`
 
+## scripts/features/admiral_assets.gd  (class_name AdmiralAssetsFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/admiral_assets_ai.gd  (class_name AdmiralAssetsAI extends RefCounted)
+- `func tick(dt: float) -> void`
+- `func afford(id: String) -> bool`
+
+## scripts/features/admiral_orders.gd  (class_name AdmiralOrdersFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func pick_target(team: int, p: Vector2) -> Unit`
+- `func has_bounty(u: Unit) -> bool`
+- `func active_count(team: int) -> int`
+- `func post_bounty(team: int, target: Unit, amount: float) -> String`
+
+## scripts/features/admiral_sinks.gd  (class_name AdmiralSinksFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/admiral_smart.gd  (class_name AdmiralSmartFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func counts(t: int) -> Dictionary`
+- `static func wish_list(brain: PilotAI, call: String, base: Array) -> Array`
+
+## scripts/features/admiral_weak.gd  (class_name AdmiralWeak extends RefCounted)
+- `static func is_weak(team: int) -> bool`
+- `static func ai_acts(world: World, team: int) -> bool`
+
+## scripts/features/attrition.gd  (class_name AttritionFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/bay_back.gd  (class_name BayBackFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(_dt: float) -> void`
+- `func bay_spots(_w: World, _team: int, spots: Array, _lanes: AdmiralLanes) -> Array`
+
+## scripts/features/bay_shop.gd  (class_name BayShopFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func serving_bay(ship: Ship) -> RepairBay`
+- `func human_can_shop(h: Hangar) -> bool`
+- `func tick(dt: float) -> void`
+- `func ai_think_home(brain: PilotAI, ship: Ship, ms: Mothership) -> bool`
+
+## scripts/features/beacons.gd  (class_name BeaconsFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(dt: float) -> void`
+- `func pilot_think(brain: PilotAI, ship: Ship) -> bool`
+- `func minimap_marks(_vt: int) -> Array`
+- `func minimap_hides(u: Unit, vt: int) -> bool`
+
+## scripts/features/bomber_role.gd  (class_name BomberRoleFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/bomber_role_shopping.gd  (class_name BomberRoleShopping extends PilotShopping)
+- `func wish_list() -> Array`
+- `func shop() -> void`
+
+## scripts/features/bomber_role_targeting.gd  (class_name BomberRoleTargeting extends PilotTargeting)
+- `func pick_target(ship: Ship, r: float) -> Unit`
+
+## scripts/features/breach.gd  (class_name BreachFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func banner(_w: World, team: int) -> Array`
+- `func minimap_chevrons(_w: World) -> Array`
+
+## scripts/features/breach_extra.gd  (class_name BreachExtraFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func banner(_w: World, team: int) -> Array`
+- `func minimap_chevrons(_w: World) -> Array`
+
+## scripts/features/breach_tracker.gd  (class_name BreachTracker extends RefCounted)
+- `func start() -> void`
+- `func serve(team: int, lane: String, wave_id: float) -> bool`
+- `func banner(team: int) -> Array`
+- `func marks() -> Array`
+
+## scripts/features/buyback.gd  (class_name BuybackFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `static func current() -> BuybackFeature`
+- `func cost(p: PilotProfile) -> float`
+- `func blocker(p: PilotProfile) -> String`
+- `func buy(p: PilotProfile) -> String`
+- `static func button_text(p: PilotProfile) -> String`
+- `static func can_buy(p: PilotProfile) -> bool`
+- `static func press(p: PilotProfile) -> String`
+
+## scripts/features/camp4.gd  (class_name Camp4Feature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/catchup.gd  (class_name CatchupFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/comeback_bounties.gd  (class_name ComebackBountiesFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/comeback_director.gd  (class_name ComebackDirector extends RefCounted)
+- `static func ensure(w: World) -> ComebackDirector`
+- `func enable_banner() -> void`
+- `func is_behind(team: int) -> bool`
+- `func bounty_structures(team: int) -> Array`
+- `func update() -> void`
+
+## scripts/features/command_orders.gd  (class_name CommandOrders extends RefCounted)
+- `static func add(world: World, def: Dictionary) -> void`
+- `static func cost_of(d: Dictionary, team: int) -> float`
+- `static func ready_in(world: World, id: String, team: int) -> float`
+- `static func reset_cooldown(world: World, id: String, team: int) -> void`
+- `static func blocker(world: World, id: String, team: int, p: Vector2) -> String`
+- `static func run(world: World, id: String, team: int, p: Vector2) -> String`
+- `static func hint(world: World, id: String) -> String`
+- `static func radius(world: World, id: String) -> float`
+- `static func needs_point(world: World, id: String) -> bool`
+- `static func add_mark(world: World, m: Dictionary) -> Dictionary`
+- `static func prune(world: World) -> void`
+- `static func mark_pos(m: Dictionary) -> Vector2`
+- `static func mark_visible(m: Dictionary, vt: int) -> bool`
+- `static func draw_marks(ov: CommandOverlay, vt: int, px: float) -> void`
+- `static func draw_minimap(mm: Minimap, vt: int) -> void`
+- `static func hud_tag(world: World, team: int, viewer: int) -> String`
+- `static func help_entries() -> Array`
+
+## scripts/features/command_orders_ui.gd  (class_name CommandOrdersUi extends RefCounted)
+- `static func build(b: AdmiralBoard) -> void`
+- `static func refresh(b: AdmiralBoard) -> void`
+
+## scripts/features/doctrine.gd  (class_name DoctrineFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `static func current() -> DoctrineFeature`
+- `static func cost_for(level: int) -> float`
+- `func blocker(team: int) -> String`
+- `func start(team: int) -> String`
+- `static func build_card(b: AdmiralBoard) -> void`
+- `static func refresh_card(b: AdmiralBoard) -> void`
+
+## scripts/features/econ_banner.gd  (class_name EconBanner extends CanvasLayer)
+- `static func set_line(world: World, key: String, text: String) -> void`
+
+## scripts/features/econ_play.gd  (class_name EconPlayFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/eff.gd  (class_name EffFeature extends RefCounted)
+- `static func install(_world: World) -> void`
+- `static func adjust(ship: Ship, u: Unit) -> float`
+
+## scripts/features/epic_neutral.gd  (class_name EpicNeutralFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func live() -> Derelict`
+- `func tick(dt: float) -> void`
+- `func pilot_think(brain: PilotAI, ship: Ship) -> bool`
+- `func minimap_marks(_vt: int) -> Array`
+
+## scripts/features/escort_pd.gd  (class_name EscortPdFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func support_n(s: Ship) -> int`
+- `func status(s: Ship) -> String`
+
 ## scripts/features/escort_wing.gd  (class_name EscortWingFeature extends RefCounted)
 - `static func install(world: World) -> void`
 - `static func upgrade(m: Minion) -> void`
 
+## scripts/features/feats.gd  (class_name FeatsFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(_dt: float) -> void`
+- `func scoreboard_note(t: int) -> String`
+
 ## scripts/features/feature_registry.gd  (class_name FeatureRegistry extends RefCounted)
 - `static func install(world: World) -> void`
 - `static func is_on(key: String) -> bool`
+- `static func conflict() -> String`
+- `static func banner_for(world: World, team: int) -> Array`
+- `static func minimap_chevrons(world: World) -> Array`
+
+## scripts/features/fleet_cap.gd  (class_name FleetCapFeature extends RefCounted)
+- `func install(_w: World) -> void`
+
+## scripts/features/fortify.gd  (class_name FortifyFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/gear_mk2.gd  (class_name GearMk2Feature extends RefCounted)
+- `func install(_w: World) -> void`
+- `static func is_on() -> bool`
+- `static func upgrade_price(id: String) -> float`
+- `static func total_paid(id: String) -> float`
+- `static func upgrade_blocker(profile: PilotProfile, i: int) -> String`
+- `static func upgrade(profile: PilotProfile, i: int) -> String`
+- `static func slot_of(profile: PilotProfile, id: String) -> int`
+- `static func ai_upgrade(profile: PilotProfile, reserve: float, gear_list: Array) -> void`
+- `static func ai_trip_reason(profile: PilotProfile, ship: Ship, gear_list: Array) -> String`
+
+## scripts/features/group_late.gd  (class_name GroupLateFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(dt: float) -> void`
+- `func active(team: int) -> bool`
+- `func plan_for(_ship: Ship, profile: PilotProfile) -> Dictionary`
+- `func pilot_think(brain: PilotAI, ship: Ship) -> bool`
+- `func allow_camp(brain: PilotAI, _ship: Ship, d: Derelict) -> bool`
+
+## scripts/features/home_vision.gd  (class_name HomeVisionFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func in_zone(owner: int, p: Vector2) -> bool`
+
+## scripts/features/jungle_big.gd  (class_name JungleBigFeature extends RefCounted)
+- `static func level() -> int`
+- `static func choke_gap() -> float`
+- `static func path_half() -> float`
+- `static func allows(ship: Ship) -> bool`
+- `static func route_small(ship: Ship) -> bool`
+- `static func plan_route(route: RouteGraph, ship: Ship, from: Vector2, to: Vector2) -> PackedVector2Array`
+- `func install(w: World) -> void`
+
+## scripts/features/jungle_scale.gd  (class_name JungleScaleFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(dt: float) -> void`
+- `func pilot_think(brain: PilotAI, ship: Ship) -> bool`
+
+## scripts/features/lance_role.gd  (class_name LanceRoleFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func is_isolated(u: Ship) -> bool`
+- `func find_prey(ship: Ship) -> Ship`
+- `static func hunt(brain: PilotAI, ship: Ship) -> void`
+- `static func steer_behind(brain: PilotAI, ship: Ship) -> void`
+
+## scripts/features/lance_role_combat.gd  (class_name LanceRoleCombat extends PilotCombat)
+- `func fight(ship: Ship) -> void`
+
+## scripts/features/lance_role_goals.gd  (class_name LanceRoleGoals extends PilotGoals)
+- `func think_lane(ship: Ship) -> void`
+- `func think_jungle(ship: Ship) -> void`
+
+## scripts/features/landing_spot.gd  (class_name LandingSpot extends RefCounted)
+- `static func find(world: World, site: Vector2, toward: Vector2, dist: float, radius: float) -> Vector2`
+
+## scripts/features/lanespawn.gd  (class_name LanespawnFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/last_stand.gd  (class_name LastStandFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func banner(_w: World, team: int) -> Array`
+
+## scripts/features/minion_boost.gd  (class_name MinionBoost extends RefCounted)
+- `static func tough_copy(m: Minion, hull: float, shield: float, label: String, tag: String) -> void`
+- `static func longer_cannon(m: Minion, bonus: float) -> void`
+- `static func add_siege_shell(m: Minion) -> void`
+
+## scripts/features/minion_buffs.gd  (class_name MinionBuffs extends RefCounted)
+- `static func ensure(w: World) -> MinionBuffs`
+- `func add_source(key: String, team: int, until: float, hull: float, structs: float, carrier: Unit = null, radius: float = INF, usage: String = "") -> void`
+- `func remove_source(key: String) -> void`
+- `func tick(dt: float) -> void`
+
+## scripts/features/minion_cap.gd  (class_name MinionCapFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/minion_hook_chain.gd  (class_name MinionHookChain extends RefCounted)
+- `static func add(w: World, hook: Callable, run_last: bool = false) -> void`
+
+## scripts/features/morale.gd  (class_name MoraleFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/ms_cap.gd  (class_name MsCapFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func banner(_w: World, team: int) -> Array`
+
+## scripts/features/ms_move.gd  (class_name MsMoveFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/ms_nosmall.gd  (class_name MsNosmallFeature extends RefCounted)
+- `static func install(_world: World) -> void`
+- `static func skips(ship: Ship) -> bool`
+
+## scripts/features/ms_soft.gd  (class_name MsSoftFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/ms_spend_weak.gd  (class_name MsSpendWeakFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/mutiny.gd  (class_name MutinyFeature extends Node)
+- `func install(w: World) -> void`
+- `func lead(team: int) -> float`
+- `func seats(team: int) -> Array`
+- `func vote_blocker(team: int) -> String`
+- `func call_vote(team: int, caller: PilotProfile) -> String`
+- `func swap(team: int) -> void`
+
+## scripts/features/node_persist.gd  (class_name NodePersistFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(dt: float) -> void`
+- `func nodes_by_distance(team: int) -> Array`
+
+## scripts/features/pilot_extractor.gd  (class_name PilotExtractor extends Unit)
+- `func setup(w: World, p: PilotProfile, n: ResourceNode) -> void`
+- `func sim_update(dt: float) -> void`
+- `func on_killed(_info: DamageInfo) -> void`
+
+## scripts/features/pilot_mining.gd  (class_name PilotMiningFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func node_under(s: Ship) -> ResourceNode`
+- `func is_dry(p: PilotProfile, node_id: String) -> bool`
+- `func enemy_pilot_near(s: Ship) -> bool`
+- `func build_blocker(p: PilotProfile, n: ResourceNode) -> String`
+- `func node_taken(n: ResourceNode) -> bool`
+- `func build_extractor(p: PilotProfile, n: ResourceNode) -> String`
+
+## scripts/features/recall.gd  (class_name RecallFeature extends Node2D)
+- `func install(w: World) -> void`
+- `func blocker(ship: Ship) -> String`
+- `func start(ship: Ship) -> String`
+- `func tick(dt: float) -> void`
+- `func ai_think_home(brain: PilotAI, ship: Ship, ms: Mothership) -> bool`
+- `func human_progress() -> Array`
+
+## scripts/features/redeploy.gd  (class_name RedeployFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `static func plan_with_early_hyperspace() -> Array`
+- `func start(p: PilotProfile, site: Unit) -> String`
+- `func finish(p: PilotProfile) -> void`
+- `func site_ok(site: Unit, team: int) -> bool`
+- `func pick_site(brain: PilotAI) -> Unit`
+- `func destination(brain: PilotAI) -> Vector2`
+- `func bay_spots(w: World, team: int, spots: Array, lanes: AdmiralLanes) -> Array`
+
+## scripts/features/respawn_site.gd  (class_name RespawnSiteFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(_dt: float) -> void`
+- `func provide_hull(p: PilotProfile, ts: TeamState) -> void`
+
+## scripts/features/role_brains.gd  (class_name RoleBrains extends RefCounted)
+- `static func ensure(world: World, member: String, script: GDScript, only_slots: Array = []) -> int`
+
+## scripts/features/role_hud.gd  (class_name RoleHud extends RefCounted)
+- `static func draw(panel: Control, ship: Ship) -> void`
+
+## scripts/features/role_scaling.gd  (class_name RoleScaling extends CombatScaling)
+- `func final_amount(target: Unit, info: DamageInfo) -> float`
+- `static func attach(w: World) -> RoleScaling`
+
+## scripts/features/routing_payoff.gd  (class_name RoutingPayoffFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func charged_mode(s: Ship) -> int`
+- `func overcharge_left(s: Ship) -> float`
+
+## scripts/features/routing_payoff_systems.gd  (class_name RoutingPayoffSystems extends PilotSystems)
+- `func set_energy_and_shields(ship: Ship) -> void`
+
+## scripts/features/salvage_core.gd  (class_name SalvageCoreFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(_dt: float) -> void`
+- `func pilot_think(brain: PilotAI, ship: Ship) -> bool`
+- `func allow_camp(_brain: PilotAI, ship: Ship, d: Derelict) -> bool`
+
+## scripts/features/siege_fix.gd  (class_name SiegeFixFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func throttle(ship: Ship) -> void`
+
+## scripts/features/size_respawn.gd  (class_name SizeRespawnFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(_dt: float) -> void`
+
+## scripts/features/slipstream.gd  (class_name SlipstreamFeature extends RefCounted)
+- `func install(world: World) -> void`
+
+## scripts/features/steep_respawn.gd  (class_name SteepRespawnFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func tick(_dt: float) -> void`
+
+## scripts/features/supply_drone.gd  (class_name SupplyDrone extends RepairDrone)
+- `func setup_supply(w: World, ms: Unit, t: int, at: Vector2, spot: Vector2) -> void`
+- `func sim_update(dt: float) -> void`
+
+## scripts/features/surrender.gd  (class_name SurrenderFeature extends RefCounted)
+- `func install(w: World) -> void`
+- `func banner(_w: World, team: int) -> Array`
+
+## scripts/features/tfj_kit.gd  (class_name TfjKit extends RefCounted)
+- `static func news(text: String, team: int = -1) -> void`
+- `static func friends_near(world: World, ship: Ship, p: Vector2, r: float, small_only: bool) -> int`
+- `static func enemy_pilot_near(world: World, team: int, p: Vector2, r: float) -> bool`
+- `static func minions_on_lane(world: World, team: int, lane: String) -> int`
+- `static func test_hull_scale() -> float`
+- `static func apply_test_hull(d: Derelict) -> void`
+- `static func attack_derelict(brain: PilotAI, ship: Ship, d: Derelict) -> void`
+
+## scripts/features/waves_late.gd  (class_name WavesLateFeature extends RefCounted)
+- `func install(w: World) -> void`
+
+## scripts/features/zoom_max.gd  (class_name ZoomMaxFeature extends Node)
+- `static func factor() -> float`
+- `func install(w: World) -> void`
 
 ## scripts/main.gd  (extends Node)
 - `func start(role: String) -> void`
@@ -591,6 +978,7 @@ changes.
 - `func arm(t: String) -> void`
 - `func disarm() -> void`
 - `func hint() -> String`
+- `func tool_text() -> String`
 - `func blocker_at(p: Vector2) -> String`
 - `func apply_at(p: Vector2) -> void`
 - `func order_at(p: Vector2) -> void`
@@ -608,6 +996,7 @@ changes.
 - `func setup(w: World, p: PilotProfile) -> void`
 - `func mode() -> String`
 - `func can_shop() -> bool`
+- `func can_shop_goods() -> bool`
 - `func launch() -> bool`
 
 ## scripts/ui/hangar_gear.gd  (class_name HangarGear extends RefCounted)
@@ -642,6 +1031,7 @@ changes.
 
 ## scripts/ui/help_panel.gd  (class_name HelpPanel extends PanelContainer)
 - `signal closed`
+- `func rebuild() -> void`
 
 ## scripts/ui/hud.gd  (class_name Hud extends Control)
 - `func setup(w: World) -> void`
@@ -662,12 +1052,22 @@ changes.
 ## scripts/ui/hud_input.gd  (class_name HudInput extends RefCounted)
 - `func handle(event: InputEvent) -> void`
 
+## scripts/ui/hud_layout.gd  (class_name HudLayout extends RefCounted)
+- `func apply() -> void`
+- `func panel_top(left: float) -> float`
+- `func panel_bottom(strip: bool) -> float`
+- `func toast_width(panel_open: bool) -> float`
+- `func banner_width() -> float`
+
 ## scripts/ui/hud_me_panel.gd  (class_name HudMePanel extends PanelContainer)
 - `func refresh(w: World) -> void`
+- `func base_height() -> float`
 - `func on_credits(p: RefCounted, amount: float, reason: String) -> void`
 
 ## scripts/ui/hud_panels.gd  (class_name HudPanels extends RefCounted)
-- `func panel_rect(c: Control, margin: Vector2) -> void`
+- `func panel_rect(c: Control, side: float) -> void`
+- `func relayout() -> void`
+- `func on_window_resized() -> void`
 - `func open_hangar() -> void`
 - `func toggle_board() -> void`
 - `func show_scoreboard(on: bool) -> void`
@@ -676,6 +1076,8 @@ changes.
 - `func any_open() -> bool`
 
 ## scripts/ui/hud_slots.gd  (class_name HudSlots extends VBoxContainer)
+- `func wide_width() -> float`
+- `func set_compact(on: bool) -> void`
 - `func refresh_slots(h: PilotProfile) -> void`
 - `func refresh_keys(role: String) -> void`
 
@@ -713,6 +1115,7 @@ changes.
 - `static func panel(pad: int = 12) -> PanelContainer`
 - `static func scroll() -> ScrollContainer`
 - `static func set_text(l, text: String) -> void`
+- `static func panel_width(c: Control) -> float`
 - `static func pin_width(l: Label, w: float) -> void`
 
 ## scripts/world/asteroid_field.gd  (class_name AsteroidField extends Node2D)
@@ -847,9 +1250,9 @@ changes.
 - `func next_uid() -> int`
 - `func remove_unit(u: Unit) -> void`
 - `func launch(p: PilotProfile, at_bay: RepairBay = null) -> Ship`
-- `func hyperspace_launch(p: PilotProfile, bay: RepairBay) -> String`
+- `func hyperspace_launch(p: PilotProfile, bay: Unit) -> String`
 - `func swap_module_in_bay(p: PilotProfile, id: String) -> String`
-- `func try_dock(s: Ship) -> bool`
+- `func try_dock(s: Ship, from_anywhere: bool = false) -> bool`
 - `func spawn_minion(team: int, type_id: String, lane: String, at: Vector2) -> Minion`
 - `func spawn_mining_drone(team: int, assign: String) -> MiningDrone`
 - `func spawn_repair_drone(owner: Unit, team: int, at: Vector2, mode: int) -> RepairDrone`
@@ -875,9 +1278,9 @@ changes.
 
 ## scripts/world/world_hangar.gd  (class_name WorldHangar extends RefCounted)
 - `func launch(p: PilotProfile, at_bay: RepairBay = null) -> Ship`
-- `func hyperspace_launch(p: PilotProfile, bay: RepairBay) -> String`
+- `func hyperspace_launch(p: PilotProfile, bay: Unit) -> String`
 - `func swap_module_in_bay(p: PilotProfile, id: String) -> String`
-- `func try_dock(s: Ship) -> bool`
+- `func try_dock(s: Ship, from_anywhere: bool = false) -> bool`
 
 ## scripts/world/world_mining.gd  (class_name WorldMining extends RefCounted)
 - `static func best_node_for_drone(w: World, team: int, from: Vector2) -> String`
@@ -909,6 +1312,12 @@ changes.
 
 ## scripts/world/world_setup.gd  (class_name WorldSetup extends RefCounted)
 - `static func build(w: World, role: String) -> void`
+
+## scripts/world/world_slipstream.gd  (class_name WorldSlipstream extends Node2D)
+- `func setup(w: World, is_flat: bool, is_probe: bool) -> void`
+- `func tick(dt: float) -> void`
+- `func evaluate() -> void`
+- `static func apply(ship: Ship) -> void`
 
 ## scripts/world/world_spawner.gd  (class_name WorldSpawner extends RefCounted)
 - `func spawn_pilot_ship(p: PilotProfile, pos: Vector2, facing: float) -> Ship`

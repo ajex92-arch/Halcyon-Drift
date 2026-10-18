@@ -19,7 +19,7 @@ extends RefCounted
 ##
 ## A unit remembers who sees it in a "bitmask": one whole number used as a
 ## row of on/off switches, one per team. Switch 0 (value 1) is Aurelian,
-## switch 1 (value 2) is Cinder; `1 << team` makes the switch for one team.
+## switch 1 (value 2) is Vhorr; `1 << team` makes the switch for one team.
 ## Unit.visible_mask = seen right now; Unit.seen_mask = ever seen.
 ##
 ## WHO USES IT: World makes one (World.visibility) and calls tick() every
@@ -30,7 +30,7 @@ extends RefCounted
 var world: World
 ## Seconds until the next vision update (counts down every tick).
 var vision_t := 0.0
-## Whose turn it is next: 0 = Aurelian, 1 = Cinder.
+## Whose turn it is next: 0 = Aurelian, 1 = Vhorr.
 var vision_team := 0
 ## A reusable list the spatial hash fills with nearby units.
 var scratch: Array = []
@@ -77,7 +77,20 @@ func viewers(team: int) -> Array:
 			if jp.distance_to(u.global_position) < 1400.0:
 				r *= 0.25
 				break
+		# Feature hook (World.vision_mods): a feature may change this unit's
+		# sight radius; 0 or less means it lights nothing.
+		if not world.vision_mods.is_empty():
+			for f: Callable in world.vision_mods:
+				r = float(f.call(team, u, r))
+			if r <= 0.0:
+				continue
 		out.append(Vector3(u.global_position.x, u.global_position.y, r))
+	# Feature hook (World.vision_sources): extra sight sources of this team
+	# that are still running, for example a Sensor Sweep.
+	for sv: Dictionary in world.vision_sources:
+		if int(sv["team"]) == team and world.time < float(sv["until"]):
+			var sp: Vector2 = sv["pos"]
+			out.append(Vector3(sp.x, sp.y, float(sv["r"])))
 	return out
 
 

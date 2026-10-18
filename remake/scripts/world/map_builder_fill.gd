@@ -16,7 +16,7 @@ extends RefCounted
 ##   2. Throw the rock away if it is too close to the centre line (its
 ##      mirror copy would overlap it), or if _fill_ok() says it is in the
 ##      way of open space.
-##   3. Otherwise keep it; it gets a mirror copy on Cinder's half later
+##   3. Otherwise keep it; it gets a mirror copy on Vhorr's half later
 ##      (MapBuilder._emit_rocks()).
 ## Fill rocks may overlap lane wall rocks; only open space is protected.
 ##
@@ -75,8 +75,8 @@ func _fill_ok(p: Vector2, r: float) -> bool:
 	for k: Dictionary in mb.keep_out:
 		if p.distance_to(k["c"]) < float(k["r"]) + r:
 			return false
-	# Jungle paths (Aurelian's and Cinder's copies alike).
+	# Jungle paths (Aurelian's and Vhorr's copies alike).
 	for pl: PackedVector2Array in mb.info.jungle_paths:
-		if Util.dist_to_polyline(p, pl) < MapLayout.PATH_HALF + r + 20.0:
+		if Util.dist_to_polyline(p, pl) < JungleBigFeature.path_half() + r + 20.0:
 			return false
 	return true

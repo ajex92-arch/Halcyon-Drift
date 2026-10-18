@@ -19,7 +19,8 @@ extends PanelContainer
 ##
 ## WHO USES IT: the HUD's scene (scenes/ui/hud.tscn) holds it. Hud.setup()
 ## gives it the world and connects Events.credits_earned to on_credits();
-## Hud._refresh() calls refresh() and fades earn_box.
+## Hud._refresh() calls refresh() and fades earn_box. HudLayout asks
+## base_height() and hides earn_box while a big panel is open.
 
 ## How long (seconds) an earnings line stays before it is removed. It fades
 ## out during its last 1.5 seconds.
@@ -75,6 +76,17 @@ func refresh(w: World) -> void:
 	UiKit.set_text(_me_line, "K/D/A %s · last hits %d\n%s · %s lane" % [h.kda(), h.minion_kills, ship_txt, h.role])
 
 
+## The panel's height (pixels) without the earnings log. The log is hidden
+## while a big panel is open, and HudLayout starts the big panels below the
+## panel as it is then, so they do not jump as earnings lines come and go.
+func base_height() -> float:
+	var h := get_combined_minimum_size().y
+	if earn_box.visible:
+		var rows := earn_box.get_parent() as Control
+		h -= earn_box.get_combined_minimum_size().y + float(rows.get_theme_constant("separation"))
+	return h
+
+
 ## Someone (profile `p`) earned `amount` credits for `reason`. If it is the
 ## human, add or update an earnings line.
 func on_credits(p: RefCounted, amount: float, reason: String) -> void:
@@ -84,8 +96,11 @@ func on_credits(p: RefCounted, amount: float, reason: String) -> void:
 	var now := Time.get_ticks_msec()
 	# Step 1: the same kind of payment less than 1.5 seconds (1500 ms) after
 	# the last one: add it to that line instead of making a new one.
+	# (The cached line may have been removed since: test that it is still
+	# alive BEFORE asking what it is, because asking a removed node raises a
+	# script error.)
 	var last = _earn_last.get(label)
-	if last is Label and is_instance_valid(last) and now - int(last.get_meta("born")) < 1500:
+	if is_instance_valid(last) and last is Label and now - int(last.get_meta("born")) < 1500:
 		var total := float(last.get_meta("amount")) + amount
 		last.set_meta("amount", total)
 		last.text = "+%d %s" % [int(total), label]

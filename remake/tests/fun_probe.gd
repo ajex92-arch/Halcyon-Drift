@@ -336,6 +336,22 @@ func _results(mship: MsPart, cap: float) -> Dictionary:
 	out.merge(ttk.results())
 	out.merge(fights.results(obs_secs, pilots.size()))
 	out.merge(mship.results(winner, ended, start_t, world.time))
+	# How the match ended: "mothership" (one was destroyed), "surrender" (a
+	# passed surrender vote, the surrender:vote variant) or "none" (still
+	# running). A surrendered match has no mothership kill, so the numbers
+	# that need one (final push, close-out time, big-ship damage share and
+	# the damage sums it is pooled from) are null for it and the scoring
+	# leaves them out.
+	var ended_by := "none"
+	if ended:
+		ended_by = "surrender" if int(Game.usage.get("surrenders", 0)) > 0 else "mothership"
+	out["ended_by"] = ended_by
+	if ended_by == "surrender":
+		out["final_push_secs"] = null
+		out["close_out_secs"] = null
+		out["ms_big_damage_share"] = null
+		out["ms_loser_big_dmg"] = null
+		out["ms_loser_hull_dmg"] = null
 	out.merge(lead.results(winner, ended, world.time))
 	out.merge(economy.results(world, pilots, skills, _watched_min(1800.0, INF)))
 	# Step 3: the v1 rates, now per minute WATCHED (the same as before for a

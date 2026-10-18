@@ -55,7 +55,14 @@ const LOOKAHEAD := 4
 static func next_step(ts: TeamState) -> Dictionary:
 	# How many unfinished steps we have looked at so far.
 	var pending := 0
-	for s: Array in PLAN:
+	# A feature may give the team its own order (TeamState.plan_override,
+	# RedeployFeature), and a feature may then hand us that plan in another
+	# order (TeamState.plan_hook, AdmiralSmartFeature). With neither, it is
+	# PLAN as written.
+	var plan: Array = PLAN if ts.plan_override.is_empty() else ts.plan_override
+	if ts.plan_hook.is_valid():
+		plan = ts.plan_hook.call(ts, plan)
+	for s: Array in plan:
 		var kind: String = s[0]
 		var id: String = s[1]
 		# Step 1: skip steps that are finished or already under way.

@@ -113,7 +113,7 @@ func zoom_limits() -> Vector2:
 	else:
 		var s := followed()
 		var size := s.size_class if s != null else Rules.SIZE_SMALL
-		min_z = vw / float(PILOT_VIEW_WIDTH[Rules.size_index(size)])
+		min_z = vw / (float(PILOT_VIEW_WIDTH[Rules.size_index(size)]) * ZoomMaxFeature.factor())
 	return Vector2(min_z, vw / MIN_VIEW_WIDTH)
 
 

@@ -15,7 +15,7 @@ extends PanelContainer
 ##     ship;
 ##   Tabs (Research, Build, Mothership, Fleet, Pilots): one button per tab
 ##     (page), 120 pixels wide; each button's text is its tab's name;
-##   Scroll > Content: the scroll area (at least 260 pixels tall) and the
+##   Scroll > Content: the scroll area (at least 120 pixels tall) and the
 ##     column inside it that holds the current tab's cards;
 ##   Detail: the details line (at least 36 pixels tall), which explains the
 ##     last card or button the mouse moved onto.
@@ -174,9 +174,11 @@ func _hover(c: Control, text: String) -> void:
 
 
 ## The width in pixels that a tab's cards may use: the board's width minus
-## 50, but never less than 700.
+## 50, but never less than 700. The board's width is the one it is meant to
+## have (UiKit.panel_width), not its `size`: the cards make the board at
+## least as wide as they are, so `size` could never shrink.
 func _inner_w() -> float:
-	return maxf(700.0, size.x - 50.0)
+	return maxf(700.0, UiKit.panel_width(self) - 50.0)
 
 
 ## Add a grid with `cols` columns and 6-pixel gaps to the tab's content and

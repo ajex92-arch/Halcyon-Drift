@@ -49,6 +49,16 @@ static func refresh_card(h: Hangar, c: CardButton, id: String, shop: bool) -> vo
 	# Step 1: owned, or the price plus the reason it can't be bought.
 	if owned:
 		foot = "Owned"
+		# With Mk II gear (GearMk2Feature) an owned item can be upgraded.
+		if GearMk2Feature.is_on():
+			var slot := GearMk2Feature.slot_of(h.profile, id)
+			if (h.profile.inventory[slot] as Dictionary).has("mk"):
+				foot = "Owned  ·  Mk II"
+			else:
+				foot = "Upgrade to Mk II: %d credits" % int(GearMk2Feature.upgrade_price(id))
+				var ub := GearMk2Feature.upgrade_blocker(h.profile, slot)
+				if ub != "":
+					foot += "  ·  " + ub
 	else:
 		var b := h.profile.gear_blocker(id)
 		if b != "":
@@ -66,10 +76,18 @@ static func refresh_card(h: Hangar, c: CardButton, id: String, shop: bool) -> vo
 ## buy it; an item already owned does nothing. A refusal shows as a toast;
 ## a purchase plays the "buy" sound (Events.cue). Then refresh.
 static func buy(h: Hangar, id: String) -> void:
-	if not h.can_shop():
+	if not h.can_shop_goods():
 		Events.toast.emit("Gear is bought at the mothership.")
 		return
 	if h.profile.has_item(id):
+		# With Mk II gear (GearMk2Feature), clicking an owned item upgrades it.
+		if GearMk2Feature.is_on():
+			var up := GearMk2Feature.upgrade(h.profile, GearMk2Feature.slot_of(h.profile, id))
+			if up != "":
+				Events.toast.emit(up)
+			else:
+				Events.cue.emit("buy", Vector2.ZERO)
+			h._refresh()
 		return
 	var err := h.profile.buy_gear(id)
 	if err != "":
@@ -98,6 +116,10 @@ static func refresh_slots(h: Hangar, shop: bool) -> void:
 		if s["id"] == Items.KIT["id"]:
 			title = "Repair Kit x%d (R)" % int(s["count"])
 			value = float(Items.KIT["price"]) * Rules.SELL_BACK * float(s["count"])
+		elif s.has("mk"):
+			# A Mk II item (GearMk2Feature) sells for half of all it cost.
+			title = String(Items.ITEMS[s["id"]]["label"]) + " Mk II"
+			value = GearMk2Feature.total_paid(String(s["id"])) * Rules.SELL_BACK
 		else:
 			title = String(Items.ITEMS[s["id"]]["label"])
 			value = float(Items.ITEMS[s["id"]]["price"]) * Rules.SELL_BACK

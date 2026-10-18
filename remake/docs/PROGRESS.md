@@ -711,3 +711,92 @@ much of that back). Next: pass 2 (targeting + admiral) and minion re-targeting.
   tools scripts, file names, the user's verbatim documents and the older entries of this file.
 - Display only: the code changes are the new constant and helper and their use at the display sites; no game
   logic changed.
+
+### 2026-10-17: v0.2.0, the fun council's two rule sets ship as opt-in presets (user decisions)
+- The six fun-plan forks (docs/FUN_PLAN.md section 5) were merged into the game and the council (section 6) built
+  and validated two combinations. The user chose to ship both as rule sets the player picks: "Within
+  requirements" (`--preset=within`) and "Council's pick" (`--preset=pick`). The start screen has a new RULE SET row
+  (under the rules text, above the seats) with "Standard rules", "Within requirements" and "Council's pick";
+  Game.apply_preset() applies the choice before `--variant`, so `--variant` can still change one key of a preset.
+  An unknown `--preset` name stops the match at its start ("PRESET UNKNOWN", exit code 3) instead of quietly
+  playing the default game.
+- The key promise: with no preset (and no `--variant`) the game is exactly v0.1.0. Every key of every fork
+  defaults to off, FeatureRegistry installs only the switched-on ones, and the shared-code edits are empty hooks,
+  so tests/det_hash.gd prints v0.1.0's hash lines (normal 900 s and `--late` 300 s).
+- The user's choices (2026-10-17): the pick stays "Within requirements" plus the turret-rebuild lock
+  (`node_persist`), although the lock added nothing on 80 seeds; and both presets use a fleet cap of 60 bought
+  minions (the keys-off game stays at 30; `--preset=within --variant=fleet_cap:30` plays the old limit inside a
+  preset). `fleet_cap` is a new key: Minions.control_cap() reads it, so one limit holds for both teams and for a
+  human or AI Admiral, and the Admiral board's texts show the limit of the match.
+- What is in the presets: within = `minion_cap:on,lance_role:on,bomber_role:both,admiral_sinks:fleet,redeploy:on,
+  gear_mk2:on,fleet_cap:60`; pick = within + `node_persist:on`. None changes a requirement: the user also made
+  60 the Fleet Command limit requirement on 2026-10-17 (DESIGN.md C22; the verbatim docs/USER_REQUIREMENTS_2026-10-13.md
+  still says 30, and the standard rules keep 30). The requirement-changing ideas stay one switch each, off by default
+  (docs/RELEASE_NOTES.md lists them in plain words, FORK_MANIFEST.md lists every switch).
+- Validation (the preset build, 80 fresh AI-vs-AI matches per arm on the same seeds 181-260, cloud runs): FUN 63.0
+  for the default game, 81.4 for "Within requirements" (+18.4, 95% lower bound +14.5) and 79.8 for "Council's
+  pick" (+16.8, lower bound +13.3); the bar was +5 with a lower bound above 0. Every match ended in both presets
+  (default: 55% within an hour), typically after about 29 minutes. node_persist adds no fun on top of "within"
+  (-1.6, not significant). The matches were AI against AI.
+- Known issues: very short last pushes at cap 60 (46% under 45 s in "within", 38% in the pick, 27% by default),
+  the pick may lean to Vhorr (Aurelian won 38% of 80; 44% of 80 in "within", 48% of the 44 that ended by default),
+  "both ship sizes needed" and "admiral matters" may dip (chance alone gives such dips in about two of three
+  comparisons of this size: things to watch in a playtest), and cap 60 costs about 39% more late-game simulation
+  time. Next: a human feel
+  check of a match where the AI Admiral buys Fleet Command, a big-ship role, a final-push band, and the held
+  `doctrine:on` once the user's Admiral changes are in.
+- Docs and code map: new docs/RELEASE_NOTES.md, FORK_MANIFEST.md rewritten for the game (rule sets and every
+  switch), docs/fork_manifests/ (the six forks' manifests), README.md and docs/CODE_GUIDE.md (the scripts/features
+  folder, the "feature module", "preset / rule set" and "variant" entries), docs/DESIGN.md (the Fleet Command
+  limit) and docs/API_INDEX.md (rebuilt). The root README has a short "Rule sets" note.
+- The enemy team's display name is now Vhorr (user decision, 2026-10-17: everywhere, like Aurelian). Same split as the
+  Aurelian rename: Rules.TEAM_DISPLAY[1] and Rules.display_label() give the player-facing name (HUD, end screen,
+  scoreboard, feed, Admiral board, place names such as "Vhorr Top"), and the docs and code comments that name the
+  team say Vhorr. Kept as the internal label Cinder on purpose: Rules.TEAM_NAMES, Rules.CINDER, Palette.CINDER,
+  Roster.CINDER, scene node names, log and print output (the SUMMARY line included), JSON keys and values, test labels,
+  the tools, file names, the user's verbatim documents and the older entries of this file. Recorded as C23 in
+  docs/DESIGN.md and in the "Team names" note and glossary of docs/CODE_GUIDE.md. Display only: no game logic changed.
+
+### 2026-10-17: UI layout fix, no text on top of text at any window size
+- Problem: in windows smaller than the design size (laptop screens, a browser window, 1024 wide or 600 high) the HUD
+  put its pieces on top of each other. The top bar covered the "me" panel, the ship readout covered the gear slots
+  and the minimap, a pop-up hint covered the minimap or the end screen, and every big panel (hangar, Admiral board,
+  help, scoreboard) covered the kill feed, the big message, the minimap and the instruments. Some panels also ran off
+  the window, and stayed too wide after the window got smaller.
+- The fix is in the UI only; no game rule, simulation file or balance number changed. New scripts/ui/hud_layout.gd
+  (HudLayout) places the HUD's pieces so they stay out of each other's way: the top bar moves right of the "me" panel
+  in a narrow window, the gear slots go into two rows when the bottom row is too tight, the instruments hide while a big
+  panel is open, and the big panels sit under the top bar. The hangar, board and help size their cards from the window
+  (UiKit.panel_width) so they can shrink again and rebuild on a resize; their scroll areas take the height that is
+  left. The scoreboard scrolls inside a short window and its Status column is wide enough for the Admiral. The kill
+  feed starts under the top bar. The pop-up hint wraps, and stays away over the end screen. The start screen card
+  keeps 10 pixels from each side of a 1024-pixel window. The Admiral board's module
+  cards wrap instead of widening the board.
+- The checker: tools/ui_layout_check.py reads the UI tour's layout dump (`--dump-layout`, with `--ui-size=WxH` for the
+  window size, or several sizes separated by commas to resize the window between dumps; the dump code is
+  tests/lib/ui_dump.gd) and reports text on text (OVERLAP), text under a solid panel (COVERED), controls outside the
+  window (OFFSCREEN) and text that does not fit its box (CRAMPED), with the two controls and the step. It has
+  `--selftest`. The tour (tests/ui_tour.gd) also fills the kill feed and the earnings log first, and covers two more
+  screens, so the check sees the HUD at its fullest.
+- Result, problem lines for the pilot and the Admiral tours together, v0.1.0 against the fix, at 1024x600, 1280x600,
+  1280x720, 1366x657, 1366x768, 1536x730, 1600x789, 1920x969, 1920x1080 and 2560x1300: before 367, 226, 214, 171,
+  147, 126, 142, 138, 58 and 58; after 0 at every size.
+
+### 2026-10-17: v0.2.0 release review (Opus), and what it changed
+
+- An adversarial Opus review read the UI fix merge (77f7073..2b155b1), the 18 review-fix commits with the Vhorr
+  rename, the v0.2.0 release notes, and every commit message and added line since main for privacy.
+- UI merge: no defects (the four conflict resolutions, freed or missing nodes, signals and timers, hidden panels and
+  the mouse, the browser build, sizes between the tested ones). Review fixes and rename: no defects (the display
+  name is never used as a key). Privacy: clean.
+- Release notes, fixed: the sentence that the determinism test shows the rule-set matches play out the same had no
+  evidence, because the determinism test ran without a rule set. It was run with both: the late window (25:00 to
+  30:00, seed 7) on the tested code (7f19200) and on this release, identical over all 60 hash lines for "Within
+  requirements" (END 40ad326f) and for "Council's pick" (END 3b7b77ef), no script errors. The sentence now says it
+  was run with both rule sets.
+- Release notes, fixed: the hidden-HUD sentence now names every big panel (scores, hangar, help, Admiral board)
+  and every piece that steps aside.
+- README and release notes: a fresh copy of the source has no import cache (the .godot folder), and a plain
+  `godot --path remake` then shows an empty window because the scripts cannot find each other's class names. Both
+  now say to run `godot --headless --path remake --import` once first. (Opening the project in the Godot editor
+  imports it by itself.)

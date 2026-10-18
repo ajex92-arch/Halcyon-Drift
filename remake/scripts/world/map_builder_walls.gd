@@ -17,7 +17,7 @@ extends RefCounted
 ##      on the outside of each bend, with a fan of rocks (no random numbers).
 ## Every rock goes through _try_rock(), which throws it away if it would
 ## poke into a corridor, a base clearing or an ore node, or if it is on
-## Cinder's half (that half gets mirror copies in MapBuilder._emit_rocks()).
+## Vhorr's half (that half gets mirror copies in MapBuilder._emit_rocks()).
 ##
 ## Sides: a corridor's centre line runs from its first point to its last.
 ## Side +1 is the edge on your right as you walk it that way on screen
@@ -75,7 +75,7 @@ func _walk_side(cid: String, pts: PackedVector2Array, half: float, side: float) 
 			# The next gate: its first rock is centred at `gate_left`, its
 			# second one CHOKE_GAP + 2 * GATE_R further on.
 			var gs: float = float(my_gates[gi]["s"])
-			var gate_left := gs - MapLayout.CHOKE_GAP * 0.5 - MapBuilder.GATE_R
+			var gate_left := gs - JungleBigFeature.choke_gap() * 0.5 - MapBuilder.GATE_R
 			if s + r > gate_left - MapBuilder.GATE_R:
 				# The next rock would bump into the gate. Instead: if there is
 				# a big hole between the last rock (about where it ended,
@@ -87,10 +87,10 @@ func _walk_side(cid: String, pts: PackedVector2Array, half: float, side: float) 
 					var fr := room * 0.5 + 10.0
 					_wall_rock(pts, prev_end + room * 0.5, half, side, fr)
 				_wall_rock(pts, gate_left, half, side, MapBuilder.GATE_R)
-				_wall_rock(pts, gs + MapLayout.CHOKE_GAP * 0.5 + MapBuilder.GATE_R, half, side, MapBuilder.GATE_R)
+				_wall_rock(pts, gs + JungleBigFeature.choke_gap() * 0.5 + MapBuilder.GATE_R, half, side, MapBuilder.GATE_R)
 				# Carry on just past the gate's second rock with a new random
 				# radius (first) and gap (second).
-				s = gs + MapLayout.CHOKE_GAP * 0.5 + 2.0 * MapBuilder.GATE_R
+				s = gs + JungleBigFeature.choke_gap() * 0.5 + 2.0 * MapBuilder.GATE_R
 				gi += 1
 				r = mb.rng.range_f(MapBuilder.EDGE_R_MIN, MapBuilder.EDGE_R_MAX)
 				s += mb.rng.range_f(MapBuilder.EDGE_GAP_MIN, MapBuilder.EDGE_GAP_MAX) + r
@@ -164,7 +164,7 @@ func _wall_rock(pts: PackedVector2Array, s: float, half: float, side: float, r: 
 ## Keep a wall rock at `p` (radius `r`) unless it would intrude on open
 ## space. (`_is_node` is not used; every caller passes false.)
 func _try_rock(p: Vector2, r: float, _is_node: bool) -> void:
-	# Cinder's half gets mirror copies instead (1 unit of slack).
+	# Vhorr's half gets mirror copies instead (1 unit of slack).
 	if p.x > MapLayout.CX + 1.0:
 		return
 	# Too far off the map's left, top or bottom edge.

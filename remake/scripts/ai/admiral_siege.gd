@@ -80,7 +80,7 @@ const PARKED_DIST := 2500.0
 
 ## The game world (ships, nodes, motherships, the map, match time).
 var world: World
-## Our team: 0 = Aurelian, 1 = Cinder.
+## Our team: 0 = Aurelian, 1 = Vhorr.
 var team := 0
 ## The admiral's lane helper (we use its fleet strength measure).
 var lanes: AdmiralLanes

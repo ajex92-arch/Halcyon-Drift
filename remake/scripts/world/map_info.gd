@@ -13,7 +13,7 @@ extends RefCounted
 ##     (warm_up()), one per square of OPEN_CELL by OPEN_CELL world units.
 ##
 ## Distances are in world units (1 world unit is about one pixel at normal
-## zoom). Team 0 is Aurelian (the left side), team 1 is Cinder (the right).
+## zoom). Team 0 is Aurelian (the left side), team 1 is Vhorr (the right).
 ##
 ## WHO USES IT: World keeps it as World.map (WorldSetup.build() makes it
 ## with MapBuilder.build() and calls warm_up()). AsteroidField.build() turns
@@ -27,7 +27,7 @@ extends RefCounted
 ## command desk ask `route` for paths.
 
 ## The three lanes: lane id ("top", "mid", "bot") -> the points of its
-## centre line (a PackedVector2Array), running from Aurelian to Cinder.
+## centre line (a PackedVector2Array), running from Aurelian to Vhorr.
 var lanes := {}
 ## Lane id -> half the lane's width (world units).
 var lane_half := {}

@@ -93,7 +93,17 @@ func disarm() -> void:
 func hint() -> String:
 	if tool == "":
 		return ""
-	return "%s.  Right-click or Esc to cancel." % TOOL_TEXT.get(tool, "Click the map")
+	return "%s.  Right-click or Esc to cancel." % tool_text()
+
+
+## The instruction for the armed tool: its line in TOOL_TEXT, or (for the
+## orders that feature modules add, see CommandOrders) the order's hint,
+## else "Click the map".
+func tool_text() -> String:
+	if TOOL_TEXT.has(tool):
+		return TOOL_TEXT[tool]
+	var h := CommandOrders.hint(world, tool)
+	return h if h != "" else "Click the map"
 
 
 ## Why the armed tool can't go at world point `p` (AdmiralCommand's
@@ -110,6 +120,10 @@ func blocker_at(p: Vector2) -> String:
 			if b == "" and not world.map.in_open_lane(p):
 				b = "Too big for the jungle: pick a lane or the base"
 			return b
+		_:
+			# An order that a feature module added (CommandOrders).
+			if world.command.orders.has(tool):
+				return CommandOrders.blocker(world, tool, team, p)
 	return ""
 
 
@@ -136,6 +150,10 @@ func apply_at(p: Vector2) -> void:
 			msg = cmd.order_minions(team, _live_selection(), {"type": "move", "pos": p})
 		"fleet_hold":
 			msg = cmd.order_minions(team, _live_selection(), {"type": "hold", "pos": p})
+		_:
+			# An order that a feature module added (CommandOrders).
+			if cmd.orders.has(tool):
+				msg = CommandOrders.run(world, tool, team, p)
 	if msg == "":
 		tool = ""
 

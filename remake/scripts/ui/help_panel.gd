@@ -6,12 +6,13 @@ extends PanelContainer
 ## HOW IT WORKS: the layout is the scene scenes/ui/help_panel.tscn: a box
 ## (the "HelpLook" look) holding one column, Col > Head (Title, one button
 ## per page: TheMatch, Flying, Admiral, then Close) and Scroll > Body (the
-## scrolling area). Each page button shows its page's name, which is also
+## scrolling area, at least 120 pixels tall: it takes the height that is
+## left). Each page button shows its page's name, which is also
 ## the page's key in PAGES, where all the text lives. _show() fills Body
 ## with the chosen page: each entry is an amber heading and a wrapped
 ## paragraph, made in code. The current page's button is amber. When the
-## panel is resized, the page is rebuilt so the paragraphs wrap to the new
-## width.
+## window's width changes, HudPanels calls rebuild() so the paragraphs wrap
+## to the new width.
 ##
 ## WHO USES IT: HudPanels makes it from scenes/ui/help_panel.tscn (H toggles
 ## it, through HudInput) and hides it when `closed` is sent.
@@ -63,19 +64,24 @@ var _page := "The match"
 
 
 ## Called once when the node joins the scene: each page button shows its
-## page and Close sends `closed`; the page is rebuilt whenever our size
-## changes, and shown now.
+## page and Close sends `closed`, and the first page is shown.
 func _ready() -> void:
 	for b in _tabs:
 		b.pressed.connect(_show.bind(b.text))
 	$Col/Head/Close.pressed.connect(func() -> void: closed.emit())
-	resized.connect(func() -> void: _show(_page))
+	_show(_page)
+
+
+## Lay the current page out again for the width the panel now has (HudPanels
+## calls this when the window's width changed).
+func rebuild() -> void:
 	_show(_page)
 
 
 ## Show page `p`: mark its button amber, clear the old entries, and add a
-## heading and a paragraph per entry. Paragraphs are pinned to our width
-## minus 60 pixels (but at least 400) so they wrap neatly.
+## heading and a paragraph per entry. Paragraphs are pinned to the panel's
+## width (UiKit.panel_width, not our `size`, which cannot shrink below the
+## paragraphs) minus 60 pixels (but at least 400) so they wrap neatly.
 func _show(p: String) -> void:
 	_page = p
 	for b in _tabs:
@@ -83,8 +89,13 @@ func _show(p: String) -> void:
 	# queue_free removes each old entry at the end of this frame.
 	for c in _body.get_children():
 		c.queue_free()
-	var w := maxf(400.0, size.x - 60.0)
-	for entry: Array in PAGES[p]:
+	var w := maxf(400.0, UiKit.panel_width(self) - 60.0)
+	# The Admiral page also explains the orders that feature modules add
+	# (CommandOrders); there are none in today's game.
+	var entries: Array = (PAGES[p] as Array).duplicate()
+	if p == "Admiral":
+		entries.append_array(CommandOrders.help_entries())
+	for entry: Array in entries:
 		var row := UiKit.vbox(2)
 		_body.add_child(row)
 		row.add_child(UiKit.label(entry[0], 15, Palette.AMBER))
