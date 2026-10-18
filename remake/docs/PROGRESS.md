@@ -800,3 +800,17 @@ much of that back). Next: pass 2 (targeting + admiral) and minion re-targeting.
   `godot --path remake` then shows an empty window because the scripts cannot find each other's class names. Both
   now say to run `godot --headless --path remake --import` once first. (Opening the project in the Godot editor
   imports it by itself.)
+
+### 2026-10-18: hotfix (test tool only): tests/spectate_shots.gd photographs the fights again
+
+- The photo tour could stop with "Trying to assign invalid previously freed instance": its search for the busiest
+  spot read `.alive` of every unit the spatial hash returned, and a unit freed in that frame stopped it. It now
+  skips freed units with `is_instance_valid()`.
+- Its free camera also drifted toward the map's top-left corner by itself (CameraRig's edge panning sees a fresh
+  window's mouse at (0, 0)), so even a correct aim ended at the map edge. The camera's own per-frame work is now off
+  from the aim until the picture is saved, with its position and zoom set by hand.
+- After each picture it prints the camera spot and how many units, pilot ships and minions are in view, and a FAIL
+  line when no pilot ship and no minion is in view; its last line is "spectate_shots: done N pictures, F failures".
+- Measured on this same file (seed 7, --speed=4, 1280x720, six pictures from 1:30 to 20:00): units in view
+  3, 0, 0, 0, 0, 0 before the fix and 14, 12, 21, 22, 22, 22 after it, 0 failures, no script error.
+- Only the test script changes: no game code, so every match plays exactly as before.
