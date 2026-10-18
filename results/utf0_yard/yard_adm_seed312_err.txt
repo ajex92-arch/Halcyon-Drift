@@ -1,1 +1,0 @@
-[compact] no stderr lines other than the usual exit-time leak warnings
