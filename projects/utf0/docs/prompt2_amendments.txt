@@ -1,5 +1,0 @@
-rather than a zone that needs to be captured, make the resource nodes asteroids that need to be mined by mining drones the admiral builds and dispatches from the mothership. These travel from the mothership to the asteroid, collect ore, and ship it back to the mothership. Only upon returning do the drones deposit resources into the pool that is split between the bank and the players. Remove the extractors from the game and the turrets the admiral can build.
-
-instead, add a tech tree to the game such as the one ive attached, where the mothership has to build modules to unlock upgrades and research later ships. The game should start only with scout planes and fighters unlocked, with scout planes being free.
-
-add all 64 players into the game. Also do a pass over the AI and make what upgrades you can.

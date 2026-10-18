@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://scripts/entities/resource_node.gd" id="1_root"]
-
-[node name="ResourceNode" type="Node2D"]
-script = ExtResource("1_root")

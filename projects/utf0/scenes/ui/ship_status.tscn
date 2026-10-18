@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://scripts/ui/ship_status.gd" id="1_root"]
-
-[node name="ShipStatus" type="Control"]
-script = ExtResource("1_root")
