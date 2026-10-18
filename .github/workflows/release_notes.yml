@@ -1,0 +1,117 @@
+# Release page text from the repository: release_notes/<tag>.md (for example
+# release_notes/v0.2.1.md) is added at the end of that tag's GitHub Release,
+# under the text the release job writes and GitHub's change list.
+#
+# WHAT RUNS WHEN
+#   The "release" workflow finished successfully (a tag's Release was just made
+#   or updated, or a main build deployed Pages)
+#       -> every notes file is checked against its Release.
+#   Push to main that changes release_notes/**, this file or its script
+#       -> the same check, so an edited notes file reaches the page.
+#   Run by hand (Actions tab > release-notes > Run workflow) -> the same check.
+#   A notes file whose Release does not exist yet is skipped with a notice; the
+#   tag's release run adds it when that run finishes.
+#
+# HOW A RELEASE GETS ITS TEXT
+#   Put release_notes/vX.Y.Z.md in the release commit on main, then push the tag
+#   as usual. When the tag's release run has made the Release, this workflow adds
+#   the text. Editing the file later and pushing main replaces that section.
+#   The section starts at a hidden marker line and runs to the end of the body
+#   (.github/scripts/release_notes.py has the rules). The same text already
+#   pasted by hand at the end of the body is taken over, not added twice.
+#
+# SAFETY
+#   Only main's code and notes files run: the job is skipped on any other ref
+#   (a workflow_run always runs on main; a hand run picks a ref, and only main
+#   counts) and after a "release" run from another repository. Nothing from the
+#   finished run is downloaded, tag names come from file names in the repository
+#   and are checked before use, and the token may write repository contents
+#   (needed to edit a Release) in this one job only. The notes files are public:
+#   no personal information, computer paths or secrets in them.
+name: release-notes
+run-name: release notes (${{ github.event_name }})
+
+on:
+  workflow_run:
+    workflows: [release]
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - 'release_notes/**'
+      - '.github/workflows/release_notes.yml'
+      - '.github/scripts/release_notes.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One at a time. Every run checks every notes file, so a newer waiting run can
+# replace an older waiting one; a running one is never cancelled.
+concurrency:
+  group: release-notes
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  notes:
+    name: Add the notes files to their Releases
+    # Main only (see SAFETY). After a release run only when it succeeded (a
+    # failed run may have made no Release, or a half-finished one) and it ran
+    # in this repository.
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'workflow_run' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_repository.full_name == github.repository))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Add the notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          shopt -s nullglob
+          files=(release_notes/v*.md)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No release_notes/v*.md files yet; nothing to do."
+          fi
+          # Shows in the log that the token can read the Releases.
+          if latest="$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name 2>/dev/null)"; then
+            echo "Newest release: $latest"
+          else
+            echo "Newest release: none found"
+          fi
+          for f in "${files[@]}"; do
+            tag="$(basename "$f" .md)"
+            if ! [[ "$tag" =~ ^v[0-9]+(\.[0-9]+)*(-[0-9A-Za-z.]+)?$ ]]; then
+              echo "::error::$f: the file name is not a release tag name"
+              exit 1
+            fi
+            if ! gh api "repos/$GH_REPO/releases/tags/$tag" --jq '.body // ""' > "$RUNNER_TEMP/current.md" 2> "$RUNNER_TEMP/err.txt"; then
+              if grep -q 'HTTP 404' "$RUNNER_TEMP/err.txt"; then
+                echo "::notice::$tag has no Release yet; its notes are added when the release run for $tag finishes."
+                continue
+              fi
+              cat "$RUNNER_TEMP/err.txt"
+              echo "::error::Could not read the $tag Release"
+              exit 1
+            fi
+            status="$(python3 .github/scripts/release_notes.py "$tag" "$f" "$RUNNER_TEMP/current.md" "$RUNNER_TEMP/new.md")"
+            echo "$tag: $status"
+            if [ "$status" != "UNCHANGED" ]; then
+              gh release edit "$tag" --notes-file "$RUNNER_TEMP/new.md"
+              echo "::notice::$tag: release notes $status"
+            fi
+          done
