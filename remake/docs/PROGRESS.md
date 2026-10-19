@@ -943,3 +943,26 @@ much of that back). Next: pass 2 (targeting + admiral) and minion re-targeting.
 - Results: run_checks ALL OK (load_all, bot_pilot, support_probe, both ui tours); camera_check 0 failures for the pilot, the Admiral and the spectator seat; zoom_check still 5,200 units across (7,800 with zoom_max:wide, 150 counted frames, for a pilot and for a made-up human with free = false); the layout check at six window sizes for both roles clean (it was clean before); det_hash with the drawing code running (det_check.ps1 -Full, because --sim-only switches the camera off): normal IDENTICAL over 180 lines (END 749aa6eb), late IDENTICAL over 60 lines (END 4bccf106) against v0.2.0's baselines, no script errors. Only test files changed after the det runs.
 - v0.2.1 release (Sun 2026-10-18). A fresh Fable review of the opening fix's round 3 (5e1e926..e87398b) found no defects. It noted three readings: two the user confirmed (the Admiral counts its pilots and its minions near each Crossing, and the rule applies whenever it holds no Crossing turret, rebuilds included), and one that is bounded (a jungler finishing its fall-back flies to its camp without fighting for at most 4 s). The user kept the camera jump at launch and shipped the bloodier opening as is. Against v0.2.0 on seeds 301-306 (40-minute AI matches): stuck episodes 2.82 -> 4.63 per 100 pilot-min (63 of 215 from one bomber stuck from 6:35 in seed 306; +16% without it), rock contact +2%, crash deaths 6 -> 7, matches ended 1/6 -> 0/6, FUN 64.1 -> 60.3.
 - v0.2.1 release review (Opus, Sun 2026-10-18, the release branch against main 7e681a6): no defect in the AI change. In the camera change one low defect (a middle drag stayed on after a focus loss) and two unverified readings of the same kind (the edge pan with the pointer outside the window, fire held through a focus loss); all three are fixed (M-04: CameraRig._notification(), _pointer_inside(), World._notification()). Public text fixed: the opening's kills and deaths were round 1's (now the shipped build's 149 / 193, retreats 159); the human Admiral's flag in the opening is new (v0.2.0 rallied nobody before 10:00); the flex pilot's rotation starts on the top lane for the whole match; no local branch names in the notes; the AI opening fix entries above got their own heading. Checks after the fix (the release branch at 4532997): run_checks ALL OK (load_all, bot_pilot, support_probe, both ui tours); det_check -Full normal IDENTICAL over 180 lines and late IDENTICAL over 60 (END f957a77a and ccbb4bde, as before the fix); camera_check 0 failures for the pilot, the Admiral and the spectator; zoom_check 5,200 units across; no script errors. Only documents changed after these checks.
+### 2026-10-19: hotfix: the mouse wheel over a menu no longer zooms the camera behind it
+
+- The report (the user, as the Admiral at 1920x1080): scrolling the Tab menu (the Admiral board) with the mouse wheel
+  also zoomed the camera in and out behind it.
+- The cause: Godot passes a wheel turn up through panels that stop the mouse (Control.mouse_force_pass_scroll_events
+  is on by default, so nested scroll areas work). A menu's scroll area takes a turn only when it really scrolls, so
+  every turn past the top or the bottom of a list, and every turn over a menu's frame, went on to the game, and
+  CameraRig._unhandled_input zoomed.
+- The fix: the Admiral board, the hangar, the help, the scoreboard and the end screen turn the property off on their
+  root. A wheel turn over them now scrolls the menu or does nothing. Cards and buttons inside still pass the wheel to
+  their list, so the lists scroll as before; the wheel over the open map, the minimap and the HUD's edges zooms as
+  before. Pilots notice it too: the wheel over the hangar (open while docked or dead), the help or the held-Tab
+  scoreboard no longer zooms the map behind it.
+- New test tests/wheel_check.gd (run once per seat): it opens each menu alone at 1920x1080 (the board on all five
+  tabs, the hangar on all four, the help on every page, the scoreboard, the end screen), turns the wheel 30 notches
+  down and 30 up at the menu's middle, top and bottom, and fails any menu where a turn changed the camera's zoom goal,
+  or where a list taller than its scroll area did not scroll. A control turn over the open map must zoom.
+- Before the fix: 13 of 13 menus failed for the Admiral and 8 of 8 for a pilot (174 to 180 of 180 turns zoomed the
+  camera); with the four menus fixed and the end screen not yet, only the end screen failed (180 of 180). After:
+  0 failures for both seats.
+- Results: run_checks ALL OK (load_all, bot_pilot, support_probe, both ui tours, both wheel checks); det_check -Full
+  normal IDENTICAL over 180 lines and late IDENTICAL over 60 against v0.2.1's release runs, no script errors. The
+  change is a UI input setting: the simulation never reads it, and the HUD is not built in simulation runs.

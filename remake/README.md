@@ -148,6 +148,9 @@ godot --headless --path remake --fixed-fps 60 -- --all-ai --seed=301 --test=open
 # (--role=pilot or admiral; for the spectator use --all-ai instead of --auto --role --bot)
 godot --headless --path remake --fixed-fps 60 -- --auto --role=pilot --bot=input --no-pilots --no-admiral-ai --test=camera_check
 
+# The mouse wheel over an open menu never zooms the camera behind it (--role=pilot or admiral)
+godot --headless --path remake -- --auto --role=admiral --bot=tour --force-hud --test=wheel_check
+
 # Every script and scene loads
 godot --headless --path remake -- --auto --all-ai --test=load_all
 

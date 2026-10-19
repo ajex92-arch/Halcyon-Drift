@@ -6,6 +6,7 @@
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 0
+mouse_force_pass_scroll_events = false
 script = ExtResource("1_root")
 
 [node name="Cover" type="ColorRect" parent="."]

@@ -4,6 +4,7 @@
 
 [node name="AdmiralBoard" type="PanelContainer"]
 mouse_filter = 0
+mouse_force_pass_scroll_events = false
 theme_type_variation = &"BoardLook"
 script = ExtResource("1_root")
 

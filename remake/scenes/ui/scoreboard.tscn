@@ -4,6 +4,7 @@
 
 [node name="Scoreboard" type="PanelContainer"]
 mouse_filter = 0
+mouse_force_pass_scroll_events = false
 theme_type_variation = &"ScoreLook"
 script = ExtResource("1_root")
 

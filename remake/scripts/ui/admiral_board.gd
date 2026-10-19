@@ -6,8 +6,11 @@ extends PanelContainer
 ##
 ## HOW IT WORKS: the frame that never changes is the scene
 ## scenes/ui/admiral_board.tscn: a nearly solid dark box (the "BoardLook"
-## look) that takes mouse clicks, so they don't reach the map. It holds one
-## column, Col, with these rows from top to bottom:
+## look) that takes mouse clicks and wheel turns, so they don't reach the
+## map (the scene turns off mouse_force_pass_scroll_events, so a wheel
+## turn the list cannot use stops here instead of zooming the camera;
+## tests/wheel_check.gd checks it). It holds one column, Col, with these
+## rows from top to bottom:
 ##   Head (Texts (Title, Status), Close): the title with the treasury, the
 ##     status line under it (what is building and researching), and Close
 ##     (at least 40 pixels tall);
