@@ -1,0 +1,12 @@
+batch: tn_conf
+run: 39508611538
+finished: 2026-10-20T23:38:34Z
+runs: 3
+jobs: 30
+expected: 270
+present: 270
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
