@@ -1,0 +1,12 @@
+batch: stuck_after
+run: 39522340316
+finished: 2026-10-21T01:02:39Z
+runs: 3
+jobs: 9
+expected: 81
+present: 81
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
