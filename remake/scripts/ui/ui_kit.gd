@@ -10,10 +10,16 @@ extends RefCounted
 ## its own scene (scenes/ui/*.tscn). The parts that never change (panels,
 ## rows, headings, fixed labels) are nodes in the scene, and each node
 ## picks its look by name: its theme_type_variation is one of the named
-## looks make_theme() adds (MistText, AmberText, PrimaryButton and the
+## looks make_theme() adds (MistText, AccentText, PrimaryButton and the
 ## PANEL_LOOKS boxes). Lists that change while playing (cards, rows of
 ## pilots, feed lines) are still built in code with the helpers below.
 ## Colours always come from Palette, never from the scene files.
+## The interface has one highlight colour (the "accent"): the first line of the
+## top-left panel, the pressed and chosen buttons, the selected tabs, the prices.
+## It follows the human's team: amber for Aurelian (and for a spectator), red for
+## Vhorr. Palette.accent() decides the colour; accent_team says for which side
+## the interface is built, and accent() gives the colour. Whoever builds a screen
+## (Hud.setup(), StartScreen) sets the side first with set_accent_team().
 ## Buttons never take keyboard focus: WASD, Space, Tab and the arrows
 ## belong to the pilot, not to whichever button was clicked last.
 ##
@@ -38,35 +44,54 @@ const PANEL_LOOKS := [
 	["EndLook", Palette.PANEL, 0.95, 24],     # end screen card
 ]
 
+## The team the interface highlights for (Rules.HALCYON or Rules.CINDER): the
+## human's team, or Aurelian for a spectator. Change it only with
+## set_accent_team().
+static var accent_team := Rules.HALCYON
+
+
+## Build the interface for team `t` from now on: accent() gives that team's
+## highlight colour (Palette.accent()). A theme made before this call keeps the
+## old colour, so the caller makes a new one with make_theme().
+static func set_accent_team(t: int) -> void:
+	accent_team = t
+
+
+## The interface's highlight colour: Palette.accent() of accent_team.
+static func accent() -> Color:
+	return Palette.accent(accent_team)
+
 
 ## Build the game's theme. Hud and StartScreen set it on themselves, and
-## every control inside them uses it unless it overrides a look itself.
+## every control inside them uses it unless it overrides a look itself. It is
+## made with the accent() colour of the moment.
 static func make_theme() -> Theme:
 	var t := Theme.new()
+	var hi := accent()
 	t.default_font_size = 15
-	# Step 1: panels and buttons. Buttons get an amber border on hover and
-	# when pressed, and an empty focus box (no focus outline).
+	# Step 1: panels and buttons. Buttons get a border in the accent colour on
+	# hover and when pressed, and an empty focus box (no focus outline).
 	t.set_stylebox("panel", "PanelContainer", box(Palette.with_alpha(Palette.PANEL, 0.94), Palette.LINE, 12))
 	t.set_stylebox("panel", "Panel", box(Palette.PANEL, Palette.LINE, 0))
 	t.set_stylebox("normal", "Button", box(Palette.INK, Palette.LINE, 8))
-	t.set_stylebox("hover", "Button", box(Palette.INK, Palette.AMBER, 8))
-	t.set_stylebox("pressed", "Button", box(Palette.PANEL, Palette.AMBER, 8))
-	t.set_stylebox("hover_pressed", "Button", box(Palette.PANEL, Palette.AMBER, 8))
+	t.set_stylebox("hover", "Button", box(Palette.INK, hi, 8))
+	t.set_stylebox("pressed", "Button", box(Palette.PANEL, hi, 8))
+	t.set_stylebox("hover_pressed", "Button", box(Palette.PANEL, hi, 8))
 	t.set_stylebox("disabled", "Button", box(Palette.with_alpha(Palette.INK, 0.6), Palette.with_alpha(Palette.LINE, 0.6), 8))
 	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	# Step 2: text colours for buttons and labels.
 	t.set_color("font_color", "Button", Palette.ICE)
 	t.set_color("font_hover_color", "Button", Palette.ICE)
-	t.set_color("font_pressed_color", "Button", Palette.AMBER)
-	t.set_color("font_hover_pressed_color", "Button", Palette.AMBER)
+	t.set_color("font_pressed_color", "Button", hi)
+	t.set_color("font_hover_pressed_color", "Button", hi)
 	t.set_color("font_focus_color", "Button", Palette.ICE)
 	t.set_color("font_disabled_color", "Button", Palette.with_alpha(Palette.MIST, 0.5))
 	t.set_color("font_color", "Label", Palette.ICE)
-	# Step 3: progress bars (dark background, amber fill).
+	# Step 3: progress bars (dark background, accent fill).
 	var bar_bg := StyleBoxFlat.new()
 	bar_bg.bg_color = Palette.INK
 	var bar_fill := StyleBoxFlat.new()
-	bar_fill.bg_color = Palette.AMBER
+	bar_fill.bg_color = hi
 	t.set_stylebox("background", "ProgressBar", bar_bg)
 	t.set_stylebox("fill", "ProgressBar", bar_fill)
 	# Step 4: scroll areas: no background, slim scroll bars. The "grabber"
@@ -89,19 +114,20 @@ static func make_theme() -> Theme:
 	t.set_color("font_color", "TooltipLabel", Palette.ICE)
 	# Step 6: named looks ("type variations"). A node in a scene picks one
 	# by name (its theme_type_variation), so the colours stay in Palette.
-	# Text colours: MistText (grey) and AmberText. Plain labels are ICE.
+	# Text colours: MistText (grey) and AccentText (the highlight colour). Plain
+	# labels are ICE.
 	t.set_type_variation("MistText", "Label")
 	t.set_color("font_color", "MistText", Palette.MIST)
-	t.set_type_variation("AmberText", "Label")
-	t.set_color("font_color", "AmberText", Palette.AMBER)
-	# The filled amber button for a screen's main choice (Launch, New match,
-	# the start screen's seat buttons).
+	t.set_type_variation("AccentText", "Label")
+	t.set_color("font_color", "AccentText", hi)
+	# The button filled with the accent colour for a screen's main choice
+	# (Launch, New match, the start screen's seat buttons).
 	t.set_type_variation("PrimaryButton", "Button")
-	t.set_stylebox("normal", "PrimaryButton", box(Palette.AMBER, Palette.AMBER, 8))
-	t.set_stylebox("hover", "PrimaryButton", box(Palette.AMBER.lightened(0.12), Palette.AMBER, 8))
-	t.set_stylebox("pressed", "PrimaryButton", box(Palette.AMBER.darkened(0.15), Palette.AMBER, 8))
-	t.set_stylebox("hover_pressed", "PrimaryButton", box(Palette.AMBER.darkened(0.15), Palette.AMBER, 8))
-	t.set_stylebox("disabled", "PrimaryButton", box(Palette.with_alpha(Palette.AMBER, 0.35), Palette.with_alpha(Palette.AMBER, 0.35), 8))
+	t.set_stylebox("normal", "PrimaryButton", box(hi, hi, 8))
+	t.set_stylebox("hover", "PrimaryButton", box(hi.lightened(0.12), hi, 8))
+	t.set_stylebox("pressed", "PrimaryButton", box(hi.darkened(0.15), hi, 8))
+	t.set_stylebox("hover_pressed", "PrimaryButton", box(hi.darkened(0.15), hi, 8))
+	t.set_stylebox("disabled", "PrimaryButton", box(Palette.with_alpha(hi, 0.35), Palette.with_alpha(hi, 0.35), 8))
 	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_disabled_color"]:
 		t.set_color(k, "PrimaryButton", Palette.VOID)
 	t.set_font_size("font_size", "PrimaryButton", 18)

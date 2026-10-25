@@ -7,7 +7,10 @@ extends RefCounted
 ## because their shots now land, they became the top killer of pilots after
 ## 30:00. With this variant a minion's shot at a PILOT SHIP counts as if the
 ## minion had at most +15% strength, and the Reinforced Waves bonus does not
-## count for that shot at all.
+## count for that shot at all. The cap is a damage modifier: with the damage
+## modifiers removed (Rules.damage_modifiers_removed()) the variant key is
+## still valid, "minion_cap:on" still loads (the council presets list it),
+## and it does nothing.
 ##
 ## HOW IT WORKS: Combat already lets a feature re-scale a minion's hit
 ## against one target (Combat.minion_scale_hook). install() plugs in
@@ -27,7 +30,8 @@ extends RefCounted
 
 ## The variant key this module belongs to.
 const KEY := "minion_cap"
-## The strongest a minion counts as against a pilot ship (1.15 = +15%).
+## The strongest a minion counts as against a pilot ship (1.15 = +15%). Used
+## only while the damage modifiers are kept.
 const CAP := 1.15
 
 ## The match (we read the teams' Reinforced Waves bonus from it).
@@ -35,8 +39,11 @@ var world: World
 
 
 ## Switch the cap on for match `w`: plug _scale() into Combat. FeatureRegistry
-## calls this once at match start.
+## calls this once at match start. With the damage modifiers removed there is
+## nothing to plug in.
 func install(w: World) -> void:
+	if Rules.damage_modifiers_removed():
+		return
 	world = w
 	MinionHookChain.add(w, Callable(self, "_scale"), true)
 

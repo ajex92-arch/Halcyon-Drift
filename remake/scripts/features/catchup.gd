@@ -73,8 +73,7 @@ func _tick_income(dt: float) -> void:
 		var rate := minf(INCOME_CAP, INCOME_PER_D * deficit)
 		for p: PilotProfile in world.profiles:
 			if p.team == team and p.role != "admiral" and p.slot < Rules.PILOTS_PER_TEAM:
-				p.credits += rate * dt
-				p.earned += rate * dt
+				p.earn_quietly(rate * dt)
 				_income_carry += rate * dt
 	if _income_carry >= 1.0:
 		Game.count_usage("catchup_credits", int(_income_carry))

@@ -4,7 +4,9 @@ extends Node
 ## rule that the mothership is tough and has decent point defense (small
 ## quick guns that can also shoot down torpedoes) but is weak to big ships,
 ## and that a fully upgraded one can fight several frigates at once and
-## (barely) win.
+## (barely) win. The winners listed below are for the game with the damage
+## modifiers kept. With them removed, the damage table and the "weak to big
+## ships" multipliers are gone, so the winners may differ: run it to see.
 ##
 ## HOW IT WORKS: setup() picks a scenario from SCENARIOS (--scenario,
 ## default B). For a "+" scenario it first gives Aurelian all the Flagship

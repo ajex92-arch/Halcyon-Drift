@@ -18,7 +18,8 @@ extends RefCounted
 ##       capdump    (Ion) the next shot or burst of each FIXED gun does 1.8x
 ##                  ("Capacitor Dump").
 ##       emergency_repair (Logistics) repair friendly ships and structures
-##                  within 650 by 12% of their maximum hull.
+##                  within 650 by 12% of their maximum hull (but not
+##                  turrets: Unit.heal() refuses them).
 ##       jam        (Support) jam enemy vision around us for 7 s.
 ##       brace      (Flak) take only 62% damage for 5 s.
 ##       overcharge (Destroyer) double fire rate for 5 s.
@@ -75,6 +76,7 @@ static func use_special(ship: Ship) -> void:
 		"emergency_repair":
 			for u: Unit in world.unit_hash.query(ship.global_position, 650.0, _scratch):
 				if u.team == ship.team and u.alive and u.global_position.distance_to(ship.global_position) < 650.0:
+					# (heal() refuses a turret, so it gets nothing.)
 					if u.kind == Unit.K_SHIP or u.is_structure():
 						u.heal(u.hull_max * 0.12)
 			world.effects.pulse(ship.global_position, 650.0, 0.6, Palette.REPAIR)

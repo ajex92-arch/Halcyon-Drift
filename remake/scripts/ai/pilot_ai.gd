@@ -32,12 +32,16 @@ extends RefCounted
 ##                       "tanking" (standing in its range, so it shoots them
 ##                       and not us) near the front line (big ships lead the
 ##                       way into point-defense turrets, which barely hurt
-##                       them), or the enemy mothership once the wave
-##                       reaches it;
+##                       them while the damage modifiers are kept), or the
+##                       enemy mothership once the wave reaches it;
 ##                prey - hunt a visible enemy pilot within SEEK of us and
 ##                       LEASH of our station when the local odds are fair
 ##                       and it isn't hiding under an enemy turret (big ships
-##                       don't chase: they hold and shoot what comes close).
+##                       don't chase: they hold and shoot what comes close);
+##                farm - with nothing else to do, fly out to the best enemy
+##                       minion within PilotTargeting.FARM_RADIUS of our wave's
+##                       front minion and shoot it (last hits first), instead
+##                       of waiting at the station for a target to come.
 ##       jungle   clear derelict camps (neutral monster ships in the asteroid
 ##                "jungle" between the lanes). Junglers join the opening at
 ##                the middle Crossing first (where, like a lane pilot, one
@@ -147,10 +151,10 @@ var launched_at := -999.0
 ## Tests and orders: hold here instead of the lane station (Vector2.INF =
 ## off). tests/arena.gd sets it.
 var hold_point := Vector2.INF
-## Why `target` was chosen: "" (it was in range), "prey" (hunting a pilot)
-## or "push" (attacking a structure our minions are tanking). Big ships
-## close to a standoff range for prey/push targets; otherwise they hold
-## station.
+## Why `target` was chosen: "" (it was in range), "prey" (hunting a pilot),
+## "push" (attacking a structure our minions are tanking) or "farm" (flying
+## out to a minion near our wave's front minion). Big ships close to a
+## standoff range for prey/push/farm targets; otherwise they hold station.
 var intent := ""
 ## Why we're flying home to shop, e.g. "hull:destroyer" (to buy a
 ## destroyer) or "gear:helm_neural"; "" when not. tests/match_probe.gd

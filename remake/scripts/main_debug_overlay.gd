@@ -60,5 +60,5 @@ static func on_f1(world: World) -> void:
 	var h := world.human
 	if h.state == "docked":
 		if h.hull_id == "":
-			h.buy_hull("fighter", world.teams[0])
+			h.buy_hull("fighter", world.teams[h.team])
 		world.launch(h)

@@ -20,7 +20,11 @@ extends RefCounted
 ##                   "fac:<facility>". A tech id (from tech.gd) means "needs
 ##                   that research AND the facility for this hull's size";
 ##                   "fac:corvette" means "needs the Corvette Facility".
-##     blurb         the description shown in the hangar
+##     blurb         the description shown in the hangar (read it through
+##                   blurb())
+##     blurb_removed only on the hulls whose blurb names a damage modifier:
+##                   the description in words that do not, shown instead
+##                   while the damage modifiers are removed (blurb())
 ##   Defence:
 ##     hull          hit points of the hull; at 0 the ship is destroyed
 ##     shield        shield points, the total over the 4 shield zones
@@ -89,7 +93,9 @@ extends RefCounted
 ## pick them; the HUD and the scoreboard show their labels.
 ##
 ## To add a hull: add an entry, add its id to ORDER, give it a silhouette in
-## ShipVisual.HULLS, and (if it needs a new special) handle it in
+## ShipVisual.HULLS, a steel Aurelian drawing in AurelianShapes.HULLS and an
+## alien Cinder shape in CinderShapes.HULLS (without
+## one, Cinder draws it as the fighter), and (if it needs a new special) handle it in
 ## Ship._use_special() (which forwards to ShipAbilities.use_special()).
 
 ## Every hull id, in the order the hangar lists them (TeamState also returns
@@ -114,10 +120,12 @@ const HULLS := {
 		"special_label": "Ping", "special_info": "reveals every enemy within 4,500 for 3s, even behind asteroids",
 	},
 	# Fighter (small): the all-round dogfighter. Its cannon has a small_bonus
-	# of 1.25 (weapons.gd), which is the "+25% against small ships".
+	# of 1.25 (weapons.gd), which is the "+25% against small ships" (applied
+	# only while the damage modifiers are kept).
 	"fighter": {
 		"label": "Fighter", "size": 0, "price": 150.0, "unlock": "",
 		"blurb": "Agile dogfighter. +25% damage against small ships.",
+		"blurb_removed": "Agile all-round dogfighter.",
 		"hull": 100.0, "shield": 200.0, "shield_regen": 18.0, "hull_resist": 0.0, "shield_resist": 0.0,
 		"energy": 100.0, "energy_regen": 26.0,
 		"accel": 540.0, "reverse": 360.0, "strafe": 420.0, "max": 640.0, "turn": 3.2, "turn_bleed": 0.05,
@@ -131,6 +139,7 @@ const HULLS := {
 	"lance": {
 		"label": "Lance Fighter", "size": 0, "price": 300.0, "unlock": "lanceBeams",
 		"blurb": "Beam fighter that melts corvettes. Hold the beam on target.",
+		"blurb_removed": "Beam fighter. Hold the beam on target.",
 		"hull": 110.0, "shield": 220.0, "shield_regen": 18.0, "hull_resist": 0.05, "shield_resist": 0.0,
 		"energy": 120.0, "energy_regen": 32.0,
 		"accel": 480.0, "reverse": 330.0, "strafe": 360.0, "max": 600.0, "turn": 2.9, "turn_bleed": 0.07,
@@ -145,6 +154,7 @@ const HULLS := {
 	"bomber": {
 		"label": "Bomber", "size": 0, "price": 350.0, "unlock": "fusionBombs",
 		"blurb": "Slow torpedo ship. Plan attack runs on big ships, turrets and motherships.",
+		"blurb_removed": "Slow torpedo ship without a booster. Plan your attack runs.",
 		"hull": 170.0, "shield": 240.0, "shield_regen": 16.0, "hull_resist": 0.1, "shield_resist": 0.0,
 		"energy": 120.0, "energy_regen": 22.0,
 		"accel": 220.0, "reverse": 150.0, "strafe": 100.0, "max": 400.0, "turn": 1.15, "turn_bleed": 0.22,
@@ -158,7 +168,7 @@ const HULLS := {
 	# Corvette Facility. It carries 2 repair drones.
 	"logistics": {
 		"label": "Logistics Corvette", "size": 1, "price": 500.0, "unlock": "fac:corvette",
-		"blurb": "Repair corvette. Two repair drones heal allies and structures; weak guns.",
+		"blurb": "Repair corvette. Two repair drones heal allies, repair bays and the mothership (nothing heals a turret); weak guns.",
 		"hull": 380.0, "shield": 420.0, "shield_regen": 22.0, "hull_resist": 0.1, "shield_resist": 0.0,
 		"energy": 150.0, "energy_regen": 22.0,
 		"accel": 250.0, "reverse": 190.0, "strafe": 155.0, "max": 350.0, "turn": 1.55, "turn_bleed": 0.12,
@@ -174,6 +184,7 @@ const HULLS := {
 	"support": {
 		"label": "Support Corvette", "size": 1, "price": 550.0, "unlock": "commandSystems",
 		"blurb": "Command corvette. Big vision, buffs nearby allies, marks targets for bombers.",
+		"blurb_removed": "Command corvette. Big vision, buffs nearby allies, marks enemy ships.",
 		"hull": 300.0, "shield": 500.0, "shield_regen": 26.0, "hull_resist": 0.05, "shield_resist": 0.05,
 		"energy": 180.0, "energy_regen": 30.0,
 		"accel": 290.0, "reverse": 210.0, "strafe": 200.0, "max": 430.0, "turn": 1.9, "turn_bleed": 0.1,
@@ -189,15 +200,16 @@ const HULLS := {
 	"flak": {
 		"label": "Flak Frigate", "size": 2, "price": 1100.0, "unlock": "fac:frigate",
 		"blurb": "Lane anchor. Flak battery plus two automatic point-defense guns shred small craft.",
+		"blurb_removed": "Lane anchor. Flak battery plus two automatic point-defense guns.",
 		"hull": 1000.0, "shield": 900.0, "shield_regen": 30.0, "hull_resist": 0.15, "shield_resist": 0.05,
 		"energy": 200.0, "energy_regen": 25.0,
 		"accel": 125.0, "reverse": 95.0, "strafe": 52.0, "max": 250.0, "turn": 0.78, "turn_bleed": 0.36,
 		"assist": 2.6, "cap_rate": 1.5, "boost_mul": 1.22, "boost_cap": 1.1, "has_boost": false, "boost_drain": 30.0,
-		"vision": 2700.0, "radius": 70.0, "length": 210.0,
+		"vision": 2700.0, "radius": 87.5, "length": 262.5,
 		"mounts": [
-			{"w": "flak_battery", "type": "turret", "off": Vector2(40, 0), "arc": 160.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(-50, -40), "arc": 180.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(-50, 40), "arc": 180.0},
+			{"w": "flak_battery", "type": "turret", "off": Vector2(50, 0), "arc": 160.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(-62.5, -50), "arc": 180.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(-62.5, 50), "arc": 180.0},
 		],
 		"special": "brace", "special_cd": 14.0, "special_energy": 50.0,
 		"special_label": "Brace", "special_info": "takes 38% less damage for 5s",
@@ -207,14 +219,15 @@ const HULLS := {
 	"ion": {
 		"label": "Ion Frigate", "size": 2, "price": 1250.0, "unlock": "ionCannons",
 		"blurb": "Forward ion beam that cuts frigates, turrets and motherships. Point the hull to aim.",
+		"blurb_removed": "Forward ion beam, fired in bursts. Point the hull to aim.",
 		"hull": 850.0, "shield": 1000.0, "shield_regen": 30.0, "hull_resist": 0.12, "shield_resist": 0.05,
 		"energy": 220.0, "energy_regen": 30.0,
 		"accel": 135.0, "reverse": 100.0, "strafe": 60.0, "max": 260.0, "turn": 0.85, "turn_bleed": 0.34,
 		"assist": 2.6, "cap_rate": 1.5, "boost_mul": 1.22, "boost_cap": 1.1, "has_boost": false, "boost_drain": 30.0,
-		"vision": 2900.0, "radius": 68.0, "length": 220.0,
+		"vision": 2900.0, "radius": 85.0, "length": 275.0,
 		"mounts": [
-			{"w": "ion_cannon", "type": "fixed", "off": Vector2(100, 0), "arc": 0.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(-40, 0), "arc": 180.0},
+			{"w": "ion_cannon", "type": "fixed", "off": Vector2(125, 0), "arc": 0.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(-50, 0), "arc": 180.0},
 		],
 		"special": "capdump", "special_cd": 14.0, "special_energy": 60.0,
 		"special_label": "Capacitor dump", "special_info": "next ion burst deals +80% damage",
@@ -228,13 +241,13 @@ const HULLS := {
 		"energy": 300.0, "energy_regen": 35.0,
 		"accel": 70.0, "reverse": 50.0, "strafe": 25.0, "max": 175.0, "turn": 0.45, "turn_bleed": 0.4,
 		"assist": 3.0, "cap_rate": 1.2, "boost_mul": 1.15, "boost_cap": 1.05, "has_boost": false, "boost_drain": 30.0,
-		"vision": 3100.0, "radius": 120.0, "length": 420.0,
+		"vision": 3100.0, "radius": 180.0, "length": 630.0,
 		"mounts": [
-			{"w": "heavy_cannon", "type": "turret", "off": Vector2(120, 0), "arc": 150.0},
-			{"w": "heavy_cannon", "type": "turret", "off": Vector2(-60, 0), "arc": 150.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(60, -70), "arc": 180.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(60, 70), "arc": 180.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(-140, 0), "arc": 180.0},
+			{"w": "heavy_cannon", "type": "turret", "off": Vector2(180, 0), "arc": 150.0},
+			{"w": "heavy_cannon", "type": "turret", "off": Vector2(-90, 0), "arc": 150.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(90, -105), "arc": 180.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(90, 105), "arc": 180.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(-210, 0), "arc": 180.0},
 			{"w": "flak_auto", "type": "auto", "off": Vector2(0, 0), "arc": 180.0},
 		],
 		"special": "overcharge", "special_cd": 20.0, "special_energy": 80.0,
@@ -249,17 +262,17 @@ const HULLS := {
 		"energy": 400.0, "energy_regen": 40.0,
 		"accel": 55.0, "reverse": 40.0, "strafe": 18.0, "max": 150.0, "turn": 0.32, "turn_bleed": 0.45,
 		"assist": 3.2, "cap_rate": 1.1, "boost_mul": 1.12, "boost_cap": 1.04, "has_boost": false, "boost_drain": 30.0,
-		"vision": 3300.0, "radius": 160.0, "length": 560.0,
+		"vision": 3300.0, "radius": 240.0, "length": 840.0,
 		"mounts": [
-			{"w": "ion_turret", "type": "turret", "off": Vector2(170, 0), "arc": 140.0},
-			{"w": "ion_turret", "type": "turret", "off": Vector2(-130, 0), "arc": 140.0},
-			{"w": "heavy_cannon", "type": "turret", "off": Vector2(30, 0), "arc": 150.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(120, -90), "arc": 180.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(120, 90), "arc": 180.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(-180, -80), "arc": 180.0},
-			{"w": "pd_gun", "type": "auto", "off": Vector2(-180, 80), "arc": 180.0},
-			{"w": "flak_auto", "type": "auto", "off": Vector2(60, 0), "arc": 180.0},
-			{"w": "flak_auto", "type": "auto", "off": Vector2(-80, 0), "arc": 180.0},
+			{"w": "ion_turret", "type": "turret", "off": Vector2(255, 0), "arc": 140.0},
+			{"w": "ion_turret", "type": "turret", "off": Vector2(-195, 0), "arc": 140.0},
+			{"w": "heavy_cannon", "type": "turret", "off": Vector2(45, 0), "arc": 150.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(180, -135), "arc": 180.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(180, 135), "arc": 180.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(-270, -120), "arc": 180.0},
+			{"w": "pd_gun", "type": "auto", "off": Vector2(-270, 120), "arc": 180.0},
+			{"w": "flak_auto", "type": "auto", "off": Vector2(90, 0), "arc": 180.0},
+			{"w": "flak_auto", "type": "auto", "off": Vector2(-120, 0), "arc": 180.0},
 		],
 		"special": "broadside", "special_cd": 25.0, "special_energy": 120.0,
 		"special_label": "Broadside", "special_info": "all weapons fire 50% faster for 6s",
@@ -277,4 +290,14 @@ static func get_def(id: String) -> Dictionary:
 ## Modules (prices), Tech (unlocks) and PilotShopping use it.
 static func size_of(id: String) -> int:
 	return int(HULLS[id]["size"])
+
+
+## The description of hull `id` that players read in the hangar: its
+## "blurb_removed" while the damage modifiers are removed and the hull has
+## one, else its "blurb". HangarShips uses it.
+static func blurb(id: String) -> String:
+	var d: Dictionary = HULLS[id]
+	if Rules.damage_modifiers_removed() and d.has("blurb_removed"):
+		return String(d["blurb_removed"])
+	return String(d["blurb"])
 

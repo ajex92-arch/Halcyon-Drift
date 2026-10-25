@@ -183,7 +183,7 @@ func start(role: String) -> void:
 	# pilot record too) buys a Fighter and launches at once, unless a --bot
 	# test script is flying the human itself. A spectator has no ship.
 	if Game.opt("auto", false) and world.human != null and not Game.opt("bot"):
-		world.human.buy_hull("fighter", world.teams[0])
+		world.human.buy_hull("fighter", world.teams[world.human.team])
 		world.launch(world.human)
 	# Step 7: one line about the match: the seat, the rule variants, and how
 	# many rocks, ore nodes, monster camps and route-map points there are.

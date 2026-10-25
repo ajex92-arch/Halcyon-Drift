@@ -23,7 +23,7 @@ extends Node
 ## tell it to hold another: a travel test, for jungle_big).
 ##
 ## WHO USES IT: main.gd loads it for --test=roles_probe. The combat_roles
-## build report (SP/fun/reports/combat_roles_build.md) quotes its output.
+## build report (fun_plan/reports/combat_roles_build.md) quotes its output.
 
 ## The arena toolkit: squads, keeping pilots in the fight, who is alive.
 const ArenaKit := preload("res://tests/lib/arena_kit.gd")
@@ -147,8 +147,10 @@ func _point(text: String) -> Vector2:
 ## --unit, idea E1 (minion_cap): a minion with strength 1.35 (and a 10%
 ## Reinforced Waves bonus on top) hits the first ship of squad A, and a
 ## minion of ours; print the damage the hit has with and without the hook.
-## With the variant on, the hit on the ship should be cut to 1.15 / 1.485
-## (0.774) of what it was; the hit on the minion should not change.
+## With the variant on and the damage modifiers kept, the hit on the ship
+## should be cut to 1.15 / 1.485 (0.774) of what it was; the hit on the minion
+## should not change. With the damage modifiers removed, minion_cap does
+## nothing and both ratios print 1.000.
 func _unit_e1() -> void:
 	world.teams[Rules.CINDER].minion_buff = 0.1
 	var target_ship: Ship = a[0]

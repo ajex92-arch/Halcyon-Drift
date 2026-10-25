@@ -51,6 +51,6 @@ func _draw() -> void:
 	var left: float = prog[0]
 	var total: float = prog[1]
 	draw_rect(Rect2(Vector2.ZERO, Vector2(W, H)), Palette.INK)
-	draw_rect(Rect2(Vector2.ZERO, Vector2(W * clampf(1.0 - left / total, 0.0, 1.0), H)), Palette.AMBER)
+	draw_rect(Rect2(Vector2.ZERO, Vector2(W * clampf(1.0 - left / total, 0.0, 1.0), H)), UiKit.accent())
 	draw_rect(Rect2(Vector2.ZERO, Vector2(W, H)), Palette.LINE, false, 1.0)
 	draw_string(font, Vector2(8, 15), "RECALL %.1f s: hold still and hold fire" % left, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Palette.ICE)

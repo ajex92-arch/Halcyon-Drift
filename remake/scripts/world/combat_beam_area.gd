@@ -10,11 +10,14 @@ extends RefCounted
 ##     an enemy unit or an enemy mothership), hurt that unit through
 ##     Combat.apply_damage(), and return where the beam stops so it can be
 ##     drawn up to there. If an asteroid comes first, a cutting beam chips
-##     it instead (by Rules.ASTEROID_MULT: ion beams x0.6).
+##     it instead (by Rules.ASTEROID_MULT: ion beams x0.6; for its full
+##     damage when the damage modifiers are removed).
 ##   - area(): a blast at a point hurts every enemy unit whose edge is within
 ##     the blast radius: full damage within half the radius, then less and
 ##     less, down to half damage at the very edge. An enemy mothership whose
-##     hull is within the radius takes a flat half damage.
+##     hull is within the radius takes a flat half damage; with the damage
+##     modifiers removed it takes the same falloff as every other target,
+##     measured from its hull.
 ## A neutral attacker (a jungle monster) never hurts neutral units.
 ##
 ## WHO USES IT: Combat makes one; Combat.beam() and Combat.area() forward
@@ -54,7 +57,7 @@ func beam(src: Unit, from: Vector2, dir: Vector2, length: float, dmg: float, kin
 	# Step 2: the first enemy unit before that, searching the spatial hash
 	# around the middle of the line.
 	var mid := (from + to) * 0.5
-	for u: Unit in world.unit_hash.query(mid, length * 0.5 + 200.0, _scratch):
+	for u: Unit in world.unit_hash.query(mid, length * 0.5 + Projectiles.MAX_UNIT_RADIUS, _scratch):
 		if not u.alive or u.team == src.team:
 			continue
 		if src.team == Rules.NEUTRAL and u.team == Rules.NEUTRAL:
@@ -76,7 +79,12 @@ func beam(src: Unit, from: Vector2, dir: Vector2, length: float, dmg: float, kin
 		var info := DamageInfo.from_unit(src, dmg, kind, from)
 		combat.apply_damage(best, info)
 	elif not hit.is_empty() and cuts:
-		world.asteroids.damage(int(hit["index"]), dmg * float(Rules.ASTEROID_MULT.get(kind, 0.0)))
+		# A rock takes the beam's damage times Rules.ASTEROID_MULT, or all of
+		# it when the damage modifiers are removed.
+		var rock_dmg := dmg
+		if not Rules.damage_modifiers_removed():
+			rock_dmg = dmg * float(Rules.ASTEROID_MULT.get(kind, 0.0))
+		world.asteroids.damage(int(hit["index"]), rock_dmg)
 	return end
 
 
@@ -86,13 +94,16 @@ func beam(src: Unit, from: Vector2, dir: Vector2, length: float, dmg: float, kin
 ## note with the amount scaled by distance, coming from `pos` (so the
 ## shield zone facing the blast takes it).
 func area(src_info: DamageInfo, pos: Vector2, r: float, exclude_team: int) -> void:
-	for u: Unit in world.unit_hash.query(pos, r + 200.0, _scratch):
+	# The search adds the biggest unit radius: the edge of a big hull can be inside
+	# the blast while its centre is not.
+	for u: Unit in world.unit_hash.query(pos, r + Projectiles.MAX_UNIT_RADIUS, _scratch):
 		if not u.alive or u.team == exclude_team:
 			continue
 		if exclude_team == Rules.NEUTRAL and u.team == Rules.NEUTRAL:
 			continue
-		# How far the blast centre is from the unit's edge.
-		var d := pos.distance_to(u.global_position) - u.radius
+		# How far the blast centre is from the unit's edge (the size shots see,
+		# Unit.hit_radius()).
+		var d := pos.distance_to(u.global_position) - u.hit_radius()
 		if d > r:
 			continue
 		# Full damage (k = 1) up to half the radius, then sliding down to
@@ -113,12 +124,20 @@ func area(src_info: DamageInfo, pos: Vector2, r: float, exclude_team: int) -> vo
 		info.small_bonus = src_info.small_bonus
 		combat.apply_damage(u, info)
 	# Enemy motherships (not in the hash) whose hull is within the radius
-	# take a flat half damage. (Their copy of the note has no `source` unit
-	# and no small bonus.)
+	# take a flat half damage, or, with the damage modifiers removed, the
+	# same falloff as every other target, measured from the hull. (Their copy
+	# of the note has no `source` unit and no small bonus.)
+	var removed := Rules.damage_modifiers_removed()
 	for ms: Mothership in world.motherships:
-		if ms != null and ms.alive and ms.team != exclude_team and ms.hull_dist(pos) < r:
+		if ms == null or not ms.alive or ms.team == exclude_team:
+			continue
+		var hd := ms.hull_dist(pos)
+		if hd < r:
+			var mk := 0.5
+			if removed:
+				mk = 1.0 if hd <= r * 0.5 else 1.0 - 0.5 * (hd - r * 0.5) / (r * 0.5)
 			var info := DamageInfo.new()
-			info.amount = src_info.amount * 0.5
+			info.amount = src_info.amount * mk
 			info.kind = src_info.kind
 			info.source_team = src_info.source_team
 			info.source_size = src_info.source_size

@@ -15,9 +15,12 @@ extends Unit
 ##     research adds more point defense, flak, heavy batteries and an ion
 ##     lance, and grows its hull and shield (MothershipGuns, through
 ##     apply_upgrades()).
-##   - Weak to big ships: Combat multiplies damage by the attacker's size
-##     (Rules.MOTHERSHIP_ATTACKER), so strike craft barely scratch it and
-##     capital ships tear it; minions do half damage.
+##   - Weak to big ships, while the damage modifiers are kept: Combat
+##     multiplies damage by the attacker's size (Rules.MOTHERSHIP_ATTACKER),
+##     so strike craft barely scratch it and capital ships tear it; minions
+##     do half damage. With the damage modifiers removed every hit does its
+##     raw damage, whoever fires it. Its own defences stay either way: hull
+##     resistance, shield, point defense.
 ##   - Respawn strain: many PLAYER respawns in a short time
 ##     (TeamState.strain_t) slow its guns (x0.6) and stop its shield from
 ##     refilling.
@@ -191,12 +194,16 @@ func dock_radius() -> float:
 ## wraps around every 5). MinionDirector launches minions from a random
 ## spot, WorldSpawner sends wards from spot 1 and repair bays from spot 2,
 ## and WorldHangar launches each pilot from their seat number's spot.
-func launch_point(slot: int) -> Vector2:
+## `ship_radius` is the radius of the pilot ship that launches (0 for the
+## others): a hull whose radius plus 20 is more than 160 is placed that far
+## out instead, so a big ship clears the bow instead of appearing inside it.
+func launch_point(slot: int, ship_radius: float = 0.0) -> Vector2:
 	# `f` points ahead along our nose, `side` to our right (starboard).
 	var f := Vector2.from_angle(rotation)
 	var side := Util.starboard_of(rotation)
 	var lane := float((slot % 5) - 2) * 90.0
-	return global_position + f * (half_len + beam * 0.5 + 160.0) + side * lane
+	var gap := maxf(160.0, ship_radius + 20.0)
+	return global_position + f * (half_len + beam * 0.5 + gap) + side * lane
 
 
 ## True when pilots can launch, respawn and shop here: alive, with no

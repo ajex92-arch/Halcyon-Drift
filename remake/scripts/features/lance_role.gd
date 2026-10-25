@@ -4,12 +4,15 @@ extends RefCounted
 ## E3 of the combat_roles fork): the Lance Fighter hunts big ships that have
 ## lost their escort. A Lance's beam hits a LARGE or CAPITAL ship x1.35 as
 ## hard when it lands in the ship's REAR shield zone (the 90 degrees behind
-## its tail), where its big guns cannot turn far enough to answer. A Lance
-## pilot that sees such a ship alone and close goes round to its tail.
+## its tail), where its big guns cannot turn far enough to answer (a damage
+## modifier: not while the damage modifiers are removed). A Lance pilot that
+## sees such a ship alone and close goes round to its tail, whatever the
+## switch says.
 ##
 ## HOW IT WORKS: three parts.
-##   1. The damage rule. install() adds a function to the match's
-##      RoleScaling (the damage calculator with plug-in rules). _damage()
+##   1. The damage rule (only while the damage modifiers are kept; with them
+##      removed this part is not installed). install() adds a function to the
+##      match's RoleScaling (the damage calculator with plug-in rules). _damage()
 ##      multiplies a beam hit (weapon kind Rules.W_LANCE) on a pilot ship
 ##      of size LARGE or CAPITAL by REAR_MULT (1.35) when the shield zone
 ##      that takes the hit is the rear one (ShieldZones.zone_for_local, the
@@ -35,7 +38,8 @@ extends RefCounted
 
 ## The variant key this module belongs to.
 const KEY := "lance_role"
-## Damage multiplier for a Lance beam hit in the rear zone of a big ship.
+## Damage multiplier for a Lance beam hit in the rear zone of a big ship
+## (used only while the damage modifiers are kept).
 const REAR_MULT := 1.35
 ## How far (world units) a Lance looks for isolated big ships.
 const HUNT_RANGE := 6000.0
@@ -64,11 +68,13 @@ var _t := 0.0
 var _scratch: Array = []
 
 
-## Plug the feature into match `w`: the damage rule, a tick hook and the
-## two AI parts. FeatureRegistry calls it once at match start.
+## Plug the feature into match `w`: the damage rule (unless the damage
+## modifiers are removed), a tick hook and the two AI parts. FeatureRegistry
+## calls it once at match start.
 func install(w: World) -> void:
 	world = w
-	RoleScaling.attach(w).hooks.append(Callable(self, "_damage"))
+	if not Rules.damage_modifiers_removed():
+		RoleScaling.attach(w).hooks.append(Callable(self, "_damage"))
 	w.tick_hooks.append(Callable(self, "_tick"))
 	_brains()
 
@@ -88,8 +94,9 @@ func _brains() -> void:
 	RoleBrains.ensure(world, "combat", LanceRoleCombat)
 
 
-## The damage rule (see HOW IT WORKS, part 1): x1.35 for a Lance beam hit in
-## the rear zone of a LARGE or CAPITAL pilot ship.
+## The damage rule (see HOW IT WORKS, part 1; plugged in only while the damage
+## modifiers are kept): x1.35 for a Lance beam hit in the rear zone of a LARGE
+## or CAPITAL pilot ship.
 func _damage(target: Unit, info: DamageInfo, amount: float) -> float:
 	if info.kind != Rules.W_LANCE or target.kind != Unit.K_SHIP or target.size_class < Rules.SIZE_LARGE:
 		return amount

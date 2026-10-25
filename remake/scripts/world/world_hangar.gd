@@ -50,7 +50,7 @@ func launch(p: PilotProfile, at_bay: RepairBay = null) -> Ship:
 	# (b) Normally: the pilot's launch point off the mothership's bow,
 	# pointing the way the mothership points.
 	elif ms != null and ms.available():
-		pos = ms.launch_point(p.slot)
+		pos = ms.launch_point(p.slot, float(Ships.get_def(p.hull_id)["radius"]))
 		facing = ms.rotation
 	# (c) While the mothership is offline: a random spot 160 world units
 	# from the anchored repair bay nearest to it, or no launch at all.

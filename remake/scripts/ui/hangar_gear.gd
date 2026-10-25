@@ -64,10 +64,10 @@ static func refresh_card(h: Hangar, c: CardButton, id: String, shop: bool) -> vo
 		if b != "":
 			foot += "  ·  " + b
 			blocked = true
-	# Step 2: show it: green when owned, grey when blocked, amber otherwise.
+	# Step 2: show it: green when owned, grey when blocked, the highlight colour otherwise.
 	c.foot.text = foot
 	c.foot.visible = true
-	c.foot.add_theme_color_override("font_color", Palette.REPAIR if owned else (Palette.MIST if blocked else Palette.AMBER))
+	c.foot.add_theme_color_override("font_color", Palette.REPAIR if owned else (Palette.MIST if blocked else UiKit.accent()))
 	c.set_state(blocked and not owned, owned, 0.55)
 
 

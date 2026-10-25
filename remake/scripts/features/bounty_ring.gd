@@ -41,6 +41,8 @@ func _process(dt: float) -> void:
 func _draw() -> void:
 	if director == null or director.world == null:
 		return
+	# The same gold for both teams: it is the colour of the comeback bounty, not
+	# the interface's highlight colour.
 	var gold := Palette.AMBER
 	for team in 2:
 		for s: Unit in director.bounty_structures(team):

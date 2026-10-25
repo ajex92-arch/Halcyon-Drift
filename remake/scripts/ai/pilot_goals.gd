@@ -9,9 +9,11 @@ extends RefCounted
 ##     minion wave, spread sideways by seat), and move it for special jobs:
 ##     the admiral's rally waypoint, defending a turret, a siege, defending
 ##     the mothership, or a test's hold point. Never park under an enemy
-##     turret that our minions aren't tanking. Then choose what to attack:
-##     the enemy mothership during an assault, a structure to push, or an
-##     enemy pilot to hunt.
+##     turret that our minions aren't tanking, and never on top of one of our
+##     own turrets. Then choose what to attack: the enemy mothership during
+##     an assault, a structure to push, an enemy pilot to hunt, and, with
+##     nothing else to do, an enemy minion near our wave's front minion to
+##     farm (fly out to gun reach of it and shoot, last hits first).
 ##   - the opening (opening_active(), opening_goal()): at the start of the
 ##     match the station is somewhere else. For the first
 ##     Rules.AI_OPENING_HOLD (10) seconds every AI pilot waits near its own
@@ -46,6 +48,9 @@ extends RefCounted
 ##            lane: first "gather" at a staging point, then "assault".
 ##   tanking  our minions stand in an enemy turret's range, so it shoots
 ##            them instead of us.
+##   farm     to fly out to an enemy minion near our wave's front minion and
+##            shoot it, hoping for the last hit (the one that pays), instead
+##            of waiting at the station for a target to come into range.
 ##   opening  the first minutes of a match, before our first minion wave
 ##            gets to the middle of the map (see the list above).
 ##   Crossing one of the three ore nodes on the centre line, x = 20000: the
@@ -143,6 +148,23 @@ func wave_front_s(lane: String, team: int) -> float:
 		if float(pr["dist"]) < 2500.0 and float(pr["s"]) > best_s:
 			best_s = pr["s"]
 	return best_s
+
+
+## The front minion of `team`'s live wave on `lane`: the minion that
+## wave_front_s() measures (the furthest along the lane, among those within
+## 2,500 of the lane line), or null with no wave out.
+func front_minion(lane: String, team: int) -> Minion:
+	var pts := MapLayout.lane_points(lane, team)
+	var best: Minion = null
+	var best_s := -1.0
+	for m in ai.world.minions:
+		if m.team != team or not m.alive or m.lane != lane:
+			continue
+		var pr := Util.project_on_polyline(m.global_position, pts)
+		if float(pr["dist"]) < 2500.0 and float(pr["s"]) > best_s:
+			best_s = pr["s"]
+			best = m
+	return best
 
 
 ## The lane the flex pilot works at match time `t` (seconds): it moves to the
@@ -269,14 +291,16 @@ func _opening_hold_spot(ship: Ship) -> Vector2:
 
 
 ## Lane state: choose our station, keep out from under enemy turrets, then
-## choose what to attack (assault, push or prey). Sets the brain's goal,
+## choose what to attack (assault, push, prey or farm). Sets the brain's goal,
 ## target, lock_target and intent.
 func think_lane(ship: Ship) -> void:
 	var brain := ai
 	var world := brain.world
 	var ts := world.teams[ship.team]
-	# Step 1: where we'd like to park (this sets ai.goal).
-	_pick_station(ship, ts)
+	# Step 1: where we'd like to park (this sets ai.goal). `free_lane` is the
+	# lane of a plain station behind our wave, or "" when the opening or an
+	# order (rally, defend, siege, hold point) put the goal somewhere else.
+	var free_lane := _pick_station(ship, ts)
 	var station := brain.goal
 	# Step 2: don't park under an enemy turret unless our minions are
 	# tanking it: move to 350 outside its range instead. Large and capital
@@ -322,17 +346,32 @@ func think_lane(ship: Ship) -> void:
 			brain.target = prey
 			brain.lock_target = prey
 			brain.intent = "prey"
+	# Step 7: farm. Nothing to shoot, no structure to push, no pilot to hunt,
+	# and the goal is a plain station behind our wave (no order): fly out to
+	# the best enemy minion near our wave's front minion, to gun reach of it
+	# on our side of it, and shoot it (PilotTargeting.farm_target()).
+	if brain.target == null and free_lane != "":
+		var front := front_minion(free_lane, ship.team)
+		if front != null:
+			var farm := brain.targeting.farm_target(ship, front)
+			if farm != null:
+				brain.target = farm
+				brain.lock_target = farm
+				brain.intent = "farm"
+				brain.goal = PilotTargeting.standoff(ship, farm, station)
 
 
 ## Set the brain's goal to our station on the lane: behind our wave front
-## by a distance that grows with our size, spread sideways by seat, then
-## moved for the admiral's orders, a turret in trouble, or a hold point.
-## Each later step wins over the earlier ones. In the opening (see
-## opening_active()) the first station is opening_goal() instead, unless a
-## human admiral's waypoint rally applies to this seat (the AI admiral's
-## waypoint does not count in the opening); the orders in the later steps
-## (turret in trouble, siege, defend, hold point) still win.
-func _pick_station(ship: Ship, ts: TeamState) -> void:
+## by a distance that grows with our size, spread sideways by seat (and
+## kept off our own turrets), then moved for the admiral's orders, a turret
+## in trouble, or a hold point. Each later step wins over the earlier ones.
+## In the opening (see opening_active()) the first station is
+## opening_goal() instead, unless a human admiral's waypoint rally applies
+## to this seat (the AI admiral's waypoint does not count in the opening);
+## the orders in the later steps (turret in trouble, siege, defend, hold
+## point) still win. Returns the lane of the station when it is the plain
+## station behind our wave, or "" when the opening or an order moved it.
+func _pick_station(ship: Ship, ts: TeamState) -> String:
 	var brain := ai
 	var world := brain.world
 	var profile := brain.profile
@@ -366,6 +405,10 @@ func _pick_station(ship: Ship, ts: TeamState) -> void:
 		lane = world.map.lane_for(ts.waypoint)
 	elif not grouped.is_empty():
 		lane = grouped["lane"]
+	# Is the goal going to be the plain station behind our wave? (False in the
+	# opening, under a rally or a feature's grouping, and, below, whenever an
+	# order sets the goal.)
+	var plain := not opening and not rally and grouped.is_empty()
 	# The opening (no admiral order, no feature grouping): our own lane
 	# (the middle for junglers and the flex pilot), and the station is the
 	# one opening_goal() gives instead of a spot behind the wave.
@@ -393,21 +436,39 @@ func _pick_station(ship: Ship, ts: TeamState) -> void:
 			s_goal = maxf(minf(s_goal, s_wp), s_wp - 600.0) if s_goal < s_wp else s_goal
 		brain.goal = Util.polyline_at(pts, s_goal)
 		# Step 3: spread pilots across the lane so they don't stack on one spot
-		# (450 to one side, the middle, or 450 to the other side, by seat).
+		# (450 to one side, the middle, or 450 to the other side, by seat; a very big
+		# hull, whose radius times 2.2 is more than 450, spreads by that instead, so
+		# neighbours do not overlap).
 		var side := Util.port_of((Util.polyline_at(pts, s_goal + 50.0) - Util.polyline_at(pts, s_goal)).angle())
-		brain.goal += side * float((profile.slot % 3) - 1) * 450.0
+		brain.goal += side * float((profile.slot % 3) - 1) * maxf(450.0, ship.radius * 2.2)
+		# Step 3b: keep the station off our own turrets. A ship cannot fly into
+		# one (they are solid), and a pilot counts as arrived once it is within
+		# 160 of its goal (PilotCombat.steer), so a station nearer a turret
+		# than its hull plus our radius plus 160 moves out along the line from
+		# the turret's centre to that distance. (A turret slot lies 500 off the
+		# lane line at the outer Crossings, so the 450 spread alone would put a
+		# station on it.)
+		for t in world.turrets:
+			if t.team != ship.team or not t.alive:
+				continue
+			var clear: float = t.radius + ship.radius + 160.0
+			var away: Vector2 = brain.goal - t.global_position
+			if away.length() < clear:
+				brain.goal = t.global_position + (away.normalized() if away.length() > 0.0 else side) * clear
 	# Step 4: defend our turrets on this lane when enemy pilots are hitting
 	# them (if within 9,000 of us, and not while falling back): park 300
 	# from the turret, toward our end of the lane.
 	var threatened := brain.senses.turret_under_attack(ship.team, lane)
 	if threatened != null and brain.fallback_t <= 0.0 and threatened.global_position.distance_to(ship.global_position) < 9000.0:
 		brain.goal = threatened.global_position + (Util.polyline_at(pts, 0.0) - threatened.global_position).normalized() * 300.0
+		plain = false
 	# Step 5: siege. When our admiral declares one (TeamState.siege_lane),
 	# big ships and bombers converge on that lane and close on the enemy
 	# mothership - the only win condition (playtest: 17 turrets fell in a
 	# match but no mothership was ever touched while big ships held separate
 	# stations).
 	if brain.fallback_t <= 0.0 and ts.siege_lane != "" and (not ship.is_small() or ship.hull_id == "bomber"):
+		plain = false
 		if ts.siege_phase == "gather":
 			# Mass at the staging point (spread 400 around it by seat) so the
 			# slow capitals arrive together.
@@ -421,9 +482,12 @@ func _pick_station(ship: Ship, ts: TeamState) -> void:
 	var answer_r := 18000.0 if not ship.is_small() else 12000.0
 	if ts.defending(world.time) and ship.global_position.distance_to(ts.defend_point) < answer_r:
 		brain.goal = ts.defend_point + Vector2.from_angle(float(profile.slot) * 0.9) * (300.0 + 150.0 * float(Rules.size_index(ship.size_class)))
+		plain = false
 	# Step 7: a test (or an order) pinned us to a point.
 	if brain.hold_point != Vector2.INF:
 		brain.goal = brain.hold_point
+		plain = false
+	return lane if plain else ""
 
 
 ## The point on our siege lane just inside our weapon reach (80% of our

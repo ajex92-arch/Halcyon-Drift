@@ -10,7 +10,7 @@ extends Camera2D
 ##     (while you fly they steer the ship); the screen edges pan; dragging
 ##     with the middle mouse button pulls the map; minimap clicks jump the
 ##     camera (look_at_point()). The Space key centers the camera on your
-##     ship (with no ship, docked or dead, on the Aurelian mothership), and
+##     ship (with no ship, docked or dead, on the human's own mothership), and
 ##     holding it keeps the camera centered on the ship as it moves; let go
 ##     and the camera is free again from where it is. A pilot's camera also
 ##     jumps to the ship whenever it launches, so a new ship is never off
@@ -22,7 +22,7 @@ extends Camera2D
 ##     your ship and looks a little ahead, toward the mouse pointer and
 ##     where the ship is going. Holding the mouse at a screen edge "peeks" a
 ##     little further that way. The zoom-out limit is a pilot's. With no
-##     ship (docked or dead), the camera looks at the Aurelian mothership.
+##     ship (docked or dead), the camera looks at the human's own mothership.
 ## Every frame _process() works out where the camera wants to be and how
 ## far zoomed in, and slides part of the way there, so it moves smoothly.
 ##
@@ -32,6 +32,14 @@ extends Camera2D
 ## (the admiral's C key); ZoomMaxFeature asks zoom_limited(); the command
 ## overlay asks followed() and reads the zoom; Sfx reads the camera to make
 ## far-away sounds quieter; tests also move it.
+##
+## "Pixels" in this file are the game's own pixels, not the monitor's: the
+## project stretches the whole picture to the window (project.godot, canvas
+## items stretch, base size 1280 x 720), so the viewport size, the mouse
+## position and the screen-edge distances below are all in the base pixels
+## (a window twice as big draws each one as 2 x 2 real pixels). Because the
+## zoom limits below are worked out from the viewport's width, how many
+## world units fit across the screen never depended on the window size.
 ##
 ## Words used here: "zoom" is how big things look. At zoom 1 one world unit
 ## is one pixel; a smaller zoom shows more of the map (zoomed out). So the
@@ -76,14 +84,17 @@ var _was_flying := false
 
 
 ## Get ready for match `w`. Everyone starts in free mode. Start 1800 world
-## units to the right of the Aurelian mothership's spot, zoomed so 6000
+## units in front of the human's mothership's spot (to the right of Aurelian's,
+## to the left of Vhorr's; a spectator starts at Aurelian's), zoomed so 6000
 ## world units fit across the screen, and become the screen's camera.
 func setup(w: World) -> void:
 	world = w
 	free = true
-	# Step 1: the starting spot (also the free camera's goal).
-	var home: Vector2 = w.map.mothership_pos[Rules.HALCYON]
-	global_position = home + Vector2(1800, 0)
+	# Step 1: the starting spot (also the free camera's goal): in front of the
+	# human's own mothership, toward the middle of the map.
+	var home: Vector2 = w.map.mothership_pos[w.human_team]
+	var toward_middle := 1.0 if w.human_team == Rules.HALCYON else -1.0
+	global_position = home + Vector2(1800.0 * toward_middle, 0)
 	_free_pos = global_position
 	# Step 2: the starting zoom. Godot's own smoothing is off because
 	# _process() does its own; make_current() makes this the camera the
@@ -237,17 +248,18 @@ func _process(dt: float) -> void:
 		want += peek
 	else:
 		# Step 5: no ship (docked or dead): look at the spot in front of the
-		# Aurelian mothership.
+		# human's mothership.
 		want = _home_spot()
 	# Step 6: slide toward that spot (k = 6).
 	global_position = global_position.lerp(want, 1.0 - exp(-6.0 * dt))
 
 
 ## The spot the camera looks at when there is no ship (docked or dead): 900
-## world units in front of the Aurelian mothership, in the direction it
-## faces. Where the camera already is if there is no mothership.
+## world units in front of the human's mothership (Aurelian's for a spectator),
+## in the direction it faces. Where the camera already is if there is no
+## mothership.
 func _home_spot() -> Vector2:
-	var ms := world.mothership(Rules.HALCYON)
+	var ms := world.mothership(world.human_team)
 	if ms == null or not is_instance_valid(ms):
 		return global_position
 	return ms.global_position + Vector2.from_angle(ms.rotation) * 900.0

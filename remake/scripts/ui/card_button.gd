@@ -6,9 +6,9 @@ extends PanelContainer
 ##
 ## HOW IT WORKS: _init() builds the three labels (plus an empty `extra`
 ## column that callers may fill). A left click sends `pressed`, unless the
-## card is disabled. _restyle() draws the border: amber (`accent`) when
-## selected or when the mouse is over an enabled card, otherwise the plain
-## line colour; a selected card also gets a dark fill. A disabled card is
+## card is disabled. _restyle() draws the border: in the interface's highlight
+## colour (`accent`) when selected or when the mouse is over an enabled card,
+## otherwise the plain line colour; a selected card also gets a dark fill. A disabled card is
 ## drawn see-through (its `dim` amount).
 ##
 ## WHO USES IT: Hangar (ship, module, gear and slot cards) and AdmiralBoard
@@ -24,7 +24,8 @@ signal pressed
 var title: Label
 ## The wrapped description under the title (hidden when empty).
 var sub: Label
-## The footer line, in amber (hidden when empty).
+## The footer line, in the interface's highlight colour unless the caller
+## colours it (hidden when empty).
 var foot: Label
 ## An empty column under the footer where callers can add more lines.
 var extra: VBoxContainer
@@ -32,8 +33,9 @@ var extra: VBoxContainer
 var disabled := false
 ## A selected card has an accent border and a dark fill.
 var selected := false
-## The border colour for selected / hovered cards.
-var accent := Palette.AMBER
+## The border colour for selected / hovered cards: the interface's highlight
+## colour (UiKit.accent()) when the card is made.
+var accent := UiKit.accent()
 ## True while the mouse is over the card.
 var _hover := false
 ## How solid a disabled card is (0..1; 1 = fully solid).
@@ -52,7 +54,7 @@ func _init(title_text: String = "", sub_text: String = "", foot_text: String = "
 	add_child(v)
 	title = UiKit.label(title_text, 15, Palette.ICE)
 	sub = UiKit.label(sub_text, 12, Palette.MIST, true)
-	foot = UiKit.label(foot_text, 12, Palette.AMBER)
+	foot = UiKit.label(foot_text, 12, accent)
 	v.add_child(title)
 	v.add_child(sub)
 	v.add_child(foot)

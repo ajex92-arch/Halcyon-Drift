@@ -58,6 +58,8 @@ func _ready() -> void:
 	var title := "%s wins" % Rules.TEAM_DISPLAY[winner]
 	var tint := Palette.team(winner)
 	if us >= 0:
+		# Good news is amber and bad news red for both teams (as in the kill feed),
+		# not the team's or the interface's colour.
 		title = "Victory" if winner == us else "Defeat"
 		tint = Palette.AMBER if winner == us else Palette.CINDER
 	$Center/Card/Col/Title.text = title
@@ -73,10 +75,10 @@ func _ready() -> void:
 	best.sort_custom(func(a: PilotProfile, b: PilotProfile) -> bool: return a.damage_done > b.damage_done)
 	for i in mini(5, best.size()):
 		var p: PilotProfile = best[i]
-		_col.add_child(UiKit.label("%s (%s)  ·  %s K/D/A  ·  %s damage  ·  %d last hits  ·  %s credits earned" % [p.callsign, Rules.TEAM_DISPLAY[p.team], p.kda(), Util.money(p.damage_done), p.minion_kills, Util.money(p.earned)], 14, Palette.AMBER if p.is_human else Palette.ICE))
+		_col.add_child(UiKit.label("%s (%s)  ·  %s K/D/A  ·  %s damage  ·  %d last hits  ·  %s credits earned" % [p.callsign, Rules.TEAM_DISPLAY[p.team], p.kda(), Util.money(p.damage_done), p.minion_kills, Util.money(p.earned)], 14, UiKit.accent() if p.is_human else Palette.ICE))
 	var me := world.human
 	if me != null and best.find(me) >= 5:
-		_col.add_child(UiKit.label("You: %s K/D/A · %s damage · %d last hits" % [me.kda(), Util.money(me.damage_done), me.minion_kills], 14, Palette.AMBER))
+		_col.add_child(UiKit.label("You: %s K/D/A · %s damage · %d last hits" % [me.kda(), Util.money(me.damage_done), me.minion_kills], 14, UiKit.accent()))
 	_col.move_child($Center/Card/Col/Buttons, -1)
 
 

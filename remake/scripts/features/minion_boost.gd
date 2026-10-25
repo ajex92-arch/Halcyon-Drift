@@ -1,6 +1,6 @@
 class_name MinionBoost
 extends RefCounted
-## WHAT THIS IS: small tools that turn a freshly launched escort corvette
+## WHAT THIS IS: small tools that turn a freshly launched Patrol Leader
 ## into a tougher copy of itself. BreachFeature (the breach corvette) and
 ## BreachExtraFeature (the super minion) share them.
 ##
@@ -10,7 +10,7 @@ extends RefCounted
 ## again from the copy (times the minion's own strength multiplier
 ## stat_scale, as Minion.setup() does) and its gun's reach is made longer.
 ## The minion keeps its type ("corvette"), so it flies and fights like the
-## normal escort and is drawn the same way; a meta tag marks the copies.
+## normal Patrol Leader and is drawn the same way; a meta tag marks the copies.
 ## None of the tools draws a random number.
 ##
 ## WHO USES IT: BreachFeature and BreachExtraFeature call tough_copy(),
@@ -42,7 +42,7 @@ static func tough_copy(m: Minion, hull: float, shield: float, label: String, tag
 	m.set_meta(tag, true)
 
 
-## Make the escort cannon of `m` reach `bonus` times as far (1.2 = +20%): its
+## Make the Patrol cannon of `m` reach `bonus` times as far (1.2 = +20%): its
 ## own copy of the weapon data gets a longer round life, and the gun's reach
 ## is worked out again. The point defence gun is not touched.
 static func longer_cannon(m: Minion, bonus: float) -> void:
@@ -57,7 +57,7 @@ static func longer_cannon(m: Minion, bonus: float) -> void:
 
 ## Add the SIEGE_SHELL gun to `m` as its FIRST gun (the first gun sets how
 ## far the minion fights from its target, and the speed it aims with), a
-## turret-type mount like the escort cannon's.
+## turret-type mount like the Patrol cannon's.
 static func add_siege_shell(m: Minion) -> void:
 	var mount := WeaponMount.new(m, "m_cannon", "turret", Vector2(m.radius, 0), 150.0)
 	mount.weapon_id = "siege_shell"

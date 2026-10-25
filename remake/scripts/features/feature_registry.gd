@@ -3,8 +3,8 @@ extends RefCounted
 ## WHAT THIS IS: the list of "feature modules": optional new game mechanics,
 ## one small script each in scripts/features/, that a match only gets when
 ## its rule variant is switched on. With every variant at its default
-## (Rules.VARIANT_DEFAULTS) no feature is installed, so the match is
-## exactly today's game.
+## (Rules.VARIANT_DEFAULTS, the old rules: --preset=none) no feature is
+## installed. The standard rules (Council's pick) switch several on.
 ##
 ## HOW IT WORKS: when a match is built, WorldSetup.build() calls install()
 ## once, as its very last step (after the map, teams, pilots and admirals
@@ -84,7 +84,9 @@ extends RefCounted
 ## prints "FEATURE CONFLICT: ..." and quits the game with exit code 3, so a
 ## test match with an impossible combination stops at once instead of
 ## measuring something nobody asked for. The same happens, with "PRESET
-## UNKNOWN: ...", when --preset names no council preset (CouncilPresets).
+## UNKNOWN: ...", when --preset names no preset (CouncilPresets), and,
+## with "DIFFICULTY UNKNOWN: ...", when --difficulty names no level (Difficulty),
+## and with "TEAM UNKNOWN: ...", when --team names no team the human can play for.
 
 ## Pairs of variant settings that must not be on together (FUN_PLAN 4.5,
 ## "alternatives of which at most one merges"): [key a, value a, key b,
@@ -103,8 +105,8 @@ const CONFLICTS := [
 ## Every feature module, in install order: [variant key, the module's
 ## script]. A fork adds one line per feature (see the top of this file).
 const FEATURES := [
-	# escort_wing: with "upgrade", Escort Wing research upgrades each free
-	# wave's single corvette instead of adding a second one
+	# escort_wing: with "upgrade", Escort Wing research upgrades the first
+	# Patrol Leader of each lane's free wave instead of adding another one
 	# (EscortWingFeature, scripts/features/escort_wing.gd).
 	["escort_wing", preload("res://scripts/features/escort_wing.gd")],
 	# endgame_closure fork (docs/FUN_PLAN.md section 5, idea numbers B1-B9 and
@@ -212,7 +214,8 @@ const FEATURES := [
 	# when its treasury piles up (AdmiralSinksFeature).
 	["admiral_sinks", preload("res://scripts/features/admiral_sinks.gd")],
 	# fleet_cap: the most bought minions a team may have alive in Fleet
-	# Command mode, 30 by default (FleetCapFeature).
+	# Command mode, 30 by default and 60 in the standard rules
+	# (FleetCapFeature).
 	["fleet_cap", preload("res://scripts/features/fleet_cap.gd")],
 ]
 
@@ -220,12 +223,26 @@ const FEATURES := [
 ## Install every feature that is on into match `world` (see HOW IT WORKS
 ## at the top). WorldSetup.build() calls this once, as its last step.
 static func install(world: World) -> void:
-	# Step 0a: refuse a match whose council preset name is unknown
+	# Step 0a: refuse a match whose preset name is unknown
 	# (--preset=<name>, Game.preset_error): nothing is installed and the
-	# game quits with exit code 3, so a typo never plays today's game.
+	# game quits with exit code 3, so a typo never plays other rules.
 	if Game.preset_error != "":
 		print("PRESET UNKNOWN: " + Game.preset_error)
 		push_error("PRESET UNKNOWN: " + Game.preset_error)
+		(Engine.get_main_loop() as SceneTree).quit(3)
+		return
+	# Step 0a2: refuse a match whose difficulty is unknown (--difficulty=<level>,
+	# Game.difficulty_error) the same way, so a typo never plays Medium.
+	if Game.difficulty_error != "":
+		print("DIFFICULTY UNKNOWN: " + Game.difficulty_error)
+		push_error("DIFFICULTY UNKNOWN: " + Game.difficulty_error)
+		(Engine.get_main_loop() as SceneTree).quit(3)
+		return
+	# Step 0a3: refuse a match whose team is unknown (--team=<name>,
+	# Game.team_error) the same way, so a typo never plays Aurelian.
+	if Game.team_error != "":
+		print("TEAM UNKNOWN: " + Game.team_error)
+		push_error("TEAM UNKNOWN: " + Game.team_error)
 		(Engine.get_main_loop() as SceneTree).quit(3)
 		return
 	# Step 0b: refuse a combination that FUN_PLAN 4.5 rules out (CONFLICTS):

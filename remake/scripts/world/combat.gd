@@ -7,8 +7,11 @@ extends RefCounted
 ##
 ## HOW IT WORKS: apply_damage(target, info) takes a DamageInfo note (who
 ## hit, with what weapon, how hard) and:
-##   1-4. works out the final damage with all the damage rules
-##        (CombatScaling, in combat_scaling.gd):
+##   1-4. works out the final damage (CombatScaling, in combat_scaling.gd).
+##        With the damage modifiers removed (Rules.damage_modifiers_removed())
+##        that is the hit's raw damage: no damage table and no multiplier for
+##        weapon kind, target size, who shot or who was hit. With them kept,
+##        it applies all the damage rules:
 ##        1. the damage table, Rules.DAMAGE[weapon kind][target size], and
 ##           the weapon's bonus against small targets;
 ##        2. motherships: an extra multiplier by attacker size; minions x0.5;
@@ -23,7 +26,7 @@ extends RefCounted
 ##          against this one target (_rescale_minion_hit);
 ##        - the target's own incoming_mults (Unit) multiply the hit;
 ##   5. target.take_hit(): the shield zone facing the attacker soaks the
-##      hit first, the hull takes the rest (and the unit flashes white);
+##      hit first, the hull takes the rest (and the unit's outline flashes);
 ##   6. bookkeeping: the target's damage log (for assists), the shooting
 ##      pilot's damage total, the turret "aggro" marker, a sound cue and,
 ##      for probes only, the Events.damage_applied signal
@@ -49,6 +52,8 @@ extends RefCounted
 
 ## How much more damage a torpedo does to a "painted" ship: x1.3, that is
 ## +30%. A Support ship paints enemies (Ship.paint_t, set by WorldSupport).
+## It is a damage modifier, so it is read only while the damage modifiers
+## are kept; the paint mark itself is always made.
 const PAINT_BONUS := 1.3
 
 ## The world (we read its clock and remove dead units from it).

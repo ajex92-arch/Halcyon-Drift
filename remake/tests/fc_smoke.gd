@@ -166,8 +166,9 @@ func _race_step(dt: float) -> void:
 
 
 ## mscap: hit Cinder's mothership with a capital ship's shell every tick
-## (3 raw damage x1.5 shell x2.0 capital = 9 a tick, 540 a second), with the
-## shield kept empty.
+## (3 raw damage; with the damage modifiers kept x1.5 shell x2.0 capital = 9 a
+## tick, 540 a second, and with them removed 3 a tick, 180 a second), with
+## the shield kept empty.
 func _hit_mothership() -> void:
 	var ms := world.mothership(Rules.CINDER)
 	if ms == null or not ms.alive:

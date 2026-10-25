@@ -83,10 +83,44 @@ A file must not assume the reader knows words like *tick*, *hull*,
 first time it shows up, or point at the glossary:
 `(see "tick" in docs/CODE_GUIDE.md)`.
 
-### 6. Keep the history notes
+### 6. Keep history out of the comments
 
-Many comments say "Playtest: ..." and explain why a number or rule changed.
-These are valuable. Keep them, in plain words.
+Keep the beginner explanations this guide asks for (sections 1 to 5 above).
+Dates, the user's quotes, decision records, ticket IDs and "fixed on" notes
+come out of code comments; they live in docs/PROGRESS.md. A comment
+says why the code is the way it is, never what changed when.
+
+A quick test: if the sentence would still be true in a copy of the game that
+never had the old version, it explains the code, so keep it. If it only makes
+sense to someone who remembers the old version (a date, a quote, a ticket ID,
+"this replaces", "fixed on", "playtest showed"), it is history, so move it to
+PROGRESS.md. Keep the reason, drop the event: in the example below, "the short
+wait stops it turning back and forth" stays, and "playtest 01-01 showed" goes.
+
+Before (a made-up example: the ticket T-00, the date, the constant and the
+playtest are invented, and the user's words are left as a placeholder, because
+nobody's words may be made up):
+
+```gdscript
+## How long a lane turret waits after losing its target before it turns back.
+## (T-00, 2026-01-01. The user: (their words here). Playtest 01-01 showed the
+## turrets snapping back and forth when a target slipped in and out of range.
+## This replaces LANE_TURN_BACK (0.5). Fixed on 2026-01-01.)
+const LANE_TURN_BACK_DELAY := 1.5
+```
+
+After:
+
+```gdscript
+## How long, in seconds, a lane turret waits after losing its target before
+## it turns back to face its lane. The short wait stops it turning back and
+## forth when a target slips in and out of range.
+const LANE_TURN_BACK_DELAY := 1.5
+```
+
+The history does not vanish: the date, the decision and what it replaced go
+into a dated entry in docs/PROGRESS.md, under the heading of the change, with
+the user's own words.
 
 ### 7. Comments must be true
 

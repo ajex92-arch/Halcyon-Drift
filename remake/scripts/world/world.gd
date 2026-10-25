@@ -73,6 +73,12 @@ var winner := -1
 var human_role := "pilot"
 ## Team whose fog the screen shows (-1 = see everything).
 var viewer_team := 0
+## The team the human plays for: Rules.HALCYON (Aurelian) or Rules.CINDER (Vhorr), from
+## Game.human_team. It is the side of the human pilot's seat, of the human Admiral's chair
+## and of the Admiral board and map tools, and the mothership the camera starts at. A
+## spectator has no side and keeps Aurelian here, so the camera starts there; the fog
+## (viewer_team) shows everything then. WorldSetup sets it.
+var human_team := Rules.HALCYON
 ## The human's pilot profile (their slot, money and ship), or null for a
 ## spectator.
 var human: PilotProfile = null

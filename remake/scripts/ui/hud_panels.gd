@@ -9,9 +9,11 @@ extends RefCounted
 ## hides the others (close_others). Where a panel sits: its side margins
 ## are fixed (the hangar 70 pixels in from the side edges, the board 24, the
 ## help 110), and its top and bottom come from HudLayout, so a panel starts
-## under the top bar and the "me" panel and leaves a strip at the bottom for
-## the pop-up hint (relayout() moves them when those change). The pieces of
-## the HUD that a panel would cover are hidden while it is open (HudLayout).
+## under the top bar and the "me" panel and stops above the bottom strip of
+## the HUD instead of sitting on it: above the ship readout while the pilot
+## is flying, otherwise above the key line and the gear slots (relayout()
+## moves them when those change). The other pieces of the HUD that a panel
+## would cover are hidden while it is open (HudLayout).
 ## The hangar, the Admiral board and the
 ## help lay out their cards and paragraphs for their own width. That width
 ## is the window's width less the panel's side margins (UiKit.panel_width()), never

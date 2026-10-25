@@ -18,7 +18,7 @@ theme_override_constants/separation = 2
 
 [node name="Title" type="Label" parent="Rows"]
 layout_mode = 2
-theme_type_variation = &"AmberText"
+theme_type_variation = &"AccentText"
 theme_override_font_sizes/font_size = 16
 
 [node name="Line" type="Label" parent="Rows"]

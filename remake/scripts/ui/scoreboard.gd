@@ -18,7 +18,8 @@ extends PanelContainer
 ## assists 1). Rows are added or removed so each grid always has exactly
 ## one per pilot; a new cell is as wide as the title at the top of its
 ## column. An enemy's ship is shown only while our team can see it ("?"
-## and "Unseen" otherwise). Your own row is amber, dead pilots grey.
+## and "Unseen" otherwise). Your own row is in the interface's highlight colour,
+## dead pilots grey.
 ##
 ## WHO USES IT: HudPanels makes it from scenes/ui/scoreboard.tscn for
 ## pilots (shown while Tab is held). AdmiralBoard makes one from the same
@@ -171,4 +172,4 @@ func _fill_row(g: GridContainer, r: int, p: PilotProfile, t: int, vt: int) -> vo
 	for c in g.columns:
 		var l: Label = g.get_child((r + 1) * g.columns + c)
 		UiKit.set_text(l, vals[c])
-		l.add_theme_color_override("font_color", Palette.AMBER if p.is_human else (Palette.MIST if p.state == "dead" else Palette.ICE))
+		l.add_theme_color_override("font_color", UiKit.accent() if p.is_human else (Palette.MIST if p.state == "dead" else Palette.ICE))

@@ -119,10 +119,10 @@ static func run(world: World, id: String, team: int, p: Vector2) -> String:
 	(d["run"] as Callable).call(team, p, cost)
 	# Step 2: start the cooldown.
 	(d["ready_at"] as Array)[team] = world.time + float(d.get("cooldown", 0.0))
-	# Step 3: tell everyone who listens. The human admiral (Halcyon) gets a
-	# short pop-up.
+	# Step 3: tell everyone who listens. The human admiral (the human's team)
+	# gets a short pop-up.
 	Events.admiral_result.emit(team, id, true, "")
-	if world.human_role == "admiral" and team == Rules.HALCYON:
+	if world.human_role == "admiral" and team == world.human_team:
 		Events.toast.emit("%s ordered." % d["label"])
 	return ""
 

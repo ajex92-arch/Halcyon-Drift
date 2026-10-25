@@ -37,7 +37,7 @@ theme_override_constants/separation = 12
 
 [node name="Tagline" type="Label" parent="Scroll/Center/Card/Col"]
 layout_mode = 2
-theme_type_variation = &"AmberText"
+theme_type_variation = &"AccentText"
 theme_override_font_sizes/font_size = 13
 text = "13 VS 13 · THREE LANES · THE HALCYON DRIFT ASTEROID BELT"
 

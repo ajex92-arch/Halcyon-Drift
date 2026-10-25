@@ -46,7 +46,12 @@ static func build(b: AdmiralBoard) -> void:
 	dr.add_child(db)
 	# Step 2: turrets: a note on the rules, then one row per node.
 	b._content.add_child(UiKit.heading("Turrets at resource nodes"))
-	var note := UiKit.label("PD turrets can go at any node we can hold; torpedo turrets only at the three nodes near our mothership (needs Platform Missiles). You can't build with enemy ships within 1,500 of the node. Turrets are hard to kill without minions: enemy pilots attacking alone deal 30% damage.", 12, Palette.MIST, true)
+	# The last sentence names the backdoor damage cut, so it is shown only
+	# while the damage modifiers are kept.
+	var note_text := "PD turrets can go at any node we can hold; torpedo turrets only at the three nodes near our mothership (needs Platform Missiles). You can't build with enemy ships within 1,500 of the node."
+	if not Rules.damage_modifiers_removed():
+		note_text += " Turrets are hard to kill without minions: enemy pilots attacking alone deal 30% damage."
+	var note := UiKit.label(note_text, 12, Palette.MIST, true)
 	UiKit.pin_width(note, w)
 	b._content.add_child(note)
 	for n: ResourceNode in b.world.nodes:
@@ -101,7 +106,7 @@ static func _node_row(b: AdmiralBoard, n: ResourceNode, w: float) -> void:
 			if b._ok():
 				b.world.command.build_turret(b.team, nid, tt)
 				b._refresh(), 30)
-		b._hover(tb, "%s: %s" % [td["label"], td["blurb"]])
+		b._hover(tb, "%s: %s" % [td["label"], TurretData.blurb(ttype)])
 		row.add_child(tb)
 		b._cards["tbtn:%s:%s" % [nid, ttype]] = tb
 	# Step 3: the View button points the camera at the node.

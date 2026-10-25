@@ -16,6 +16,9 @@ extends RefCounted
 ##              of x2.0 (Rules.MOTHERSHIP_ATTACKER). It uses the tuned number
 ##              "mothership_attacker_large" (read by CombatScaling), not
 ##              incoming_mults, which would also change every other attacker.
+##              The x2.0 attacker-size rule is a damage modifier: with the
+##              damage modifiers removed there is nothing to raise, so "mult"
+##              changes nothing then (the value is still accepted).
 ## The AI needs no rule: the admiral sieges and the pilots attack exactly as
 ## before, they just finish the job sooner. Usage: Game.usage
 ## "ms_soft_hull_damage" counts the hull points the motherships lose under
@@ -31,7 +34,8 @@ const KEY := "ms_soft"
 const HULL_FACTOR := 0.75
 ## Shield multiplier of "shield".
 const SHIELD_FACTOR := 0.5
-## The new damage multiplier of "mult" for large and capital attackers.
+## The new damage multiplier of "mult" for large and capital attackers (used
+## only while the damage modifiers are kept).
 const LARGE_MULT := 3.0
 
 ## The world we belong to.
@@ -63,8 +67,10 @@ func install(w: World) -> void:
 				ms.base_shield *= SHIELD_FACTOR
 				ms.shields.set_max(ms.shields.max_total * SHIELD_FACTOR)
 		"mult":
-			# Step 3: the tuned number CombatScaling reads.
-			Game.tunables["mothership_attacker_large"] = LARGE_MULT
+			# Step 3: the tuned number CombatScaling reads (it reads none when
+			# the damage modifiers are removed, so there is nothing to set).
+			if not Rules.damage_modifiers_removed():
+				Game.tunables["mothership_attacker_large"] = LARGE_MULT
 		_:
 			push_warning("ms_soft: unknown value \"%s\" (use off, hull, shield or mult); nothing changed" % value)
 			return

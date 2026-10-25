@@ -47,15 +47,17 @@ static func draw(ov: CommandOverlay) -> void:
 	_draw_tool_preview(ov, px)
 
 
-## The rally waypoint of team `vt`: a faint ring as big as its area, an
-## amber cross 120 world units wide, and its label with the seconds left.
+## The rally waypoint of team `vt`: a faint ring as big as its area, a
+## cross 120 world units wide, and its label with the seconds left, all in the
+## interface's highlight colour (amber, or red when the human plays Vhorr).
 static func _draw_waypoint(ov: CommandOverlay, vt: int, px: float) -> void:
 	var world := ov.world
 	var wp := world.teams[vt].waypoint
-	ov.draw_arc(wp, Rules.WAYPOINT_RADIUS, 0.0, TAU, 64, Palette.with_alpha(Palette.AMBER, 0.55), 2.0 * px, true)
-	ov.draw_line(wp + Vector2(-60, 0), wp + Vector2(60, 0), Palette.AMBER, 2.0 * px)
-	ov.draw_line(wp + Vector2(0, -60), wp + Vector2(0, 60), Palette.AMBER, 2.0 * px)
-	_label(ov, wp + Vector2(0, -Rules.WAYPOINT_RADIUS - 30.0 * px), "Rally point (%ds)" % int(world.teams[vt].waypoint_until - world.time), Palette.AMBER, px)
+	var hi := UiKit.accent()
+	ov.draw_arc(wp, Rules.WAYPOINT_RADIUS, 0.0, TAU, 64, Palette.with_alpha(hi, 0.55), 2.0 * px, true)
+	ov.draw_line(wp + Vector2(-60, 0), wp + Vector2(60, 0), hi, 2.0 * px)
+	ov.draw_line(wp + Vector2(0, -60), wp + Vector2(0, 60), hi, 2.0 * px)
+	_label(ov, wp + Vector2(0, -Rules.WAYPOINT_RADIUS - 30.0 * px), "Rally point (%ds)" % int(world.teams[vt].waypoint_until - world.time), hi, px)
 
 
 ## The Admiral's marks: our live repair bays' healing range (so the

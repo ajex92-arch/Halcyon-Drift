@@ -60,6 +60,7 @@ changes.
 - `func lane_id() -> String`
 - `func lane_front(lane: String, team: int) -> Vector2`
 - `func wave_front_s(lane: String, team: int) -> float`
+- `func front_minion(lane: String, team: int) -> Minion`
 - `func rotation_lane_at(t: float) -> String`
 - `func rotation_lane() -> String`
 - `func opening_lane() -> String`
@@ -95,6 +96,8 @@ changes.
 - `func pick_target(ship: Ship, r: float) -> Unit`
 - `func push_target(ship: Ship, station: Vector2) -> Unit`
 - `func prey(ship: Ship, station: Vector2) -> Unit`
+- `func farm_target(ship: Ship, front: Minion) -> Unit`
+- `static func minion_score(u: Unit, d: float, heavy_hitter: bool) -> float`
 - `static func main_reach(ship: Ship) -> float`
 - `static func engage_range(ship: Ship) -> float`
 - `static func standoff(ship: Ship, t: Unit, station: Vector2) -> Vector2`
@@ -128,13 +131,22 @@ changes.
 - `signal damage_applied(target: Node, info: RefCounted, amount: float, hull_dmg: float)`
 
 ## scripts/autoload/game.gd  (extends Node)
-- `func apply_preset(preset_name: String) -> void`
+- `func use_remembered_difficulty() -> void`
+- `func choose_difficulty(level: String) -> void`
+- `func use_remembered_team() -> void`
+- `func choose_team(side: int) -> void`
 - `func opt(key: String, default_value = null)`
 - `func variant(key: String) -> String`
 - `func count_usage(key: String, n: int = 1) -> void`
 
 ## scripts/autoload/game_input_map.gd  (class_name GameInputMap extends RefCounted)
 - `static func define_all() -> void`
+
+## scripts/autoload/window_mode.gd  (class_name WindowMode extends RefCounted)
+- `static func apply_minimum_size(window: Window) -> void`
+- `static func is_fullscreen() -> bool`
+- `static func toggle_fullscreen() -> void`
+- `static func handle_input(event: InputEvent, viewport: Viewport) -> void`
 
 ## scripts/camera/camera_rig.gd  (class_name CameraRig extends Camera2D)
 - `func setup(w: World) -> void`
@@ -220,6 +232,12 @@ changes.
 - `static func is_preset(preset_name: String) -> bool`
 - `static func variant_string(preset_name: String) -> String`
 
+## scripts/data/difficulty.gd  (class_name Difficulty extends RefCounted)
+- `static func is_level(id: String) -> bool`
+- `static func income_mult(level: String) -> float`
+- `static func team_income_mult(human_team: int, team: int) -> float`
+- `static func blurb(level: String) -> String`
+
 ## scripts/data/items.gd  (class_name Items extends RefCounted)
 - `static func by_category(cat: String) -> Array`
 
@@ -228,7 +246,11 @@ changes.
 - `static func mothership_pos(team: int) -> Vector2`
 - `static func lane_points(lane: String, team: int) -> PackedVector2Array`
 
+## scripts/data/minion_shapes.gd  (class_name MinionShapes extends RefCounted)
+- `static func aurelian(type_id: String) -> Array`
+
 ## scripts/data/minions.gd  (class_name Minions extends RefCounted)
+- `static func wave_for(lane: String) -> Array`
 - `static func control_cap() -> int`
 - `static func scaling(match_time: float) -> float`
 
@@ -238,14 +260,19 @@ changes.
 
 ## scripts/data/palette.gd  (class_name Palette extends RefCounted)
 - `static func team(t: int) -> Color`
+- `static func accent(t: int) -> Color`
 - `static func bolt(t: int) -> Color`
 - `static func with_alpha(c: Color, a: float) -> Color`
+- `static func hit_edge(edge: Color, flash: float) -> Color`
+- `static func hit_width(width: float, flash: float) -> float`
 
 ## scripts/data/roster.gd  (class_name Roster extends RefCounted)
 - `static func callsign(team: int, slot: int) -> String`
 
 ## scripts/data/rules.gd  (class_name Rules extends RefCounted)
+- `static func damage_modifiers_removed() -> bool`
 - `static func enemy_of(team: int) -> int`
+- `static func team_from_name(text: String) -> int`
 - `static func display_label(text: String) -> String`
 - `static func size_index(size_class: int) -> int`
 - `static func damage_mult(kind: int, target_class: int) -> float`
@@ -255,6 +282,7 @@ changes.
 ## scripts/data/ships.gd  (class_name Ships extends RefCounted)
 - `static func get_def(id: String) -> Dictionary`
 - `static func size_of(id: String) -> int`
+- `static func blurb(id: String) -> String`
 
 ## scripts/data/tech.gd  (class_name Tech extends RefCounted)
 - `static func column_facility(column: String) -> String`
@@ -265,10 +293,38 @@ changes.
 - `static func ship_unlocked(ship_id: String, facilities: Dictionary, done: Dictionary) -> bool`
 - `static func ship_unlock_label(ship_id: String) -> String`
 
+## scripts/data/turret_data.gd  (class_name TurretData extends RefCounted)
+- `static func blurb(type: String) -> String`
+
 ## scripts/data/weapons.gd  (class_name Weapons extends RefCounted)
 - `static func get_def(id: String) -> Dictionary`
 - `static func kind_id(def: Dictionary) -> int`
 - `static func reach(def: Dictionary) -> float`
+
+## scripts/entities/aurelian_paint.gd  (class_name AurelianPaint extends RefCounted)
+- `static func on(team: int) -> bool`
+- `static func set_on(is_on: bool) -> void`
+- `static func hull(id: String) -> Dictionary`
+- `static func structure(id: String, vhorr: bool) -> Dictionary`
+- `static func outline(id: String) -> Array`
+- `static func jets(id: String) -> Array`
+- `static func nozzles(id: String) -> Array`
+- `static func mount_sockets(id: String) -> Array`
+- `static func prepare(raw: Dictionary, dress: int = DRESS_AUREL) -> Dictionary`
+- `static func draw_shape(ci: CanvasItem, rec: Dictionary, u: float, rot: float, px: float, edge: Color, edge_w: float, flash: float, heat: float, alpha: float = 1.0) -> void`
+
+## scripts/entities/cinder_paint.gd  (class_name CinderPaint extends RefCounted)
+- `static func alien(team: int) -> bool`
+- `static func set_alien(on: bool) -> void`
+- `static func prepare(raw: Dictionary) -> Dictionary`
+- `static func hull(id: String) -> Dictionary`
+- `static func minion(type_id: String) -> Dictionary`
+- `static func unit_shape(name: String) -> Dictionary`
+- `static func mothership() -> Dictionary`
+- `static func jets(id: String) -> Array`
+- `static func draw_shape(ci: CanvasItem, rec: Dictionary, scale: Vector2, rot: float, px: float, edge: Color, edge_w: float, flash: float, heat: float, phase: float, alpha: float = 1.0) -> void`
+- `static func draw_fang(ci: CanvasItem, dir: Vector2, length: float, width: float, col: Color, px: float) -> void`
+- `static func tint_jets(main_jet: CPUParticles2D, port_jet: CPUParticles2D, star_jet: CPUParticles2D) -> void`
 
 ## scripts/entities/damage_info.gd  (class_name DamageInfo extends RefCounted)
 - `static func from_unit(src: Unit, amount_value: float, kind_value: int, from: Vector2) -> DamageInfo`
@@ -278,6 +334,11 @@ changes.
 - `func is_engaged() -> bool`
 - `func sim_update(dt: float) -> void`
 - `func on_killed(_info: DamageInfo) -> void`
+
+## scripts/entities/draw_parts.gd  (class_name DrawParts extends RefCounted)
+- `static func read_options() -> void`
+- `static func set_off(list: String) -> PackedStringArray`
+- `static func off_list() -> String`
 
 ## scripts/entities/energy_pool.gd  (class_name EnergyPool extends RefCounted)
 - `func setup(capacity: float, regen_rate: float) -> void`
@@ -300,6 +361,7 @@ changes.
 
 ## scripts/entities/minion_flight.gd  (class_name MinionFlight extends RefCounted)
 - `static func face(m: Minion, dir_angle: float, dt: float) -> void`
+- `static func steer(m: Minion, want: Vector2, dt: float) -> void`
 - `static func combat_move(m: Minion, tp: Vector2, d: float, reach: float, dt: float) -> void`
 - `static func lane_move(m: Minion, dt: float) -> void`
 
@@ -315,7 +377,7 @@ changes.
 - `func hull_dist(p: Vector2) -> float`
 - `func hit_t(a: Vector2, b: Vector2, pad: float) -> float`
 - `func dock_radius() -> float`
-- `func launch_point(slot: int) -> Vector2`
+- `func launch_point(slot: int, ship_radius: float = 0.0) -> Vector2`
 - `func available() -> bool`
 - `func can_move() -> bool`
 - `func order_move(p: Vector2, path: PackedVector2Array = PackedVector2Array()) -> void`
@@ -384,6 +446,7 @@ changes.
 - `func setup(w: World, p: PilotProfile, hid: String, mods: Array, at: Vector2, facing: float) -> void`
 - `func bounty_value() -> float`
 - `func is_small() -> bool`
+- `func hit_radius() -> float`
 - `func special_ready() -> bool`
 - `func recompute_stats(full_heal: bool = false) -> void`
 - `func incoming_mult() -> float`
@@ -420,6 +483,16 @@ changes.
 - `func reach() -> float`
 - `func on_killed(_info: DamageInfo) -> void`
 
+## scripts/entities/turret_paint.gd  (class_name TurretPaint extends RefCounted)
+- `static func is_on() -> bool`
+- `static func set_on(is_on: bool) -> void`
+- `static func class_of(m: WeaponMount) -> String`
+- `static func turret(cls: String, team: int) -> Dictionary`
+- `static func prepare(spec: Dictionary, style: String, rim: Color, cls: String) -> Dictionary`
+- `static func draw_mounts(ci: CanvasItem, ship: Ship, k: float, u: float, px: float, rot: float) -> void`
+- `static func draw_unit_mounts(ci: CanvasItem, mounts: Array, team: int, size: float, px: float, rot: float, alpha: float = 1.0) -> void`
+- `static func draw_turret(ci: CanvasItem, rec: Dictionary, pos: Vector2, ang: float, size: float, px: float, alpha: float = 1.0, min_px: float = MIN_EXTENT_PX) -> void`
+
 ## scripts/entities/unit.gd  (class_name Unit extends CharacterBody2D)
 - `func sim_update(_dt: float) -> void`
 - `func on_killed(_info: DamageInfo) -> void`
@@ -435,6 +508,7 @@ changes.
 - `func is_structure() -> bool`
 - `func visible_to(viewer_team: int) -> bool`
 - `func hit_t(a: Vector2, b: Vector2, pad: float) -> float`
+- `func hit_radius() -> float`
 - `func take_hit(info: DamageInfo, amount: float) -> float`
 - `func heal(amount: float) -> float`
 - `func log_damage(info: DamageInfo, amount: float) -> void`
@@ -862,6 +936,7 @@ changes.
 
 ## scripts/team/pilot_profile.gd  (class_name PilotProfile extends RefCounted)
 - `func earn(amount: float, reason: String) -> void`
+- `func earn_quietly(amount: float) -> void`
 - `func gear_stats() -> StatBlock`
 - `func gear_changed() -> void`
 - `func has_item(id: String) -> bool`
@@ -906,6 +981,7 @@ changes.
 - `func assault_point(lane: String) -> Vector2`
 
 ## scripts/team/team_state.gd  (class_name TeamState extends RefCounted)
+- `func earn(amount: float) -> void`
 - `func can_afford(amount: float) -> bool`
 - `func spend(amount: float) -> bool`
 - `func planned_tech() -> Dictionary`
@@ -1064,6 +1140,7 @@ changes.
 - `func apply() -> void`
 - `func panel_top(left: float) -> float`
 - `func panel_bottom(strip: bool) -> float`
+- `func toast_spot(panel_open: bool) -> Vector2`
 - `func toast_width(panel_open: bool) -> float`
 - `func banner_width() -> float`
 
@@ -1112,6 +1189,8 @@ changes.
 - `signal chosen(role: String)`
 
 ## scripts/ui/ui_kit.gd  (class_name UiKit extends RefCounted)
+- `static func set_accent_team(t: int) -> void`
+- `static func accent() -> Color`
 - `static func make_theme() -> Theme`
 - `static func box(bg: Color, border: Color, pad: int) -> StyleBoxFlat`
 - `static func label(text: String, size: int = 15, color: Color = Palette.ICE, wrap: bool = false) -> Label`

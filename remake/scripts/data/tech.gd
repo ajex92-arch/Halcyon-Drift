@@ -68,9 +68,10 @@ extends RefCounted
 ##   ms_pd / ms_flak / ms_heavy / ms_ion   more mothership guns of that sort
 ##                    (the gun spots are listed in Structures.MOTHERSHIP)
 ##   minion_buff      extra minion hull, shield and damage (0.15 = +15%)
-##   wave_corvette    one more escort corvette per lane in every free
-##                    minion wave (with --variant=escort_wing:upgrade the
-##                    wave's own corvette is upgraded instead; see
+##   wave_corvette    one more Patrol Leader (minion type "corvette") per
+##                    lane in every free minion wave (with
+##                    --variant=escort_wing:upgrade the first Patrol Leader
+##                    of each lane's wave is upgraded instead; see
 ##                    EscortWingFeature)
 ##
 ## A research item's description for players is read through blurb(), so
@@ -185,7 +186,7 @@ const TECHS := {
 	"waveArmor1": {"label": "Reinforced Waves I", "column": "flagship", "req": [], "cost": 1000.0, "time": 40.0, "effect": {"minion_buff": 0.15}, "blurb": "Our minions: +15% hull and damage."},
 	"waveArmor2": {"label": "Reinforced Waves II", "column": "flagship", "req": ["waveArmor1"], "cost": 1500.0, "time": 50.0, "effect": {"minion_buff": 0.15}, "blurb": "Our minions: another +15% hull and damage."},
 	"waveArmor3": {"label": "Reinforced Waves III", "column": "flagship", "req": ["waveArmor2"], "req_fac": ["capital"], "cost": 2000.0, "time": 60.0, "effect": {"minion_buff": 0.15}, "blurb": "Our minions: another +15% hull and damage."},
-	"escortWing": {"label": "Escort Wing", "column": "flagship", "req": ["waveArmor1"], "req_fac": ["frigate"], "cost": 2500.0, "time": 60.0, "effect": {"wave_corvette": 1}, "blurb": "Every free minion wave launches one more escort corvette per lane."},
+	"escortWing": {"label": "Escort Wing", "column": "flagship", "req": ["waveArmor1"], "req_fac": ["frigate"], "cost": 2500.0, "time": 60.0, "effect": {"wave_corvette": 1}, "blurb": "Every free minion wave launches one more Patrol Leader per lane."},
 }
 
 ## Board order inside each column (dependencies read top-down).
@@ -228,8 +229,8 @@ static func blurb(id: String) -> String:
 
 ## The description of mothership module (facility) `id` for players: its
 ## "blurb", with "{fleet_cap}" replaced by the most bought minions a team may
-## have alive in this match (Minions.control_cap(): 30 in the standard rules,
-## another number under the fleet_cap variant) and "{spool}" by the seconds a
+## have alive in this match (Minions.control_cap(): 30 in the old rules, 60 in
+## the standard rules through the fleet_cap variant) and "{spool}" by the seconds a
 ## hyperspace launch spools up (World.HYPERSPACE_SPOOL, 6, unless the redeploy
 ## variant tuned "hyperspace_spool" to 4), so the Fleet Command and Hyperspace
 ## Module cards never show a stale number. The admiral board's module cards

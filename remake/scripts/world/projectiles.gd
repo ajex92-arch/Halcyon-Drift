@@ -57,12 +57,22 @@ extends Node2D
 ## pixel at normal zoom).
 
 ## How far (world units) around a round's line we search the spatial hash:
-## enough for units up to this radius (60). Units bigger than this also go
+## enough for units up to this radius (60); the size shots see, hit_radius(),
+## is the radius, except for the small pilot ships, which count 1.1 times
+## bigger (at most 18.7), far inside it. Units bigger than this also go
 ## into World.big_hash (WorldRegistry uses this same number), which we
 ## search BIG_PAD further. That keeps the main search to 1-2 hash cells.
 const HASH_PAD := 60.0
-## Extra search distance (world units) for World.big_hash.
-const BIG_PAD := 110.0
+## Extra search distance (world units) for World.big_hash. HASH_PAD plus this
+## (260) must be at least the radius of the biggest hull (the Battlecruiser,
+## 240), or a round that only grazes the rim of that hull's hit circle is not
+## found.
+const BIG_PAD := 200.0
+## The radius (world units) of the biggest unit the spatial hashes must still
+## find by its edge: HASH_PAD plus BIG_PAD. A search that adds a unit's radius
+## to its range (to see a unit whose edge is in range but whose centre is not)
+## uses this as the margin it leaves for that radius.
+const MAX_UNIT_RADIUS := HASH_PAD + BIG_PAD
 
 ## The world this belongs to (set by setup()).
 var world: World
@@ -77,7 +87,8 @@ var prev := PackedVector2Array()
 var vel := PackedVector2Array()
 ## Per slot: seconds left before it runs out and disappears.
 var life := PackedFloat32Array()
-## Per slot: raw damage of a hit, before the damage table.
+## Per slot: raw damage of a hit (before the damage table, which is not
+## applied at all while the damage modifiers are removed).
 var dmg := PackedFloat32Array()
 ## Per slot: weapon kind, one of Rules.W_* (bolt, torpedo, flak, ...).
 var kind := PackedInt32Array()
@@ -93,7 +104,9 @@ var hp := PackedFloat32Array()
 ## Per slot: how fast a homing torpedo turns (radians per second); 0 means
 ## it flies straight.
 var homing := PackedFloat32Array()
-## Per slot: extra damage multiplier against SMALL targets (1.0 = none).
+## Per slot: extra damage multiplier against SMALL targets (1.0 = none). It
+## is carried along with the round and applied by CombatScaling only while the
+## damage modifiers are kept.
 var small_bonus := PackedFloat32Array()
 ## Per slot: 1 if the round chips destructible asteroids (capital guns),
 ## else 0.
@@ -380,12 +393,16 @@ func _step(i: int, dt: float) -> void:
 			best_t = float(rock["t"])
 
 	# d. Bolts, point defense and flak can shoot down enemy torpedoes. The
-	#    torpedo loses hit points by the damage table's "torpedo" column; at
-	#    0 it pops in a small ice-white puff. Our round is used up either way.
+	#    torpedo loses hit points by the damage table's "torpedo" column (the
+	#    round's full damage when the damage modifiers are removed); at 0 it
+	#    pops in a small ice-white puff. Our round is used up either way.
 	if (k == Rules.W_BOLT or k == Rules.W_PD or k == Rules.W_FLAK) and not torps.is_empty():
 		var j := _find_torp_hit(i, a, b)
 		if j >= 0:
-			hp[j] -= dmg[i] * Rules.damage_mult(k, Rules.SIZE_TORPEDO)
+			if Rules.damage_modifiers_removed():
+				hp[j] -= dmg[i]
+			else:
+				hp[j] -= dmg[i] * Rules.damage_mult(k, Rules.SIZE_TORPEDO)
 			if hp[j] <= 0.0:
 				world.effects.puff(pos[j], Palette.ICE, 6)
 				_kill(j)

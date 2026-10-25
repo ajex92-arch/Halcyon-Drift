@@ -61,8 +61,7 @@ func sim_update(dt: float) -> void:
 	if flash > 0.0:
 		flash = maxf(0.0, flash - dt)
 		queue_redraw()
-	owner_profile.credits += INCOME * dt
-	owner_profile.earned += INCOME * dt
+	owner_profile.earn_quietly(INCOME * dt)
 	_carry += INCOME * dt
 	if _carry >= 1.0:
 		Game.count_usage("extractor_credits", int(_carry))

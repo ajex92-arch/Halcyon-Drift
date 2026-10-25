@@ -7,14 +7,18 @@ extends RefCounted
 ## HOW IT WORKS:
 ##   - Free waves: the first wave at 0:45 (Minions.FIRST_WAVE), then one
 ##     every 35 s (Minions.WAVE_INTERVAL; a feature module may tune it as
-##     "wave_interval", see Rules.tune). For each lane, each mothership
-##     launches 1 escort corvette, 5 fighters and 4 bombers (Minions.WAVE),
-##     plus one extra corvette per TeamState.wave_corvettes (the Escort
-##     Wing research). The minions of a lane leave 0.35 s apart.
+##     "wave_interval", see Rules.tune). Each mothership launches every
+##     lane's own wave (Minions.wave_for): the top and bottom lanes get 1
+##     Patrol Leader (type "corvette"), 3 Snub-Fighters ("fighter") and 1
+##     Light Bomber ("bomber"), the middle lane 2 Patrol Leaders, 5
+##     Snub-Fighters and 4 Light Bombers. On top of that every lane gets one
+##     extra Patrol Leader per TeamState.wave_corvettes (the Escort Wing
+##     research). The minions of a lane leave 0.35 s apart, the Patrol
+##     Leaders first (the research ones last).
 ##   - The escort_wing rule variant can change what Escort Wing does: with
 ##     "upgrade" its feature module (EscortWingFeature) sets
-##     escort_upgrade. Then no corvette is added: each wave's own corvette
-##     is marked in the queue and upgraded as it launches
+##     escort_upgrade. Then no corvette is added: the FIRST Patrol Leader of
+##     each lane's wave is marked in the queue and upgraded as it launches
 ##     (EscortWingFeature.upgrade: +40% hull, +15% weapon range).
 ##   - Waves are not spawned at once: each minion is put in `queue` with
 ##     its launch time, and tick() spawns the ones whose time has come.
@@ -40,13 +44,14 @@ var world: World
 var next_wave := Minions.FIRST_WAVE
 ## Minions waiting to launch. Each entry is
 ## [launch time (s), team, type id, lane id], plus a fifth entry `true` on
-## a corvette marked for the Escort Wing upgrade (only with escort_upgrade).
+## the first corvette of a lane's wave when it is marked for the Escort Wing
+## upgrade (only with escort_upgrade).
 var queue: Array = []
 ## The escort_wing variant's switch, set by its feature module
 ## (EscortWingFeature.install). false (the default, "extra") = today's
 ## game: Escort Wing research adds one corvette per lane to every free
-## wave. true ("upgrade") = waves keep their 10 minions, and while the team
-## has Escort Wing each wave's corvette launches upgraded.
+## wave. true ("upgrade") = waves keep their size, and while the team has
+## Escort Wing the first corvette of each lane's wave launches upgraded.
 var escort_upgrade := false
 
 
@@ -100,25 +105,30 @@ func tick(_dt: float) -> void:
 	queue = keep
 
 
-## Put one wave for `team` into the queue: the whole wave on every lane,
-## with the minions of a lane 0.35 s apart. With Escort Wing researched,
-## each lane also gets the research corvettes; with escort_upgrade set,
-## it gets none, and the wave's own corvette is marked for the upgrade.
+## Put one wave for `team` into the queue: every lane's own wave
+## (Minions.wave_for), with the minions of a lane 0.35 s apart. With Escort
+## Wing researched, each lane also gets the research corvettes; with
+## escort_upgrade set, it gets none, and the first corvette of the lane's
+## wave is marked for the upgrade.
 func _queue_wave(team: int) -> void:
 	var t0 := world.time
-	var wave: Array = Minions.WAVE.duplicate()
 	var extra := world.teams[team].wave_corvettes
-	# Step 1: today's game adds the research corvettes to the wave.
-	if not escort_upgrade:
-		for k in extra:
-			wave.append("corvette")
-	# Step 2: the "upgrade" variant marks the corvette instead (when the
+	# The "upgrade" variant marks a corvette instead of adding some (when the
 	# team has Escort Wing).
 	var mark := escort_upgrade and extra > 0
-	# Step 3: queue the wave on every lane.
 	for lane: String in MapLayout.LANE_ORDER:
+		# Step 1: this lane's own wave.
+		var wave: Array = Minions.wave_for(lane)
+		# Step 2: today's game adds the research corvettes to every lane's wave.
+		if not escort_upgrade:
+			for k in extra:
+				wave.append("corvette")
+		# Step 3: queue the lane's minions. Under "upgrade" only the wave's
+		# first corvette is marked (the middle lane has two).
+		var marked := false
 		for i in wave.size():
-			if mark and wave[i] == "corvette":
+			if mark and not marked and wave[i] == "corvette":
+				marked = true
 				queue.append([t0 + 0.35 * float(i), team, wave[i], lane, true])
 			else:
 				queue.append([t0 + 0.35 * float(i), team, wave[i], lane])

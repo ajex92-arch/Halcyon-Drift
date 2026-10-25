@@ -4,6 +4,67 @@ What each release of Halcyon Drift changes, newest first. The Windows version of
 each release is on the GitHub Releases page; the browser version always shows the
 newest `main`.
 
+## v0.3.0: two playable teams, the standard rules, new looks and smaller waves
+
+### For players
+
+**Play either team.** Before, you always played Aurelian.
+- The start screen has a new TEAM row under the DIFFICULTY row: **Aurelian** (amber, starting on the left of the map) or **Vhorr** (red, starting on the right). It works for both seats, Pilot and Admiral, and the other team is all computer. The map is not mirrored: as Vhorr your camera starts in front of the Vhorr mothership and your base is on the right. Your pick is remembered between runs. From a terminal: `--team=aurelian` or `--team=vhorr`.
+- The menus' highlight colour follows your team: amber for Aurelian (and for a spectator), red for Vhorr. Colours that mean something do not change: the team colours, the kill feed's amber for good news and red for bad news, the banners, Victory and Defeat, and the health, shield and energy bars.
+
+**One set of rules for every match.** The RULE SET row of the start screen is gone. Every match plays the rules that v0.2.0 called Council's pick: late minions no longer out-fight pilots, the Lance hunts big ships that lost their escort, two Bomber seats fly Fighters and torpedoes hurt small craft less, the computer Admiral spends a big treasury and builds the Hyperspace Module early, gear has Mk II upgrades, a team may have up to 60 bought minions, and a node whose turret was destroyed stays locked longer. The older rule sets remain as launch options for tests (`--preset=none`, `--preset=within`, `--preset=pick`).
+
+**Difficulty levels.** A new DIFFICULTY row on the start screen: Easy, Medium, Hard, Very hard and Extreme. In a match where one human plays against the computer, the enemy team earns 0.75, 1.0, 1.25, 1.5 or 2.0 times what it would have earned: its pilots' credits and its Admiral's treasury, from every source. Your own team's income, matches with nobody playing and every test are never changed. New games start on Medium, which plays as before, and your pick is remembered.
+
+**New looks.**
+- **Aurelian ships** have a steel look: armour plates, glass canopies, amber stripes, running lights and dark engine housings with warm nozzle lights, inside an amber outline.
+- **Vhorr ships** have an alien look: dark, bladed hulls with glowing veins. Their engine flames are a quarter smaller than the Aurelian flames, so they do not hide the design.
+- **Every gun that turns** (a turret or an automatic mount) on a pilot's ship, a lane tower, a Repair Bay or the Aurelian mothership is drawn as a small turret, turned the way the gun points: armoured octagons for Aurelian, thorned discs for Vhorr. Fixed guns get none. The Vhorr mothership still shows its guns as dots, and minions show none.
+- **Minions** are plain, solid shapes that cannot be mistaken for a pilot's ship: a blunt wedge, a squat box and a plain triangle for Aurelian; the Spore, the Bloat and the Cocoon for Vhorr.
+
+**Smaller minion waves, with new names and heavier handling.**
+- Each lane has its own wave now. The top and bottom lanes get 3 Snub-Fighters, 1 Light Bomber and 1 Patrol Leader; the middle lane gets 5 Snub-Fighters, 4 Light Bombers and 2 Patrol Leaders: 21 minions a team, where v0.2.1 sent 30. The old names were Fighter, Bomber and Escort Corvette.
+- Minions are slower to change speed (10% less acceleration along their way) and direction (20% less sideways), and their noses turn 20% slower. Top speed and the pace of the waves are unchanged.
+
+**Fairer money for helpers.** The money for a kill is shared by the pilots who helped, and the total stays the same: the helpers' share comes out of the reward, never on top of it.
+- A minion falls to an enemy pilot: if teammates also did at least a tenth of the damage in the last 15 seconds, the last hitter gets 75% of the credits and the helpers share the other 25%, by damage. With no helper the last hitter gets everything, as before.
+- A pilot's ship falls: the helpers share a third of its bounty, and the killer keeps the other two thirds.
+
+**Computer pilots go for last hits.** A lane pilot with no target, nothing to push and nobody to hunt used to park at a spot behind its wave. Now it flies up to the enemy minions fighting near the front of its wave (within 1,500 units) and goes for last hits. A waiting spot that fell right on top of the pilot's own turrets is moved out of them.
+
+**Bigger ships, easier targets, turrets without shields.**
+- The Destroyer and the Battlecruiser are 1.5 times as big and the Flak Frigate and the Ion Frigate 1.25 times, in how they are drawn, how they are hit and how they collide.
+- The Scout, Fighter, Lance Fighter and Bomber are 10% easier to hit (rounds, beams and blasts). Their bodies, the minions and every other unit are unchanged.
+- Turrets have no shields, and nothing repairs a turret: not the Logistics Corvette's drones, not Emergency Repair. Repair bays, wards, motherships and ships are unchanged.
+
+**Screens and looks.**
+- The whole picture stretches with the window, the smallest window is 1280x720, and the big panels (hangar, help, Admiral board) stay clear of the ship readout and the key line. The text grows with the window instead of staying small.
+- **F11** or **Alt+Enter** switches between the window and borderless fullscreen (in a browser, Alt+Enter; F11 stays the browser's own).
+- The drift arrow shows on the ship you fly and on no other. A hit flashes a ship's outline and leaves its fill alone. The lane and node names on the map are never taller than about 60 screen pixels.
+
+### How well it was tested
+
+Each change was tested on its own when it was made, with its own checks and, for changes to play, matches between computer players before and after. This release was not measured again as a whole against v0.2.1.
+- **The release build** (the play changes with the testing tools taken out; only documents changed after these tests): all scripts load, the bot pilot, the support probe, the UI tours for pilot and Admiral, the mouse-wheel check, and the checks for the difficulty levels, the hit size, turret repair, the rules and playing either team in every seat: all OK, with no script errors.
+- **Replay test** (seed 7, with the drawing code running): taking the testing tools out changed nothing in play. Play changes on purpose against v0.2.1, so there are new reference runs: normal END f2ba4199 (180 lines), late start END d374fd49 (60 lines).
+- **Pictures** of the start screen, the hangar and a match as Vhorr, the Admiral board as Aurelian, and two big computer fights, with no script errors.
+- **A release review of the whole release** found no code defect. It found text faults in these notes and in the developer docs (a missing known issue, a turret sentence that said too much, leftover wording), all fixed before the release.
+
+### Known issues
+
+- The big Aurelian ships (the two frigates, the Destroyer and the Battlecruiser) have several engine nozzles but one exhaust trail until a later release.
+- **Stuck ships.** Ships still get stuck in the rocks now and then, the big Battlecruisers most of all. The fix is not in this release.
+
+### For developers
+
+- New settings: `Game.human_team` (`--team`, remembered with the difficulty in a small settings file) and `Game.difficulty` (`--difficulty`; `scripts/data/difficulty.gd`). Money goes in through three gates that apply the team's multiplier: `PilotProfile.earn()`, `PilotProfile.earn_quietly()` and `TeamState.earn()`.
+- The standard rules are `CouncilPresets.STANDARD` ("pick"); `Game.apply_preset()` and the start screen's rule-set buttons are gone, and the preset table has a `none` entry for the old rules.
+- The damage modifiers (the damage table and the other fixed multipliers, DESIGN A5) are behind one switch, `Rules.DAMAGE_MODIFIERS_REMOVED`, which is false in this build; `--damage-modifiers-removed` overrides it for one run.
+- Drawing: `AurelianShapes` and `AurelianPaint`, `CinderShapes` and `CinderPaint`, `TurretShapes` and `TurretPaint`, `MinionShapes`, `StructureShapes`, and the test-only part switches of `DrawParts` (`--bench-off`). `WindowMode` holds the minimum window size and the fullscreen key.
+- Waves: `Minions.OUTER_WAVE`, `MID_WAVE`, `WAVES` and `wave_for(lane)`; handling: `MinionFlight.steer`; hit size: `Unit.hit_radius()` and `Rules.SMALL_PILOT_HIT_MUL`.
+- New tests: `rules_check`, `team_check`, `difficulty_check`, `hit_size_check`, `turret_repair_check`, `assist_check`, `hit_reach_check`, `display_check`, and probes for the waves, income, farming, difficulty, hit size, minion handling and turret repair. `remake/README.md` gives the command for each.
+- DESIGN rows C26 and C27 (the waves and the assist money) and sections A3, A5, A7, A8 and A15.
+
 ## v0.2.1: a free camera and a new AI opening
 
 ### For players

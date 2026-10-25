@@ -4,7 +4,10 @@ extends CombatScaling
 ## rules that feature modules can plug in. The combat_roles features use it
 ## for the rules that depend on WHO hit WHAT and from WHERE: the Lance's
 ## rear-shield bonus (LanceRoleFeature), the energy-routing overcharge
-## (RoutingPayoffFeature) and the torpedo change (BomberRoleFeature).
+## (RoutingPayoffFeature) and the torpedo change (BomberRoleFeature). The Lance
+## bonus and the torpedo change are damage modifiers: they plug in only while
+## the damage modifiers are kept, so with them removed only the energy-routing
+## overcharge uses this calculator.
 ##
 ## HOW IT WORKS: it is a copy of CombatScaling that does exactly what the
 ## original does (final_amount() asks the original through super), and then

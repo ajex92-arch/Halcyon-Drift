@@ -10,19 +10,21 @@ extends PanelContainer
 ## mouse passes through it. show_text() puts the text in the box and shows
 ## it for 3.5 seconds; tick() counts that time down and fades the box out
 ## over the last 0.6 seconds. Normally the box sits 150 pixels above the
-## bottom edge. While a big panel is open it drops to 6 pixels above the
-## bottom (the strip HudLayout keeps free for it) so it doesn't cover the
-## panel; while the scoreboard (which has no such strip) is held open, or
-## the match is over, it waits, hidden, and its time stops. A text too long
-## for the room it has (HudLayout.toast_width: in flight it must stay clear
-## of the minimap) wraps onto more lines. It is also kept as the HUD's last
-## child, so it draws on top of everything.
+## bottom edge, clear of the ship readout. While a big panel is open it drops
+## to 6 pixels above the bottom, into the strip under the panel, so it doesn't
+## cover the panel: in the middle, or, while the ship readout shows there, in
+## the bottom-right corner beside it (HudLayout.toast_spot); while the
+## scoreboard (which has no such strip) is held open, or the match is over,
+## it waits, hidden, and its time stops. A text too long for the room it has
+## (HudLayout.toast_width: in flight it must stay clear of the minimap)
+## wraps onto more lines. It is also kept as the HUD's last child, so it
+## draws on top of everything.
 ##
 ## WHO USES IT: the HUD's scene (scenes/ui/hud.tscn) holds it and
 ## Hud.setup() gives it the HUD. Hud.toast() (connected to Events.toast,
 ## so any script can pop a hint up) calls show_text(), and Hud._process()
 ## calls tick() every frame. It asks the Hud whether a panel is open
-## (Hud._any_panel_open) and HudLayout how wide it may be.
+## (Hud._any_panel_open) and HudLayout where it sits and how wide it may be.
 
 ## The HUD this widget belongs to (Hud.setup() sets it).
 var hud: Hud
@@ -45,23 +47,24 @@ func show_text(text: String) -> void:
 	place()
 
 
-## Put the box in its spot: 6 pixels above the bottom while a big panel is
-## open, else 150, and make it no wider than HudLayout allows (the text
-## wraps instead). We shrink the box to a point first; its minimum size
-## then grows it back, centred and upward from that point.
+## Put the box in its spot (HudLayout.toast_spot: 150 pixels above the
+## bottom, or in the strip under an open panel) and make it no wider than
+## HudLayout allows (the text wraps instead). We shrink the box to a point
+## first; its minimum size then grows it back, centred and upward from that
+## point.
 func place() -> void:
 	var open := hud._any_panel_open()
-	var y := -HudLayout.TOAST_LIFT if open else -HudLayout.TOAST_LIFT_FLIGHT
+	var spot := hud.layout.toast_spot(open)
 	# The label is as wide as its text, or as wide as the box may be less
 	# the box's own space on the left and right.
 	var font := _label.get_theme_font("font")
 	var text_w := font.get_string_size(_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, _label.get_theme_font_size("font_size")).x
 	var room := hud.layout.toast_width(open) - get_theme_stylebox("panel").get_minimum_size().x
 	UiKit.pin_width(_label, minf(ceilf(text_w) + 2.0, room))
-	offset_left = 0.0
-	offset_right = 0.0
-	offset_top = y
-	offset_bottom = y
+	offset_left = spot.x
+	offset_right = spot.x
+	offset_top = -spot.y
+	offset_bottom = -spot.y
 	# Make sure we are the HUD's last child, so we draw on top.
 	if get_index() != hud.get_child_count() - 1:
 		move_to_front()

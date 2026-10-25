@@ -122,8 +122,7 @@ func _tick(dt: float) -> void:
 			continue
 		# Pay, count the visit, and run the node dry for this pilot at 600.
 		var p := s.profile
-		p.credits += HOLD_PAY * STEP
-		p.earned += HOLD_PAY * STEP
+		p.earn_quietly(HOLD_PAY * STEP)
 		_carry += STEP
 		var v: Dictionary = visit.get(p, {})
 		v[n.node_id] = float(v.get(n.node_id, 0.0)) + HOLD_PAY * STEP

@@ -160,7 +160,7 @@ func _on_unit_killed(unit: Node, _info: RefCounted) -> void:
 		for p: PilotProfile in pilots:
 			p.earn(everyone_pool / float(pilots.size()), "comeback")
 	# Step 3: the treasury, the news, and the counters.
-	world.teams[team].treasury += total * TREASURY_SHARE
+	world.teams[team].earn(total * TREASURY_SHARE)
 	Events.feed.emit("Comeback bounty: the %s are paid %d for the %s." % [Rules.TEAM_NAMES[team], int(total), "turret" if s.kind == Unit.K_TURRET else "repair bay"], "info", -1)
 	Game.count_usage("bounty_structure_kills")
 	Game.count_usage("bounty_structure_credits", int(total))

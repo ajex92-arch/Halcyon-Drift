@@ -20,8 +20,9 @@ extends RefCounted
 ## (60 one-second buckets) and, while the total is over the limit AND the
 ## shield is down, sets  mothership.incoming_mults["ms_cap"]  to 0.5 (or
 ## 0.1); otherwise it takes the entry away. (While shields are up the factor
-## is not applied: shields, the x2.0 large and capital multiplier and the
-## point-defence weakness stay as they are.) The AI admiral's stall rule
+## is not applied: shields and the point-defence stay as they are, and, while
+## the damage modifiers are kept, so do the x2.0 large and capital multiplier
+## and the point-defence weakness.) The AI admiral's stall rule
 ## scales with it: siege_stall_frac drops from 15% to 10% (the cap makes the
 ## hull fall slower, so a siege that still bites must not be called off),
 ## unless another feature already set it. For a human viewer the banner says

@@ -82,12 +82,12 @@ static func refresh_card(h: Hangar, c: CardButton, id: String, m: String) -> voi
 			if p.credits < price:
 				foot += "  ·  %d short" % int(ceil(price - p.credits))
 				blocked = true
-	# Step 5: show it: green when installed, grey when blocked, amber
-	# otherwise. An installed module stays clickable (to sell) where
+	# Step 5: show it: green when installed, grey when blocked, the highlight
+	# colour otherwise. An installed module stays clickable (to sell) where
 	# modules can be changed.
 	c.foot.text = foot
 	c.foot.visible = true
-	c.foot.add_theme_color_override("font_color", Palette.REPAIR if installed else (Palette.MIST if blocked else Palette.AMBER))
+	c.foot.add_theme_color_override("font_color", Palette.REPAIR if installed else (Palette.MIST if blocked else UiKit.accent()))
 	c.set_state(blocked and not (installed and editable), installed, 0.55)
 
 

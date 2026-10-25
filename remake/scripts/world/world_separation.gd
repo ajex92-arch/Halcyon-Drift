@@ -36,8 +36,10 @@ func separate(dt: float) -> void:
 	for a in world.ships:
 		if not a.alive:
 			continue
-		# Each pair is handled once: only by the ship with the lower id.
-		for b: Unit in world.unit_hash.query(a.global_position, a.radius + 200.0, scratch):
+		# Each pair is handled once: only by the ship with the lower id. The search
+		# adds the biggest unit radius, so a big ship that overlaps `a` is found
+		# even though its centre is far away.
+		for b: Unit in world.unit_hash.query(a.global_position, a.radius + Projectiles.MAX_UNIT_RADIUS, scratch):
 			if not (b is Ship) or b == a or not b.alive or b.uid < a.uid:
 				continue
 			# Overlapping? (Skip exact same spots: no direction to push.)

@@ -88,7 +88,7 @@ mouse_filter = 0
 text = "Kits"
 
 [node name="Scroll" type="ScrollContainer" parent="Col"]
-custom_minimum_size = Vector2(0, 120)
+custom_minimum_size = Vector2(0, 240)
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 1

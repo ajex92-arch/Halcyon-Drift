@@ -32,7 +32,10 @@ extends Control
 ##   Slots       bottom left: HudSlots: the 6 gear slots and a reminder of
 ##               the keys
 ## _ready() gives the HUD the game's look (UiKit.make_theme()). setup()
-## then wires everything up: it makes the Admiral's map-tool layer, tells
+## then sets the interface's highlight colour to the human's team (amber for
+## Aurelian and for a spectator, red for Vhorr: UiKit.set_accent_team(), and a
+## new theme if that changed the colour) and wires everything up: it makes the
+## Admiral's map-tool layer, tells
 ## the widgets which world they show, and listens to game news from
 ## Events. (A "signal" is a message a script sends out; any other script
 ## can "connect" a function to it, and that function then runs every time
@@ -123,6 +126,12 @@ func _ready() -> void:
 ## calls this once, right after adding the HUD to the screen.
 func setup(w: World) -> void:
 	world = w
+	# Step 0: the highlight colour is the human's team's (a spectator's World
+	# says Aurelian). The panels made from here on take it from UiKit, and the
+	# theme made in _ready() is made again if it had another team's.
+	if UiKit.accent_team != w.human_team:
+		UiKit.set_accent_team(w.human_team)
+		theme = UiKit.make_theme()
 	# Step 1: the Admiral's map-tool layer lives in the game world.
 	overlay = OVERLAY_SCENE.instantiate()
 	world.add_child(overlay)
@@ -154,7 +163,7 @@ func setup(w: World) -> void:
 		_open_hangar()
 		toast("Pick a ship in the hangar and launch. H explains everything.")
 	elif world.human_role == "admiral":
-		toast("You command Aurelian. Tab opens the Admiral board; H explains everything.")
+		toast("You command %s. Tab opens the Admiral board; H explains everything." % Rules.TEAM_DISPLAY[world.human_team])
 	_refresh()
 
 
@@ -219,10 +228,10 @@ func _on_respawned(p: RefCounted) -> void:
 
 
 ## One of an Admiral's orders was carried out (`ok`) or refused. Only the
-## human Admiral (always on Aurelian) gets a pop-up: the RESULT_OK text when
-## it worked, or the reason (`message`) when it didn't.
+## human Admiral (the one of the human's team) gets a pop-up: the RESULT_OK text
+## when it worked, or the reason (`message`) when it didn't.
 func _on_admiral_result(team: int, action: String, ok: bool, message: String) -> void:
-	if world.human_role != "admiral" or team != Rules.HALCYON:
+	if world.human_role != "admiral" or team != world.human_team:
 		return
 	if ok:
 		var m: String = RESULT_OK.get(action, "")

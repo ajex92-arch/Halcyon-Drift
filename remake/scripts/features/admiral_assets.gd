@@ -238,7 +238,7 @@ func _land(team: int, pos: Vector2) -> void:
 	# while we hit them).
 	var victims: Array = []
 	for u: Unit in world.units:
-		if u.alive and u.team == enemy and u.global_position.distance_to(pos) <= BARRAGE_RADIUS + u.radius:
+		if u.alive and u.team == enemy and u.global_position.distance_to(pos) <= BARRAGE_RADIUS + u.hit_radius():
 			victims.append(u)
 	# Step 2: hit each one.
 	for u: Unit in victims:

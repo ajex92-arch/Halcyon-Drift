@@ -67,9 +67,12 @@ Pillars:
 3. **The Admiral seat matters but pilots are never helpless.** Pilots earn
    their own money (kills, minion last hits, jungle, drone deliveries share,
    passive income) and buy their own ships, modules and pilot gear.
-4. **Readable at scale.** Velocity arrow, thruster particles (main and
-   lateral), 4-zone shield arcs, team colours, lane guides, ownership rings
-   on nodes, clear turret aggro tells, fog of war that respects asteroids.
+4. **Readable at scale.** Velocity arrow (on your own ship only), thruster
+   particles (main and lateral), 4-zone shield arcs, team colours, lane
+   guides (their names and the node names never taller than about 60 screen
+   pixels), ownership rings on nodes, clear turret aggro tells, a hit that
+   flashes a unit's outline and leaves its design visible, fog of war that
+   respects asteroids.
 
 ### A2. Conflicts between the sources and how they are resolved
 
@@ -96,19 +99,50 @@ Pillars:
 | C19 | "mothership can be moved by a docked admiral from 20:00" — how should the AI admiral use it? | Humans can always move it. AI variants (`ai_ms`): advance (up the push/siege lane when at least even; since 2026-10-16 always up the mid lane), siege (only up its own siege lane, home otherwise), home (never). **Decided: advance.** Full 60-minute AI matches, 2 per variant: advance ended both (43:49, 47:48), siege 1 of 2, home 0 of 2. (2026-10-15: `siege` and `home` were taken out of the code, and with them the `ai_ms` switch. 2026-10-16: the advance lane is now always the mid lane, also during a siege. Following the push or siege lane parked the two motherships on different lanes, top against bottom some 30,000 units apart, and no 30-minute AI match ended; parked on the shortest lane they meet, and two test matches ended after about 24 and 25 minutes. That was on the AI before the pass 1-3 fixes; with them, 0 of 3 normal 30-minute AI matches ended, see docs/AI_DEEP_DIVE.md.) |
 | C20 | Project name and world: the project (repo) was still called Fleet Command 2, and the world had no name. | **Decided by the user, 2026-10-16:** "Lets change the project name to Halcyon Drift, which we shall say is the name of the asteroid belt we are fighting in." So Halcyon Drift is both the project and the asteroid belt the battle is fought in; the lanes, nodes and jungle are inside it. Nothing else about the belt is decided. Unchanged on purpose: "Fleet Command" as the late-game admiral module (A13), the team names Halcyon and Cinder (open question in A16, answered in C21), folder and repo names, and the user's verbatim documents. Text-only change; no game logic touched. |
 | C21 | Team name: the good-guy team (team 0, amber) was called Halcyon, the same word as the Halcyon Drift (the open question in A16). | **Decided by the user, 2026-10-16:** rename the team to **Aurelian**, the user's own pick for an uncommon good-guy name. Cinder (team 1, red) keeps its name, and Halcyon Drift stays the name of the project and of the asteroid belt. Aurelian is the name in all player-facing text, docs and comments. Done as a split between what the player sees and the internal label: `Rules.TEAM_DISPLAY` holds the player-facing names, and `Rules.display_label()` swaps the label in text that was built from an internal one (the place names "Halcyon Top/Mid/Bottom", the end screen's reason). `Rules.TEAM_NAMES` stays the internal label "Halcyon", together with `Rules.HALCYON`, the scene node names (and the node names themselves), logs, JSON, test output and the tools, so every past research log and baseline stays comparable (docs/CODE_GUIDE.md, "Team names"). Unchanged on purpose: the user's verbatim documents and older log entries. Display only: no game logic touched. |
-| C22 | Fleet Command limit: the requirements file says the late-game module limits friendly minions to 30 (`USER_REQUIREMENTS_2026-10-13.md`); both v0.2.0 rule sets use 60. | **Decided by the user, 2026-10-17:** "Make 60 the requirement." The Fleet Command limit is now **60** (it was 30). Both rule sets, "Within requirements" and "Council's pick", use 60, so they stay within the amended requirements. The standard rules keep v0.1.0's 30 in v0.2.0, because v0.2.0 promises that the default game is unchanged (`fleet_cap` defaults to "30"). Any limit other than 60 is a requirement change (REQ-CHANGE). The user's verbatim requirements file is not edited: this row is the amendment. |
+| C22 | Fleet Command limit: the requirements file says the late-game module limits friendly minions to 30 (`USER_REQUIREMENTS_2026-10-13.md`); both v0.2.0 rule sets use 60. | **Decided by the user, 2026-10-17:** "Make 60 the requirement." The Fleet Command limit is now **60** (it was 30). Both rule sets, "Within requirements" and "Council's pick", use 60, so they stay within the amended requirements. The standard rules keep v0.1.0's 30 in v0.2.0, because v0.2.0 promises that the default game is unchanged (`fleet_cap` defaults to "30"). Since v0.3.0 the standard rules are Council's pick (A3), so they use 60; the old rules (`--preset=none`) keep 30. Any limit other than 60 is a requirement change (REQ-CHANGE). The user's verbatim requirements file is not edited: this row is the amendment. |
 | C23 | Team 1 display name: the enemy team (team 1, red) was called Cinder. | **Decided by the user, 2026-10-17:** the enemy team's display name changes from Cinder to **Vhorr**, everywhere, like Aurelian (C21). Vhorr is the name in all player-facing text, docs and comments. Done with the same split as C21: `Rules.TEAM_DISPLAY` holds the player-facing names, and `Rules.display_label()` swaps the internal label in text that was built from one (the place names "Cinder Top/Mid/Bottom", the match-over reason). `Rules.TEAM_NAMES` stays the internal label "Cinder", together with `Rules.CINDER`, `Palette.CINDER`, `Roster.CINDER`, the scene node names, logs, JSON, test output and the tools, so every past research log and baseline stays comparable (docs/CODE_GUIDE.md, "Team names"). Unchanged on purpose: the user's verbatim documents and older log entries (C20, C21, A16 and the PROGRESS entries before 2026-10-17 still say Cinder). Display only: no game logic touched. |
 | C24 | AI opening: how the computer pilots play the first minutes. The user's report: "Ive noticed that AI player ships at the start of the game do not immediately head out to contest the center map points, and instead hover around the left map points and wait for the minions to spawn. Even then, many of the AI player ships head back to the mothership to shop before returning to escort the minions to the middle of the map. This is an incorrect behavior. The AI player ships should stay near the mothership for the first 10 seconds of the match to allow the human player to get their bearings, then head to the middle map points to contest them, even before the minions spawn or reach the middle of the map points themselves." | **Decided by the user, 2026-10-17** (ships as v0.2.1): the text above is the requirement, plus the user's answer on the junglers: "Middle first, then camps". Done in the AI layer only (`Rules.AI_OPENING_HOLD` = 10 s, `Rules.AI_OPENING_MAX` = 180 s, `PilotGoals.opening_active()` and `opening_goal()`, `PilotShopping.wants_shopping()`; see A14). The "middle map points" are the three Crossing nodes on the centre line; every AI pilot of both teams contests the one on its lane, the junglers contest the middle one, and the flex pilot the top one (C25). The opening ends per lane when the team's first minion wave reaches that Crossing, and then the junglers peel off to their camps. No trips home to shop in the opening. A human admiral's waypoint (not the AI admiral's own: C25), a siege, a defend call and a test's hold point still win. The simulation core, the win condition and all other rules are unchanged, and the human pilot is unaffected. |
 | C25 | The Crossing turrets and the flex pilot, after the opening fix. The user's answers to the questions of C24, 2026-10-17: "Yes, that is what i want. These middle of the map lane turrets should be priority for the Admiral to build as they help secure map control. If the AI pilots do not try and contest the zone it cannot be captured so the Admiral cannot build a turret there." (The early fight at the Crossings stays as built.) On the Admiral: "Only reorder the extras for now. However it should be made more obvious to both teams that a point is being contested, more obvious as to how long a point needs to be uncontested before it can be build on, and give more opportunity for counterplay." On the flex pilot: "Start rotation on a side lane". A third round of questions, 2026-10-18, after an independent review of the opening fix. On the AI admiral's own waypoint (it goes up at 60 s in every AI match and pulled the waypoint seats 4, 5, 6 and the flex pilot off their Crossings until the waves arrived): "Only a human admiral's". On where each admiral builds its first Crossing turret (the first allowed one in map order gave the Top Crossing to whichever team had the money first: Aurelian took it in 6 of 6 test matches): "Where its ships are". | **Decided by the user, 2026-10-17** (ships as v0.2.1). The code has no capture step: a Crossing is held by whoever has a live turret there, and the build check only needs no enemy turret there, a free slot, no rebuild lock and no enemy ship or minion within 1,500 (ResourceNode.build_blocker). So (1) AdmiralBuilder.more_turrets() now picks the Crossing turret (one PD per Crossing, 750 credits) before the extra turrets at the inner nodes (it was after them); nothing else about turrets changed. (2) The flex pilot's 90-second lane rotation now starts on the top lane (PilotGoals.FLEX_ROTATION_SHIFT = 2): top, mid, bot, then top again, for the whole match; before it was mid, bot, top. Both teams use the same lane, which keeps the two sides symmetric when the map is mirrored left to right. In the opening it stays on the top Crossing. (3) NOT built, kept for a later design item: making it clearer to both teams that a point is contested, how long a point must stay uncontested before it can be built on, and more counterplay. **Third round (decided by the user, 2026-10-18; ships in the same v0.2.1):** (4) In the opening, seats 4, 5, 6 and the flex pilot follow a waypoint only when a human admiral placed it (TeamState.waypoint_by_human, set through the new by_human argument of AdmiralCommand.set_waypoint: the command overlay passes true, the AI admiral false); the AI admiral's own waypoint no longer pulls them off their Crossings. Outside the opening nothing changes: from 10:00 any waypoint rallies them, and a human admiral's waypoint still wins over the opening. (5) The admiral's first Crossing turret goes to the allowed Crossing (no turret of its own there, build check passes) with the most of its own pilots and minions within 1,500 of it (the same disc as the build check's "enemy ships too close"; AdmiralBuilder._crossings_in_order()). A tie keeps the map order (Top, Middle, Bottom), and so does a Crossing choice with none of its ships near any allowed Crossing. Once the team holds a Crossing, the later Crossing turrets and the extra turrets at home follow (1) unchanged. (6) Two fixes from the review, not asked about: the first wave's arrival at a Crossing is noted once per team and lane (TeamState.first_wave_at), so a pilot that was dead, docked or away at that moment can no longer start a second opening when that wave dies; and a jungler in the opening falls back when hurt and outnumbered, as a lane pilot does (it did not before). |
+| C26 | Minion waves (T-07): the requirement is a wave of 10 per lane (C13); the user wants smaller waves with new names. | **Decided by the user, 2026-10-18:** "I do not want to remove minion waves, only change them. The top and bottom waves should be changed to 3 fighter 1 bomber and 1 corvette, while the middle wave should add 1 corvette more than what it currently has. I also want to change the names of the minion's ships as they should be flying weaker versions of the standard ships. Fighters changed to "Snub-Fighters", bombers changed to "Light Bombers", and Corvette changed to "Patrol Leader"." Read as: the top and bottom lanes send 1 Patrol Leader, 3 Snub-Fighters and 1 Light Bomber (5); the middle lane sends today's wave plus one corvette, 2 Patrol Leaders, 5 Snub-Fighters and 4 Light Bombers (11); a team sends 21 minions a wave instead of 30. The Escort Wing research still adds one Patrol Leader to every lane's wave (told to the user). The first wave (0:45), the 35 s gap, the minions' numbers, the Fleet Command Module and its prices are unchanged. The names change what players read only; the type ids `fighter`, `bomber` and `corvette` stay. The AI is not changed. Main keeps C13's wave of 10 until this is moved over. |
+| C27 | Assist money (T-25): the requirement pays a minion only to the pilot who made the last hit, and pays helpers on a pilot kill half the bounty on top of the killer's whole bounty; the user wants helpers paid on minions too, without inflating the economy. | **Decided by the user, 2026-10-18:** "In the test branch, i want pilots to be able to gain some money from minion assists, not just kills. Same with pilot kill and jungle monster kill assists. Dont let the economy inflate." Answers to the questions: minion split "Last hit 75%, helpers 25%"; pilot kills "Inside the bounty now" (the killer keeps two thirds and the helpers share one third); when "Tonight". Built as: a minion's last hitter keeps 75% and the pilots of the same team with at least 10% of the damage in the last 15 s share 25% by damage (alone, the last hitter keeps all of it); a pilot kill with helpers pays the killer two thirds and the helpers one third in equal parts, so the total is the bounty; a minion finished by a minion, turret or monster pays nobody; each cut is raised by that pilot's own gear. Jungle camps are unchanged (they already split the reward by damage). Computer pilots do not chase assists. No screen shows minion assists (the end screen's K/D/A is unchanged); the help page's Minions line says it. The tuned number "assist_share" is replaced by "kill_assist_share" and "minion_assist_share". Main keeps the old rule until this is moved over. |
 
 ### A3. Roles and the core loop
 
 **Start screen.** The human picks once:
-- **Command as Admiral** — plays Aurelian's Admiral (command UI, free
-  camera; can also launch a ship). 12 AI pilots fly for Aurelian.
-- **Fly as a Pilot** — joins Aurelian as one of the 12 field pilots. The
-  Aurelian Admiral is AI. The choice is locked for the match.
-Vhorr is always 12 AI pilots + an AI Admiral.
+- **Team** — **Aurelian** (amber, the left side of the map)
+  or **Vhorr** (red, the right side), in a TEAM row above the seats. Aurelian
+  is the default; the last pick is remembered for the next run on the same
+  computer, as the difficulty is, and `--team=aurelian|vhorr` sets it at
+  launch (an unknown word stops the match, like an unknown `--preset`). The map
+  is not mirrored for the player: as Vhorr you start at Vhorr's mothership on
+  the right and the camera starts there; the team colours stay (Vhorr red).
+  The menus' highlight colour follows the team too: amber for Aurelian (and for
+  a spectator), red for Vhorr (see A15), and on the start screen it changes the
+  moment the pick does.
+- **Command as Admiral** — plays the chosen team's Admiral (command UI, free
+  camera; can also launch a ship). 12 AI pilots fly for that team.
+- **Fly as a Pilot** — joins the chosen team as one of the 12 field pilots.
+  That team's Admiral is AI. The choice is locked for the match.
+Vhorr is 12 AI pilots and an AI Admiral unless the human picks Vhorr, then the
+human takes that seat and Aurelian is all AI. Either way the other team is all
+computer, the difficulty's income multiplier goes to it (A7), and a spectator
+(`--all-ai`) has no team.
+
+**Rules of the match.** The start screen offers no choice of
+rules, and no text asks the player for one. Every match plays the standard
+rules, which are the fun council's "Council's pick" (`CouncilPresets` "pick":
+`within` plus persistent nodes; see the glossary entry "preset / rule set" in
+CODE_GUIDE.md): the Fleet Command limit is 60 (C22), and so on. The old standard
+rules (every variant at its default, as v0.1.0 played them) and `within` stay as
+launch options for tests and research: `--preset=none|within|pick`, with `pick`
+the default; `--variant` is applied last. A name that is not one of these stops
+the match at its start (exit code 3), and a game started with one shows a line
+under the rules text that says so, with both seat buttons off, since no screen
+can change the launch option. The match log names the preset
+played. The user's words: "lets git rid of the settings option on the start
+screen and incorporate the "Council's Pick" as the standard rules" (2026-10-18),
+and "In the user test branch, can we get rid of the "rule
+set" selection so it can disappear from main?" (2026-10-24).
 
 **Pilot loop.** Spawn docked at the mothership → Hangar (CS-style): buy a
 ship (Scout free), up to 2 ship modules, pilot gear, repair kits → launch →
@@ -172,7 +206,10 @@ middle ~55 s after spawning.
 
 Size classes: SMALL (strike craft, jungle-capable), MEDIUM (corvettes),
 LARGE (frigates), CAPITAL. Structures and the mothership are their own
-classes for damage tables.
+classes for damage tables. A size class picks the shield delay and the focus
+cooldown (and which lists a stat is read from) and, while the damage modifiers
+are kept (the switch is off, see "Weapon kinds" below), the column of the
+damage table; with the damage modifiers removed it picks no damage multiplier.
 
 | id | Name | Size | Price | Unlock | Hull | Shield | Energy | Max spd | Turn | Role |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -180,16 +217,33 @@ classes for damage tables.
 | fighter | Fighter | S | 150 | start | 100 | 200 | 100 | 640 | 3.2 | Dogfighter, +25% vs small |
 | lance | Lance Fighter | S | 300 | Lance Beams | 110 | 220 | 120 | 600 | 2.9 | Beam, strong vs corvettes |
 | bomber | Bomber | S | 350 | Fusion Bombs | 170 | 240 | 120 | 400 | 1.15 | Torpedoes vs large/turrets |
-| logistics | Logistics Corvette | M | 500 | Corvette Facility | 380 | 420 | 150 | 350 | 1.55 | 2 repair drones, structure repair |
+| logistics | Logistics Corvette | M | 500 | Corvette Facility | 380 | 420 | 150 | 350 | 1.55 | 2 repair drones, structure repair (not turrets) |
 | support | Support Corvette | M | 550 | Command Systems | 300 | 500 | 180 | 430 | 1.9 | Vision, aura, paint, Jam |
 | flak | Flak Frigate | L | 1100 | Frigate Facility | 1000 | 900 | 200 | 250 | 0.78 | Flak turret + 2 PD, anchor |
 | ion | Ion Frigate | L | 1250 | Ion Cannons | 850 | 1000 | 220 | 260 | 0.85 | Forward ion beam vs large/turrets |
 | destroyer | Destroyer | C | 2200 | Destroyer Chassis | 2400 | 1800 | 300 | 175 | 0.45 | 2 heavy cannon turrets, 3 PD, flak; cuts asteroids |
 | battlecruiser | Battlecruiser | C | 3800 | Battlecruiser Chassis | 4200 | 3000 | 400 | 150 | 0.32 | 2 ion turrets, heavy cannon, 4 PD, 2 flak |
 
+(The "+25% vs small", "strong vs corvettes" and "vs large/turrets" parts of the
+roles are damage modifiers. They hold while the damage modifiers are kept, and
+not with them removed; see "Weapon kinds" below. The hangar texts follow the
+switch.)
+
 Full flight stats (accel, reverse, strafe, turn bleed, assist, boost,
 vision, radius, length), weapons and specials are in
 `scripts/data/ships.gd` / `weapons.gd`.
+
+**Hit size** (T-46): every unit has one circle, its `radius` (the table in `ships.gd` calls it
+the collision size), that is its body: the physics shape that bumps into rocks and walls, the push-apart
+between ships, docking, landing, vision and spacing. What rounds, beams and blasts see is `Unit.hit_radius()`,
+which is the same circle for every unit except the small pilot ships (Scout 9, Fighter 12, Lance Fighter 13 and
+Bomber 17 in the table): those count `Rules.SMALL_PILOT_HIT_MUL` (1.1) times their radius, so 9.9, 13.2, 14.3
+and 18.7. Every hit test uses it (`Unit.hit_t`, which covers rounds and beams, the cheap reject before it, and
+the blast edge), and so does every AI test of "is the target in reach of my gun?" (the pilots' fire checks and
+fixed-gun tolerance, the weapon mounts' target search, the turrets', the minions' and the jungle monsters'
+fire checks), so the AI fires when a shot would now hit. Minions, drones, wards, turrets, repair bays, the
+motherships and the bigger pilot ships are exactly as big as before for shots. The hash pads
+(`Projectiles.HASH_PAD`) cover the bigger size by far. `tests/hit_size_check.gd` holds it.
 
 **Weapon mounts.** Small ships: fixed forward guns (aim = flight). Corvettes:
 turrets with limited arcs. Frigates/capitals: main batteries are turrets
@@ -197,7 +251,83 @@ that track the mouse reticle within their arcs, so hull facing (shields) and
 aim are decoupled; plus AUTO mounts (flak, PD) that pick their own targets —
 this is how a well-positioned big ship "racks up kills with flak and PD".
 
-**Weapon kinds and damage table** (multiplier by target class):
+**Weapon kinds and damage table** (multiplier by target class). **The damage
+modifiers are behind a switch** (2026-10-20): the
+constant `Rules.DAMAGE_MODIFIERS_REMOVED`, with the option
+`--damage-modifiers-removed` (or `=0`) to override it for one run.
+
+- **Switch off (false). This is the default of this build.** The game
+  plays with every modifier described in this section.
+- **Switch on (true).** The damage
+  modifiers (groups 1-3 below) are removed: every hit does its RAW damage to
+  every kind of target, and nothing was tuned to make up for it. It is for
+  measuring what the modifiers do.
+
+The user's words. T-27 (Sun 2026-10-18): "I want to remove all the arbitrary
+damage modifiers from the test branch, from every ship and turret. Modifiers
+like the ones you just mentioned "×1.4 against corvettes". Weapons should be
+balanced via other means than arbitrary modifiers like this". Shown a list of
+five groups, the user decided: "Number 4 and 5 can stay, but i want to get rid
+of 1 to 3. They dont need balanced replacements right now. I will test it
+myself and figure it out". Then the switch (T-35, Mon 2026-10-19, timetable v3
+decision 2): "T-27 goes behind a switch: off in the build I play, on for T-28's
+measurement branch. With the switch off, the play build's det must return to
+the pre-T-27 baselines. Tweak lane, this week."
+
+What the switch turns off (with the switch on these are removed; groups 1-3):
+
+1. the whole table below (weapon kind against target size, with its torpedo
+   column), the Fighter cannon's +25% against small ships and the torpedo
+   ×0.35 / ×0.6 against small craft (`torp_small_mult`). Bolt, flak and PD
+   rounds can shoot torpedoes down either way (that is a capability); with
+   the switch on each does its full damage to the torpedo;
+2. the mothership attacker-size multipliers (small ×0.3, medium ×0.8, large
+   and capital ×2.0), minions ×0.5 against the mothership, minions ×0.35
+   against turrets, the turret "backdoor" ×0.3, minions ×0.6 against pilot
+   ships, minions ×1.8 against minions, the +30% from torpedoes against a
+   painted ship (painting itself stays), the flak burst's flat ×0.5 on a
+   mothership (with the switch on a burst falls off with distance from the
+   mothership's hull like it does for every other target) and the ×0.6 an ion
+   beam does to asteroids (only weapons marked "cuts" can hurt rocks either
+   way: a capability, not a multiplier);
+3. the damage parts of three Council's-pick rules: `lance_role`'s ×1.35 on a
+   big ship's rear shield zone (the Lance's prey hunt and tail circling stay
+   either way), `minion_cap` (it does nothing with the switch on; the key
+   stays valid so that the presets still load) and `bomber_role`'s ×0.6
+   torpedo number (`torp_small_mult`; its seats 6 and 10 flying Fighters stay
+   either way, and so does its AI rule that lets a lane Bomber shoot a small
+   enemy pilot).
+
+What STAYS whatever the switch says (groups 4 and 5): the shield delay and the
+focus cooldown by size class, and everything a player earns or owns: specials
+(Overload, Focus, Capacitor Dump, Overcharge, Broadside, Brace), energy
+routing, gear and modules, research (Improved Bombs, Reinforced Waves, Fire
+Control, minion growth over time), ace and the support aura; and the defences
+that are stats (hull and shield resistance, shield zones, PD, torpedo hit
+points, hit radii, crash damage, the flak area falloff). The turret damage
+ramp, the turret target choice and aggro, respawn strain, systems failure and
+the rebuild lock are the same either way. Opt-in variants that are off in the
+standard rules and in the other presets are as they were (see their module
+headers): with the switch on, `ms_soft:mult` and `eff:on` change nothing, and
+`breach:fulldmg`'s ×2.0 on the mothership is a real doubling.
+
+Consequence for the requirement lines: with the switch on, "hard to destroy by
+players on their own" and "Minions should only do a small amount of damage to
+turrets" (turrets) and "weak to attacks by large ships" (the mothership) are
+NOT enforced by damage rules, and design pillar 2 ("Every size matters", for
+example bombers and lances punishing lone frigates) is not backed by
+multipliers. With the switch off they are enforced as before. Balance with the
+switch on is for the user's own testing.
+
+The switch also decides which texts players read (the hull and turret blurbs,
+the help page and the Admiral board's turret note), and, for a preset with
+pairs (the standard rules included), `CouncilPresets.variant_string()` adds
+`minion_cap:on`, `lance_role:on` and `bomber_role:both` while the switch is
+off, so the old rules of those variants do not depend on the preset strings
+still listing them.
+
+The damage table, applied while the switch is off (it is main's table and this
+fork's before T-27):
 
 | kind | small | medium | large | capital | structure | mothership | torpedo | asteroid |
 |---|---|---|---|---|---|---|---|---|
@@ -210,13 +340,16 @@ this is how a well-positioned big ship "racks up kills with flak and PD".
 | ion (beam) | 0.4 | 0.9 | 1.5 | 1.6 | 1.6 | 1.5 | 0 | 0.6 (capital mounts only) |
 
 Torpedoes are projectiles with hit points (bomber 24, minion 12, turret 40):
-PD, flak and bolts can shoot them down. Tuned in the arena tests
+PD, flak and bolts can shoot them down; the table's torpedo column says how
+much of its damage each takes off (with the switch on, all of it). Tuned in
+the arena tests
 (2026-10-14): at x3 one PD hit killed a torpedo and big ships were immune to
 bombers; now one PD-armed frigate stops a lone bomber but two get through. The Fighter's cannons get +25% vs SMALL. Mothership takes extra
 multipliers by attacker size: small ×0.3, medium ×0.8, large ×2.0, capital
 ×2.0, minions ×0.5 ("weak to large ships"; tuned by tests/ms_duel.gd).
 Pilot ships take ×0.6 from minions (playtest: minions were the top killer
-of pilots; pilots should die mostly to pilots).
+of pilots; pilots should die mostly to pilots). With the switch on none of
+these multipliers applies.
 
 **Shields (4 zones).** Each ship has a total shield capacity split into
 front/rear/left/right zones by its focus mode:
@@ -254,9 +387,10 @@ Routing cooldown by size: S 1.5 s, M 3 s, L 5 s, C 7 s.
 accel/reverse/strafe/max speed/turn, turn bleed at speed, flight assist (V)
 that damps sideways drift only while not strafing (weaker on agile ships),
 soft speed cap that main thrust cannot exceed, boost and strafe can briefly
-exceed it, velocity arrow, thruster particles. Asteroid collisions bump
-(move_and_slide) and deal forgiving damage: none below 180 u/s impact speed,
-then (impact − 180) × 0.12 × size factor to hull (shields absorb first).
+exceed it, velocity arrow (on the human's own ship only), thruster
+particles. Asteroid collisions bump (move_and_slide) and deal forgiving
+damage: none below 180 u/s impact speed, then (impact − 180) × 0.12 × size
+factor to hull (shields absorb first).
 
 **Specials** (G or right mouse): Scout Ping (reveal radius 4,500 through
 asteroids for 3 s; +EMP with Scout EMP research), Fighter Snap Turn,
@@ -300,55 +434,146 @@ can be shot down.
   1,100 of the drone on its trip. Comeback floor: free drone every 20 s when
   a side has fewer than 3; mothership skims 3 treasury/s.
 - **Passive pilot income:** 1.5 cr/s (alive or dead).
-- **Kills:** 100 + 12% of the victim's ship+modules value; assists split 50%
-  of that among other attackers with ≥10% of damage in the last 15 s.
-- **Minion last hits:** fighter 14, bomber 18, corvette 45 (+5% per 5 min).
+- **Kills:** 100 + 12% of the victim's ship+modules value (+50 for each kill
+  of the victim's streak after the first). With assist money (T-25):
+  helpers (other attackers of the killer's team with ≥10% of the damage in
+  the last 15 s) the killer keeps two thirds and the helpers share one third
+  in equal parts, so the total paid is the bounty; with no helper the killer
+  gets all of it; if a turret, minion or monster finished the ship, the
+  helpers share all of it. (Before T-25 the helpers shared an extra half of
+  the bounty on top of the killer's whole bounty, so a kill with helpers paid
+  1.5 times.)
+- **Minion last hits:** Snub-Fighter 14, Light Bomber 18, Patrol Leader 45
+  (+5% per 5 min), to the pilot who made the last hit. With assist money (T-25):
+  other pilots of that team with ≥10% of the damage in the last 15 s are
+  helpers; they share 25% of the bounty by their damage and the last hitter
+  keeps 75%; with no helper the last hitter keeps all of it. A minion
+  finished by a minion, turret or monster pays nobody. Each pilot's cut is
+  raised by their own gear. A helper counts a minion assist (a number for the
+  test reports; no screen shows it, and the K/D/A assists are pilot kills
+  only).
 - **Turret destroyed:** 350 split among attackers who damaged it in the last
   15 s, +400 to their treasury.
 - **Jungle camps:** small 110, medium 200, split by damage (≥10%), last hit
-  +25%.
+  +25%. (Unchanged by T-25: a camp already pays its helpers out of its
+  reward.)
 - **Other bounties:** mining drone 35, ward 30, repair drone 10, repair bay
   200 (+250 treasury).
+- **Difficulty:** when one human (a pilot or the Admiral)
+  plays against the AI, the level picked on the start screen multiplies
+  everything the enemy team, the team with no human on it, earns: Easy x0.75,
+  Medium x1.0 (the standard game), Hard x1.25, Very Hard x1.5, Extreme x2.0.
+  That is its AI pilots' credits (kills, assists, minion last hits, jungle
+  camps, turrets, repair bays, drones and wards, the ore share and the escort
+  bonus, the research stipend, the steady trickle) and its Admiral's treasury
+  (the 60% ore share, the mothership's 3 cr/s, the rewards for destroyed
+  turrets and repair bays), every source, multiplied as each payment arrives
+  and never rounded. Not multiplied: the credits and treasury a team starts
+  with, what a pilot gets back for selling gear or trading in a hull or a
+  module, ship insurance, the refund of an expired admiral order, and money
+  moved between the pilots of one team. The human's own team, a match with no
+  human seat (every test) and Medium are never changed. New games start on
+  Medium and the start screen remembers the last pick. Prices, rules and the AI
+  stay as they are; the AI simply has more or less to spend.
 
 ### A8. Minions
 
-Waves every 35 s from 0:45. Per lane: 5 Fighters, 4 Bombers, 1 Escort
-Corvette. They spawn at their
-mothership's launch bay, join their lane and advance in formation at the
-corvette's speed; they engage enemies inside aggro range and resume.
+Waves every 35 s from 0:45. Each lane has its own wave (C26;
+v0.2.1 and v0.2.0 send 5 Fighters, 4 Bombers and 1 Escort Corvette down
+every lane, 10 a lane and 30 a side):
+
+| lane | Patrol Leader | Snub-Fighter | Light Bomber | ships |
+|---|---|---|---|---|
+| top and bottom | 1 | 3 | 1 | 5 |
+| mid | 2 | 5 | 4 | 11 |
+
+A team sends 21 minions a wave. They launch in that order (Patrol Leaders
+first, 0.35 s apart), spawn at their mothership's launch bay, join their lane
+and advance in formation at the Patrol Leader's speed (every lane's wave has
+one); they engage enemies inside aggro range and resume. The Escort Wing
+research adds one more Patrol Leader to every lane's wave (with
+`escort_wing:upgrade` it upgrades the first Patrol Leader of each lane's wave
+instead). The names are the player-visible ones, weaker versions of the
+pilots' Fighter, Bomber and corvettes; the type ids stay `fighter`,
+`bomber` and `corvette`.
 
 | minion | hull | shield | speed | weapon | notes |
 |---|---|---|---|---|---|
-| fighter | 55 | 30 | 480 | bolt 3/s × 4 dmg, range 600 | low skill aim (±6°) |
-| bomber | 85 | 30 | 360 | torp 0.4/s × 28, range 1,000 | prefers turrets, large ships, corvette minions |
-| escort corvette | 480 | 160 | 280 | cannon 1/s × 16, range 1,250; 1 PD | the "cannon minion" |
+| fighter (Snub-Fighter) | 55 | 30 | 480 | bolt 3/s × 4 dmg, range 600 | low skill aim (±6°) |
+| bomber (Light Bomber) | 85 | 30 | 360 | torp 0.4/s × 28, range 1,000 | prefers turrets, large ships, Patrol Leaders |
+| corvette (Patrol Leader) | 480 | 160 | 280 | cannon 1/s × 16, range 1,250; 1 PD | the "cannon minion" |
+
+**Handling** (T-42): minions are heavier to fly than they were. Top speed and the wave's pace
+are as before; what changed is how fast a minion can change its velocity and how fast it swings its nose.
+Each step (a minion steers every second tick, 1/30 s) the change it wants, the wanted velocity less its
+velocity, is split against the way it is flying now into `along` (speeding up or slowing down) and `side`
+(bending its path). The change allowed is an ellipse: at most 0.9 × accel × step along and 0.8 × accel × step
+across, and a mix of the two inside the ellipse between them (never more than accel in any direction; two
+separate limits would let a half-and-half change use both at once and turn faster than before). A change that
+fits inside is taken whole; a bigger one is shrunk, keeping its direction, until it touches the ellipse. A
+minion moving at 10 or less has no direction yet, so the whole change counts as along. The lane walk and every
+fighting pattern go through the same step (`MinionFlight.steer`); the mining drones, wards and repair bays keep
+`Steer.seek`. The nose turns at 0.8 of what it did (Snub-Fighter 2.4, Light Bomber 1.28, Patrol Leader 0.8
+radians a second). Standstill to top speed and a full reverse take 1/0.9 (about 1.11 times) as long, a steady
+bend at top speed is 1/0.8 (1.25 times) as wide, the nose takes 1.25 times as long to swing. The jungle's Snub
+Fighters (launched by a Derelict Carrier) are not minions and fly as before.
 
 Minions do ×0.35 damage to turrets and ×0.5 to the mothership. +7% hull and
 damage every 5 min. Minion aggro (as built, LoL-like): an enemy ship that is
 attacking one of our ships nearby > nearest enemy minion > enemy structure in
 range > nearest enemy ship. Pilot ships take x0.6 from minions; minions take
-x1.8 from minions (fast wave clashes).
+x1.8 from minions (fast wave clashes). These four multipliers are damage
+modifiers (A5): with the switch on, minions do their raw damage to every
+target.
 
 **Fleet Command module** (late): free waves stop; the Admiral buys minions
-(fighter 35, bomber 50, corvette 140), at most 30 alive in the standard
-rules, and orders them (lane / attack-move point / hold). The limit is one
-rule for both teams and for a human or AI Admiral; the `fleet_cap` variant
-changes it. Both rule sets, "Within requirements" and "Council's pick", use
-60, which has been the requirement since the user's decision of 2026-10-17
-(C22 in A2; the standard rules keep v0.1.0's 30), and the board's texts show
-the limit of the match.
+(Snub-Fighter 35, Light Bomber 50, Patrol Leader 140), at most 60 alive in
+the standard rules (Council's pick, A3; 30 in the old rules, `--preset=none`),
+and orders them (lane / attack-move point / hold). The
+limit is one rule for both teams and for a human or AI Admiral; the `fleet_cap` variant
+changes it. 60, which has been the requirement since the user's decision of
+2026-10-17 (C22 in A2), is also the limit of `--preset=within`, and the board's
+texts show the limit of the match.
+
+**Look** (T-08): minions are drawn plain and solid, so a player never mistakes one for a
+pilot ship, which is an outlined dart or hexagon with a notched or pointed tail. Aurelian's three are single
+flat-tailed plates filled with the team colour (the Snub-Fighter, type "fighter", a blunt wedge; the Light
+Bomber, "bomber", a squat box; the Patrol Leader, "corvette", a plain triangle); Vhorr's are smooth, horn-less
+shells with one engine light and no plates. Drawing only: nothing the simulation reads changed. For the
+pilot-ship redesign: keep the pilot hulls' pointed noses and notched or pointed tails, and the minion
+outlines as they are (scripts/data/minion_shapes.gd, CinderShapes.MINIONS).
 
 ### A9. Turrets (Admiral, at node slots)
 
 | turret | where | cost / build | hull | weapon | range |
 |---|---|---|---|---|---|
-| PD Turret | any node | 450 / 25 s | 2,500 (+600 shield) | point defense 6/s × 9 (anti-strike-craft; PD barely scratches frigates and capitals, so big ships take middle nodes), intercepts torpedoes | 1,500 |
-| Torpedo Turret | inner nodes only (needs Platform Missiles) | 750 / 35 s | 3,000 (+700 shield) | torpedo 0.45/s × 110 | 2,300 |
+| PD Turret | any node | 450 / 25 s | 2,500 (no shield) | point defense 6/s × 9 (anti-strike-craft; PD barely scratches frigates and capitals, so big ships take middle nodes; with the A5 switch on it hurts them as much as anything), intercepts torpedoes | 1,500 |
+| Torpedo Turret | inner nodes only (needs Platform Missiles) | 750 / 35 s | 3,000 (no shield) | torpedo 0.45/s × 110 | 2,300 |
 
+- **No shields, no repair** (T-47): a turret has only its hull
+  (`TurretData` "shield" is 0 for both types, so it has no shield pool, no
+  shield bar and nothing to refill), and nothing repairs it once it is built.
+  `Unit.heal()`, the one place every repair goes through, refuses turrets, so a
+  Logistics Corvette's repair drones and its Emergency Repair pass it by (the
+  drones do not even look for it as work); Emergency Repair still heals ships,
+  repair bays and the mothership, and the Admiral's supply drones serve pilot
+  ships only. What still raises a built turret's hull: finishing its build
+  (it starts at 30% and grows while it builds), Platform Armor research (it
+  keeps the share of hull the turret has left, so the bar never goes up) and,
+  in the standard rules (Council's pick, which has `node_persist`), the slow repair
+  of a turret rebuilt on a node (it starts at half hull and gains 1% of its
+  hull a second until full). Repair bays, wards, the motherships and every ship
+  keep their shields and repairs.
 - **Node disruption:** when a turret dies, nothing can be built at that node
-  for 60 s (rich admirals otherwise rebuilt every lost turret at once).
+  for 150 s in the standard rules (`node_persist`) and 60 s in the old rules
+  (rich admirals otherwise rebuilt every lost turret at once).
 - **Backdoor protection:** if no attacking-team minion is within 1,800 of the
-  turret, damage from players is ×0.3. Minions make turrets killable.
+  turret, damage from players is ×0.3. Minions make turrets killable. It is a
+  damage modifier (A5): with the switch on it is removed, a turret takes the
+  raw damage of every hit, and the requirement lines "hard to destroy by
+  players on their own" and "Minions should only do a small amount of damage
+  to turrets" are not enforced by a damage rule. The AI pilots like to push a
+  turret together with a minion wave either way (`TurretData.BACKDOOR_RADIUS`).
 - **Aggro (LoL rule):** an enemy ship that damages one of our SHIPS inside
   the turret's range becomes top priority for 3 s; otherwise nearest enemy
   minion; otherwise nearest enemy in range (ships, then structures).
@@ -387,9 +612,15 @@ attacks them or comes within 700, and reset/heal when attackers leave a
 - Hull 16,000 (10% resist); shield 6,000 as ONE pool (a hull this big
   can't have a zone starved); regen 40/s after 10 s; PD ×6 (range 1,600,
   so it reaches past its own 1,600-long hull); 2 light cannon turrets.
-- Weak to large ships: damage TO the mothership is multiplied by attacker
-  size (strike craft ×0.3, corvettes ×0.8, frigates and capitals ×2.0),
-  and point defense barely scratches big hulls (PD vs large ×0.1).
+- Weak to large ships: damage TO the mothership is multiplied by attacker size
+  (strike craft ×0.3, corvettes ×0.8, frigates and capitals ×2.0, minions
+  ×0.5), and point defense barely scratches big hulls (PD vs large ×0.1).
+  These are damage modifiers (A5): with the switch on every hit does its raw
+  damage, so the requirement line "weak to attacks by large ships" is not
+  enforced by a damage rule, and the mothership's own hull, shield, 10% hull
+  resistance and point defense are its only defences. The tuning notes below
+  were made with the damage modifiers kept (they describe main and the play
+  build, not the switch-on game).
 - Tuned with tests/ms_duel.gd (2026-10-13, the "barely" requirement):
   fully upgraded vs 2 ion + 2 flak frigates → wins with ~28% HP left;
   vs 3 ion → wins with ~24%; vs 3 frigates + a destroyer → loses;
@@ -433,7 +664,7 @@ queued). Research needs the Research Module plus the column's facility (up to
 - **Advanced Sensors Array** → +20% vision team-wide; Fire Control (+8%
   weapon range); Ward upgrades.
 - **Hyperspace Module** → pilots can launch straight to any friendly repair
-  bay (6 s spool).
+  bay (6 s spool in the old rules, 4 s in the standard rules).
 - **Utility** (Research Module): Repair Bays; Repair Drones II–IV; Bay
   Defenses; Drone Armor 1/2; Improved Mining; Pilot Stipend (team starting
   money: +250 credits per respawn).
@@ -450,7 +681,8 @@ Pacing target in AI matches: bombers ~3–4 min, corvettes ~6–8, frigates
   jungle 2 / flex 1. States: SHOP → TRAVEL (route graph) → LANE (hold behind
   the friendly wave front at a hull-appropriate distance; last-hit; trade
   when favourable; never tank enemy turrets without minions; push turrets
-  when our minions tank) → RETREAT (low hull / outnumbered / turret aggro;
+  when our minions tank; with nothing else to do, farm the enemy minions
+  near the wave's front minion, see below) → RETREAT (low hull / outnumbered / turret aggro;
   repair kit; go to bay or home) → JUNGLE (clear camps, gank pushed-up
   enemies) → DEFEND (turret or mothership under attack) → GROUP (late game,
   follow the waypoint). Big ships station behind the front with shields
@@ -483,6 +715,32 @@ Pacing target in AI matches: bombers ~3–4 min, corvettes ~6–8, frigates
   AI admiral's own waypoint (it goes up at 60 s in every match) does not:
   it does not pull the waypoint seats (4, 5, 6 and the flex pilot) off
   their Crossings (C25).
+- **Lane pilots farm minions (T-34):** a lane pilot with
+  nothing in range used to wait at its station (behind the wave's front
+  minion by 500 / 750 / 900 / 1,100 world units for a small / medium / large
+  / capital hull, spread 450 to a side by seat) while the front minion
+  fought enemy minions a little too far off for its guns. Now, when it has
+  no target, no structure to push and no pilot to hunt, and its goal is the
+  plain station behind the wave (not the opening, and no admiral order: a
+  rally waypoint, defending a turret or the mothership, a siege, a test's
+  hold point), it looks at the enemy minions within 1,500 world units
+  (`PilotTargeting.FARM_RADIUS`) of our wave's front minion, takes the best
+  one, flies to gun reach of it on our side (the standoff point a push uses)
+  and shoots. "Best" is the score a minion always had in `pick_target`:
+  nearer is better, and a minion about to die (less than two volleys of hull
+  and shield left) counts 700 better, so the pilots go for last hits. Left
+  out: a minion under an enemy turret that our minions are not tanking (the
+  250 margin of the station keep-out), one hidden behind rocks (700 worse),
+  and a place where the local odds are worse than -1 (the rule for hunting
+  a pilot). A hurt ship (under half hull), a scout and a logistics ship do
+  not farm, and a bomber leaves small minions alone. A pilot fight, a push,
+  a fall-back, a retreat and the admiral's orders still win. Not part of it:
+  holding fire to time the killing shot, and denying the enemy the last hit.
+  The same change keeps a plain station off our own turrets: one that would
+  lie nearer a turret than its hull plus the ship's radius plus 160 is
+  moved straight out to that distance (at the Top and Bottom Crossing the
+  turret slot is 500 off the lane line, and the 450 spread used to put one
+  seat's station on it).
 - **Minions:** low skill: follow lane, simple aggro, simple aim.
 - **Admiral AI:** build plan through the tree, turrets at inner nodes
   first (one at each; then, with spare money, one PD turret at each middle
@@ -536,6 +794,14 @@ Pacing target in AI matches: bombers ~3–4 min, corvettes ~6–8, frigates
   turrets per node, bays, wards), Mothership (upgrades, move), Fleet
   (waypoint, minion control). Map tools with click-to-place.
 - **Scoreboard** (Tab for pilots), **How to play** (H), **End screen**.
+- **Highlight colour:** the menus have one highlight colour (the
+  first line of the top-left panel, pressed and chosen buttons, selected tabs,
+  prices, your own scoreboard row, the rally point). It is amber for an Aurelian
+  human and for a spectator, and Vhorr's vein red when the human plays Vhorr;
+  `Palette.accent(team)` decides it. Colours that mean something stay the same
+  for both teams: the team colours, the kill feed's amber for good news and red
+  for bad news, the banners' tones, Victory and Defeat, warnings, and the
+  health, shield and energy bars.
 - **Camera:** every seat has a free camera that stays where the player puts
   it, anywhere on the map: a screen edge or the middle-mouse drag pans, a
   minimap click jumps, and W/A/S/D pan only while the human is not flying
@@ -579,7 +845,8 @@ No question is open now. Answered:
   map layout and rules live in `scripts/data/*.gd` as const dictionaries
   with static helpers.
 - **One damage pipeline:** `Combat.apply_damage(target, info)` handles
-  tables, zones, resistances, backdoor protection, assists and death.
+  tables, zones, resistances, backdoor protection, assists and death (with
+  the A5 switch on: no damage tables and no backdoor protection).
 - **Spatial hash** rebuilt every tick for all units; every proximity query
   goes through it.
 - **Vision** is computed on a grid at 5 Hz per team, with asteroid

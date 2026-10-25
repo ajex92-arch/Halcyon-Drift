@@ -2,14 +2,17 @@ class_name WorldSupport
 extends RefCounted
 ## WHAT THIS IS: the aura of support corvettes. A support corvette (a ship
 ## whose hull has "aura" in its data) helps friendly ships around it and
-## "paints" enemy ships so that torpedoes hurt them more.
+## "paints" enemy ships so that torpedoes hurt them more (while the damage
+## modifiers are kept; with them removed the mark is still made but changes no
+## damage).
 ##
 ## HOW IT WORKS: every 0.25 s, for each live aura ship:
 ##   - every other friendly pilot ship within 900 world units gets the
 ##     support buff for the next 0.6 s (Ship.support_t). If the buff had
 ##     run out, the ship is told to recompute its stats.
 ##   - every enemy pilot ship within 1800 world units is painted for the
-##     next 1.5 s (Ship.paint_t; Combat checks it for torpedo hits).
+##     next 1.5 s (Ship.paint_t; CombatScaling checks it for torpedo hits
+##     while the damage modifiers are kept).
 ## The buff (0.6 s) lasts longer than the gap between checks (0.25 s), so
 ## it doesn't flicker while a ship stays in range.
 ##

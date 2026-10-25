@@ -6,6 +6,8 @@ extends RefCounted
 ## (morale), MinionBuffs (salvage_core, epic, feats) and BreachFeature
 ## (breach:fulldmg). Alone, each simply set the hook; together, the last one
 ## would silently switch the others off. add() lets them share it.
+## (MinionCapFeature sets its hook only while the damage modifiers are kept;
+## with them removed it sets none.)
 ##
 ## HOW IT WORKS: add(world, hook, run_last):
 ##   1. Combat has no hook yet: the new hook becomes THE hook, exactly what

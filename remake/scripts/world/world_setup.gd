@@ -5,7 +5,8 @@ extends RefCounted
 ## nodes, pilots, admirals, starting drones and jungle camps.
 ##
 ## HOW IT WORKS: build() goes down a fixed list of steps:
-##   1. Remember the human's role and whose fog the screen shows, and
+##   1. Remember the human's role, the team the human plays for (Aurelian
+##      unless Game.human_team says Vhorr) and whose fog the screen shows, and
 ##      start with no tuned numbers and no usage counts (Game.tunables,
 ##      Game.usage), so nothing is left over from an earlier match.
 ##   2. Build the map (MapBuilder) and the asteroid rocks, and close the
@@ -13,8 +14,10 @@ extends RefCounted
 ##      (AsteroidField.seal_tight_gaps()).
 ##   3. Make the game systems: the two spatial hashes, vision,
 ##      projectiles, effects, combat, match rules and the admiral desk.
-##   4. Make the two teams, the two motherships and the ore nodes.
-##   5. Make 12 pilots per team (one may be the human) and their AI brains.
+##   4. Make the two teams (giving each its income multiplier from the
+##      difficulty setting, Difficulty), the two motherships and the ore nodes.
+##   5. Make 12 pilots per team (one on the human's team may be the human) and
+##      their AI brains; each pilot gets their team's income multiplier.
 ##   6. Apply the test switches and make the AI admirals.
 ##   7. Launch the starting mining drones, make the directors and spawn
 ##      the jungle camps.
@@ -45,7 +48,10 @@ static func build(w: World, role: String) -> void:
 	# Step 1: who is playing, and whose fog the screen shows (a spectator
 	# sees everything, -1). Everything else reaches the match via Game.world.
 	w.human_role = role
-	w.viewer_team = -1 if role == "spectator" else Rules.HALCYON
+	# The side the human plays for is Game.human_team (Aurelian unless they chose
+	# Vhorr); a spectator has no side and keeps Aurelian, for the camera's start.
+	w.human_team = Rules.HALCYON if role == "spectator" else Game.human_team
+	w.viewer_team = -1 if role == "spectator" else w.human_team
 	Game.world = w
 	# A fresh match: no tuned numbers and no usage counts from an earlier
 	# match (the feature modules of step 9 fill them again).
@@ -84,11 +90,24 @@ static func build(w: World, role: String) -> void:
 	w.units_root = w.get_node("Units")
 	w.camera = w.get_node("CameraRig")
 
-	# Step 4: the two teams. Aurelian's admiral seat goes to the human if
-	# they chose to be admiral, otherwise to the computer.
+	# Step 4: the two teams. The human's team gives its admiral seat to the
+	# human if they chose to be admiral, otherwise to the computer; the other
+	# team's admiral is always the computer.
 	for t in 2:
 		w.teams.append(TeamState.new(t, w))
-	w.teams[Rules.HALCYON].admiral = "human" if role == "admiral" else "ai"
+	w.teams[w.human_team].admiral = "human" if role == "admiral" else "ai"
+	# The difficulty (Difficulty): with a human seat, the team without the human
+	# earns the chosen level's multiple of its normal income. With no human seat
+	# (a spectator), and for the human's own team, the multiplier is exactly 1.0.
+	var seat_team := w.human_team if role == "pilot" or role == "admiral" else -1
+	for t in 2:
+		w.teams[t].income_mult = Difficulty.team_income_mult(seat_team, t)
+	if seat_team >= 0:
+		print("difficulty: %s, the enemy team earns x%.2f" % [Game.difficulty, w.teams[Rules.enemy_of(seat_team)].income_mult])
+		if seat_team != Rules.HALCYON:
+			print("team: the human plays for %s" % Rules.TEAM_DISPLAY[seat_team])
+	else:
+		print("difficulty: none (no human seat), both teams earn x1.00")
 	# The motherships, made the usual way (see WorldRegistry), but also
 	# kept in their own list: index = team.
 	for t in 2:
@@ -105,12 +124,13 @@ static func build(w: World, role: String) -> void:
 		w.nodes.append(n)
 
 	# Step 5: the pilots, 12 per side (Rules.PILOTS_PER_TEAM). A human pilot
-	# takes Aurelian slot 0. Each slot gets a lane role from
+	# takes slot 0 of the human's team. Each slot gets a lane role from
 	# PilotAI.ROLE_PLAN; every AI pilot gets its own PilotAI brain.
 	for t in 2:
 		for s in Rules.PILOTS_PER_TEAM:
-			var is_human := role == "pilot" and t == Rules.HALCYON and s == 0
+			var is_human := role == "pilot" and t == w.human_team and s == 0
 			var p := PilotProfile.new(Roster.callsign(t, s), t, s, is_human)
+			p.income_mult = w.teams[t].income_mult
 			p.role = PilotAI.ROLE_PLAN[s % PilotAI.ROLE_PLAN.size()]
 			w.profiles.append(p)
 			if is_human:
@@ -120,7 +140,8 @@ static func build(w: World, role: String) -> void:
 	# A human admiral gets an extra profile (slot 12), so they can launch a
 	# ship of their own.
 	if role == "admiral":
-		var ap := PilotProfile.new("Admiral", Rules.HALCYON, Rules.PILOTS_PER_TEAM, true)
+		var ap := PilotProfile.new("Admiral", w.human_team, Rules.PILOTS_PER_TEAM, true)
+		ap.income_mult = w.teams[w.human_team].income_mult
 		ap.role = "admiral"
 		w.profiles.append(ap)
 		w.human = ap

@@ -5,8 +5,9 @@ extends RefCounted
 ##
 ## HOW IT WORKS: whoever causes a hit fills in a DamageInfo and hands it to
 ## Combat.apply_damage(). `amount` is the raw damage BEFORE the damage table
-## (Rules.damage_mult), the shield zones and the resistances; Combat works
-## those out. The note then travels on: Unit.take_hit() reads `from_pos` to
+## (Rules.damage_mult; not applied at all while the damage modifiers are
+## removed), the shield zones and the resistances; Combat works those out.
+## The note then travels on: Unit.take_hit() reads `from_pos` to
 ## pick the shield zone that was hit, Unit.log_damage() reads the source
 ## fields to remember the attacker, and on a kill the same note goes to
 ## Economy and to the victim's on_killed().
@@ -23,7 +24,9 @@ extends RefCounted
 ## The raw damage of the hit, before the damage table, zones and resistances.
 var amount := 0.0
 ## The weapon kind: one of Rules.W_* (bolt, lance, torpedo, flak, point
-## defense, shell, ion, collision, pure). It picks the damage-table row.
+## defense, shell, ion, collision, pure). It picks the damage-table row (not
+## while the damage modifiers are removed) and gates some behaviour (flak
+## bursts, shooting torpedoes down) and the stats tally.
 var kind := Rules.W_BOLT
 ## The attacking unit, or null (an asteroid crash has no attacker). Only
 ## valid during the call (see the top of this file).
@@ -33,10 +36,12 @@ var source_uid := -1
 ## The attacker's team (0, 1 or Rules.NEUTRAL).
 var source_team := Rules.NEUTRAL
 ## The attacker's size class (Rules.SIZE_*). Motherships take more or less
-## damage depending on how big the attacker is.
+## damage depending on how big the attacker is (not while the damage
+## modifiers are removed). Probes and the AI read it too.
 var source_size := Rules.SIZE_SMALL
 ## True when a minion fired it (minion hits are scaled up or down against
-## some targets).
+## some targets, unless the damage modifiers are removed; a feature hook may
+## also rescale a minion's hit).
 var source_is_minion := false
 ## True when a pilot ship (human or AI pilot) dealt the hit.
 var source_is_pilot := false
@@ -46,7 +51,8 @@ var source_profile: RefCounted = null
 ## point takes the hit.
 var from_pos := Vector2.ZERO
 ## An extra multiplier used only against SMALL targets (e.g. the fighter's
-## twin autocannon has 1.25). 1.0 = none.
+## twin autocannon has 1.25). 1.0 = none. CombatScaling applies it only while
+## the damage modifiers are kept.
 var small_bonus := 1.0
 
 

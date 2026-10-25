@@ -4,25 +4,31 @@ extends RefCounted
 ## breach corvette (docs/FUN_PLAN.md section 5, endgame_closure fork, idea
 ## B2). When a team destroys the last turret at an enemy inner ore node, that
 ## lane is "breached" and, for the next 8 free minion waves (about 280 s),
-## its single escort corvette launches as a much tougher "breach corvette"
+## its first Patrol Leader launches as a much tougher "breach corvette"
 ## that soaks mothership and inner-turret fire so that a big-ship siege can
 ## land.
 ##
 ## HOW IT WORKS: the variant has three values (Rules.VARIANT_DEFAULTS):
 ##   "off"       the default, today's game. The module is not installed.
-##   "on"        the breach corvette: a copy of the escort corvette with hull
-##               960 (twice 480) and shield 320 (twice 160), and escort
+##   "on"        the breach corvette: a copy of the Patrol Leader with hull
+##               960 (twice 480) and shield 320 (twice 160), and Patrol
 ##               cannons that reach 20% farther. No new gun. Its damage
-##               multipliers are unchanged (x0.5 against a mothership, x0.35
-##               against turrets, x0.6 against pilot ships). It stacks with
-##               the escort_wing:upgrade variant (its +40% hull comes on top).
-##               REQ-CHANGE: none.
-##   "fulldmg"   everything in "on", plus full damage against a mothership
-##               (x1.0 instead of x0.5, through Combat.minion_scale_hook) and
+##               is a minion's normal damage: the fixed minion multipliers
+##               (x0.5 against a mothership, x0.35 against turrets, x0.6
+##               against pilot ships) apply while the damage modifiers are
+##               kept, and with them removed it does its raw damage. It stacks
+##               with the escort_wing:upgrade variant (its +40% hull comes on
+##               top). REQ-CHANGE: none.
+##   "fulldmg"   everything in "on", plus a hit on a mothership that counts
+##               double (x2.0, through Combat.minion_scale_hook). With the
+##               damage modifiers kept that undoes the minion x0.5 on a
+##               mothership (x1.0 in all); with them removed there is no
+##               x0.5 to undo, so it is a real doubling. It also has
 ##               a siege shell as its first gun: 1,700 world units of reach,
 ##               70 damage every 2 s (x1.5 against a mothership from the
-##               damage table). REQ-CHANGE: "weak to attacks by large ships"
-##               (minions could close a game).
+##               damage table, unless the damage modifiers are removed).
+##               REQ-CHANGE: "weak to attacks by large ships" (minions could
+##               close a game).
 ## The breach itself is tracked by BreachTracker (shared with the
 ## breach_extra module): the last inner-node turret dies, the lane is breached
 ## for the attacker. The feed message, the HUD banner and the minimap chevron
@@ -37,16 +43,18 @@ extends RefCounted
 
 ## The variant key this module belongs to.
 const KEY := "breach"
-## Breach corvette hull (base value, twice the normal escort corvette's 480).
+## Breach corvette hull (base value, twice the normal Patrol Leader's 480).
 const HULL := 960.0
 ## Breach corvette shield (base value, twice the normal 160).
 const SHIELD := 320.0
-## Reach multiplier of the escort cannon (1.2 = +20%).
+## Reach multiplier of the Patrol cannon (1.2 = +20%).
 const CANNON_RANGE := 1.2
 ## The meta tag set on every breach corvette.
 const TAG := "breach_corvette"
-## How much more a "fulldmg" breach corvette's hits hurt a mothership: the
-## normal x0.5 minion rule (Rules.MOTHERSHIP_MINION_MULT) becomes x1.0.
+## How much more a "fulldmg" breach corvette's hits hurt a mothership: with
+## the damage modifiers kept, the normal x0.5 minion rule
+## (Rules.MOTHERSHIP_MINION_MULT) becomes x1.0; with them removed, the hit
+## simply counts double.
 const FULL_MOTHERSHIP_FACTOR := 2.0
 
 ## The breach notebook (shared helper).
@@ -96,7 +104,7 @@ func _on_minion_launched(node: Node, wave_id: float) -> void:
 
 
 ## Combat.minion_scale_hook for "fulldmg": a breach corvette's hit on a
-## mothership counts double (x0.5 becomes x1.0); every other hit keeps its
+## mothership counts double (x2.0); every other hit keeps its
 ## strength `scale` (or is passed to the hook that was there before).
 func _scale_hook(m: Minion, target: Unit, scale: float) -> float:
 	if target.kind == Unit.K_MOTHERSHIP and m.has_meta(TAG):

@@ -39,8 +39,11 @@ extends Unit
 ## and timers; ShipVisual draws it; the HUD (ShipStatus) shows its timers;
 ## WeaponMount asks homing_target(); RepairDrone reads repair_recv.
 ##
-## To add a hull: data in ships.gd, silhouette in ShipVisual.HULLS, special
-## in ShipAbilities.use_special() (Ship._use_special() forwards there).
+## To add a hull: data in ships.gd, plain outline in ShipVisual.HULLS, its
+## steel Aurelian drawing in AurelianShapes.HULLS (named pieces; without one,
+## Aurelian draws it as the fighter), its alien Cinder shape in
+## CinderShapes.HULLS (without one, Cinder draws it as the fighter), special in
+## ShipAbilities.use_special() (Ship._use_special() forwards there).
 
 ## How much faster the Fighter turns while its Snap special is on (1.9x).
 const SPECIAL_SNAP_TURN := 1.9
@@ -139,7 +142,9 @@ var emp_t := 0.0
 ## Seconds left of our Jam special: enemy vision near us shrinks (World).
 var jam_t := 0.0
 ## Seconds left of being "painted" by an enemy Support ship: torpedoes do
-## 30% more damage to us (Combat.PAINT_BONUS). World sets it.
+## 30% more damage to us (Combat.PAINT_BONUS), unless the damage modifiers
+## are removed: then the mark is made all the same but changes no damage.
+## World sets it.
 var paint_t := 0.0
 ## Seconds left of a friendly Support ship's aura: +6% turning, +6% damage,
 ## +8% reach. World sets it.
@@ -236,6 +241,15 @@ func bounty_value() -> float:
 ## True for small ships (size class Rules.SIZE_SMALL).
 func is_small() -> bool:
 	return size_class == Rules.SIZE_SMALL
+
+
+## The size rounds, beams and blasts see (see Unit.hit_radius()): a small
+## pilot ship counts Rules.SMALL_PILOT_HIT_MUL (1.1) times its body's radius,
+## so a shot that grazes the rim of the drawing still lands; a bigger ship is
+## as big as its radius. The body itself (physics circle, pushing apart from
+## other ships, rocks, walls, docking) stays the size of `radius`.
+func hit_radius() -> float:
+	return radius * Rules.SMALL_PILOT_HIT_MUL if size_class == Rules.SIZE_SMALL else radius
 
 
 ## Can the special be used now? (Cooldown over and enough energy.)

@@ -6,8 +6,11 @@ extends Unit
 ## pay money to whoever shoots them down. DESIGN.md A8.
 ##
 ## HOW IT WORKS:
-##   - Types: a wave (MinionDirector) is 1 escort corvette, 5 fighters and
-##     4 bombers per lane. `mtype` says which one this is; Minions.TYPES
+##   - Types: three, Snub-Fighter ("fighter"), Light Bomber ("bomber") and
+##     Patrol Leader ("corvette"). A lane's wave (MinionDirector, Minions.WAVES)
+##     is 1 Patrol Leader, 3 Snub-Fighters and 1 Light Bomber on the top and
+##     bottom lanes and 2 Patrol Leaders, 5 Snub-Fighters and 4 Light Bombers
+##     on the middle lane. `mtype` says which one this is; Minions.TYPES
 ##     holds its numbers (hull, speed, guns...).
 ##   - Walking the lane: with nobody to fight, a minion follows its lane's
 ##     points toward the enemy base at the wave's shared pace
@@ -27,13 +30,16 @@ extends Unit
 ##     (MinionTargeting.RETARGET_MARGIN), never chases more than LEASH away
 ##     from its lane, and never picks (or keeps) a target that a rock hides.
 ##   - Fighting: each type flies its own way (MinionFlight): fighters circle
-##     the target, bombers make straight attack runs, the corvette keeps its
-##     distance. Fighters and bombers have fixed guns, so they turn the nose
+##     the target, bombers make straight attack runs, the Patrol Leader keeps
+##     its distance. Fighters and bombers have fixed guns, so they turn the nose
 ##     to the aim point (the lead point, see `aim_pt`) and only fire while
 ##     the nose is on it.
-##   - Damage rules live in Combat: minions do x0.35 damage to turrets and
-##     x0.5 to motherships, so a wave alone chips a turret slowly, but it
-##     keeps the turret busy while pilots attack it.
+##   - Damage rules live in Combat. While the damage modifiers are kept,
+##     minions do x0.35 damage to turrets and x0.5 to motherships, so a wave
+##     alone chips a turret slowly, but it keeps the turret busy while pilots
+##     attack it. With the damage modifiers removed, a minion's hit does its
+##     raw damage to every target, scaled only by its own strength
+##     (Minion.stat_scale: match-time growth and Reinforced Waves research).
 ##   - Fleet Command: with that module the admiral can give minions an
 ##     `order` instead of the lane walk (see `order` below).
 ##   - Saving work: there are many minions, so the costly parts are spread
@@ -82,9 +88,11 @@ var think_t := 0.0
 ## Top speed, in world units per second.
 var speed := 400.0
 ## How fast it can change its velocity, in world units per second, per
-## second.
+## second. MinionFlight.steer uses Minions.ALONG_ACCEL_MUL of it to speed up
+## or slow down and Minions.SIDE_ACCEL_MUL of it to bend the path.
 var accel := 400.0
-## Turning speed, in radians per second (a radian is about 57 degrees).
+## How fast it swings its nose, in radians per second (a radian is about 57
+## degrees).
 var turn := 2.0
 ## How far it looks for enemies to fight, in world units.
 var aggro := 1000.0
@@ -252,14 +260,14 @@ func sim_update(tick_dt: float) -> void:
 		# (Against a mothership the distance is to its keel line, and its
 		# radius is not added.)
 		MinionFlight.combat_move(self, tp, d, reach, dt)
-		firing = d < reach + (0.0 if target is Mothership else target.radius)
+		firing = d < reach + (0.0 if target is Mothership else target.hit_radius())
 		# A fixed gun fires along the nose, so it fires only while the nose is
-		# on the aim point: within the angle that the target (its radius plus
+		# on the aim point: within the angle that the target (its hit radius plus
 		# 15) covers at that distance, but between 0.08 and 0.3 rad. (Playtest:
 		# a quarter of the bomber torpedoes were fired 90 degrees or more off
 		# the target.)
 		if m0.mount_type == WeaponMount.FIXED and firing:
-			var trad := 170.0 if target is Mothership else target.radius
+			var trad := 170.0 if target is Mothership else target.hit_radius()
 			var ad := aim.distance_to(position)
 			var tol := clampf(atan2(trad + 15.0, maxf(1.0, ad)), 0.08, 0.3)
 			firing = absf(Util.ang_diff(rotation, (aim - position).angle())) < tol

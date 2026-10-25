@@ -35,8 +35,9 @@ const FunStats := preload("res://tests/lib/fun_stats.gd")
 ## Match time (seconds) of 30:00, where "late" starts here.
 const LATE_T := 1800.0
 ## Payment reasons that are pay for playing (kills, assists, last hits,
-## objectives). "ore", "escort", "stipend" and the passive trickle are not.
-const PLAY_REASONS := ["kill", "assist", "minion", "turret", "derelict", "repair bay", "drone", "ward", "repair drone"]
+## minion assists, objectives). "ore", "escort", "stipend" and the passive
+## trickle are not. ("minion assist" is the assist money of T-25.)
+const PLAY_REASONS := ["kill", "assist", "minion", "minion assist", "turret", "derelict", "repair bay", "drone", "ward", "repair drone"]
 ## Admiral orders that are NOT counted as decisions.
 const NOT_DECISIONS := ["drone", "waypoint", "order"]
 ## The decision cap: at most one per order type per this many seconds.

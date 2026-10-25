@@ -17,7 +17,9 @@ extends RefCounted
 ##     minion's strength times the best matching source's multiplier (the
 ##     best one, not a product, so two buffs never exceed x1.4 together).
 ##     This happens "after the minion multipliers" because Combat has already
-##     applied the damage table and the minion rules when it calls the hook.
+##     applied the damage table and the minion rules when it calls the hook
+##     (with the damage modifiers removed it has applied neither, and the hit
+##     is still its raw damage).
 ##   - The hull part runs every HALF_SECOND in tick(): each helped minion
 ##     gets its hull and maximum hull multiplied (its hull keeps the same
 ##     fraction), and gets them divided again when the buff stops covering

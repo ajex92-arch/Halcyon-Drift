@@ -2,21 +2,22 @@ class_name BreachExtraFeature
 extends RefCounted
 ## WHAT THIS IS: the feature module for the "breach_extra" rule variant: an
 ## extra "super minion" for every free wave on a breached lane (docs/
-## FUN_PLAN.md section 5, endgame_closure fork, idea B7). REQ-CHANGE: "wave
-## of 10, with 5 fighters, 4 bombers, and 1 escort corvette" (a breached
-## lane's wave has 11 units; the wave-composition gate is expected to fail
-## under this key).
+## FUN_PLAN.md section 5, endgame_closure fork, idea B7). REQ-CHANGE: the
+## user's original requirement of 2026-10-13, "wave of 10, with 5 fighters, 4
+## bombers, and 1 escort corvette" (a breached lane's wave has one unit more;
+## the wave-composition gate is expected to fail under this key). The
+## waves are smaller now, each lane's own (Minions.WAVES).
 ##
 ## HOW IT WORKS: the variant has one value besides "off" (the default):
 ##   "on"   while a lane is breached for a team (the last turret at an enemy
 ##          inner node died, see BreachTracker; the same rule as the "breach"
 ##          variant, which this module does not depend on), each free wave the
-##          team launches on that lane carries an 11th unit, a super minion:
-##          a copy of the escort corvette with hull 1,400 and shield 250 (base
-##          values, before the usual strength growth) and escort cannons that
+##          team launches on that lane carries one more unit, a super minion:
+##          a copy of the Patrol Leader with hull 1,400 and shield 250 (base
+##          values, before the usual strength growth) and Patrol cannons that
 ##          reach 20% farther. Its damage multipliers are the normal minion
 ##          ones. A breach lasts 8 waves.
-## The super minion is made when the wave's first escort corvette launches:
+## The super minion is made when the wave's first Patrol Leader launches:
 ## it appears next to the mothership's launch spots for that lane. The AI
 ## needs no special rule (it is a minion, so it walks and fights like any
 ## other). Each super minion is counted in Game.usage as "super_minions".
@@ -32,7 +33,7 @@ const KEY := "breach_extra"
 const HULL := 1400.0
 ## Super minion shield (base value).
 const SHIELD := 250.0
-## Reach multiplier of the escort cannon (1.2 = +20%).
+## Reach multiplier of the Patrol cannon (1.2 = +20%).
 const CANNON_RANGE := 1.2
 ## The meta tag set on every super minion.
 const TAG := "super_minion"

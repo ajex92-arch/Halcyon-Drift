@@ -10,12 +10,12 @@ extends PanelContainer
 ## scenes/ui/hangar.tscn: a box (the "HangarLook" look) holding one column,
 ## Col, with these rows from top to bottom:
 ##   Head (Texts (Title, Status), Launch, Close): the title with the
-##     credits and the status line under it, then the big amber Launch
+##     credits and the status line under it, then the big Launch
 ##     button (210 x 44 pixels) and Close (44 pixels tall);
 ##   BayRow: the hyperspace launch row, empty until HangarLaunch fills it;
 ##   Tabs (Ships, Modules, Gear, Kits): one button per tab, 110 pixels
 ##     wide; each button's text is its tab's name;
-##   Scroll > Content: the scroll area (at least 120 pixels tall) and the
+##   Scroll > Content: the scroll area (at least 240 pixels tall) and the
 ##     column inside it that holds the current tab's cards;
 ##   SlotsHeading, then Slots: the heading and the row for the pilot's 6
 ##     gear slot cards.
@@ -68,7 +68,8 @@ var tab := "Ships"
 ## a docked pilot's team has the Hyperspace Module and a working bay.
 @onready var _bay_row: HBoxContainer = $Col/BayRow
 ## The tab buttons in the Tabs row, in the order they appear. Each one's
-## text is its tab's name; _set_tab() colours the selected one amber.
+## text is its tab's name; _set_tab() colours the selected one in the highlight
+## colour.
 @onready var _tab_buttons: Array[Button] = [$Col/Tabs/Ships, $Col/Tabs/Modules, $Col/Tabs/Gear, $Col/Tabs/Kits]
 ## The column inside the scroll area that holds the current tab's cards.
 @onready var _content: VBoxContainer = $Col/Scroll/Content
@@ -166,15 +167,17 @@ func can_shop_goods() -> bool:
 	return mode() == "bay" and world.features.has("bay_shop") and (world.features["bay_shop"] as BayShopFeature).human_can_shop(self)
 
 
-## Show tab `t` (one tab button's text): colour its button amber, throw
+## Show tab `t` (one tab button's text): colour its button in the highlight colour, throw
 ## away the old cards, build the new tab's cards and fill them in at once.
 ## Other files call it too (the HUD after a resize, tests/ui_tour.gd).
 func _set_tab(t: String) -> void:
 	tab = t
-	# Step 1: the selected tab's button gets amber text and border.
+	# Step 1: the selected tab's button gets text and border in the interface's
+	# highlight colour.
+	var hi := UiKit.accent()
 	for b in _tab_buttons:
-		b.add_theme_color_override("font_color", Palette.AMBER if b.text == t else Palette.ICE)
-		b.add_theme_stylebox_override("normal", UiKit.box(Palette.INK, Palette.AMBER if b.text == t else Palette.LINE, 8))
+		b.add_theme_color_override("font_color", hi if b.text == t else Palette.ICE)
+		b.add_theme_stylebox_override("normal", UiKit.box(Palette.INK, hi if b.text == t else Palette.LINE, 8))
 	# Step 2: remove the old cards (queue_free deletes a node at the end of
 	# this frame).
 	for c in _content.get_children():

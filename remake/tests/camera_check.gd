@@ -28,8 +28,8 @@ extends Node
 ## the ship it moves is where the camera looks in the same frame. The mouse
 ## starts in the middle of the screen, because a windowless run's mouse sits at
 ## (0, 0), the screen corner, and the camera would pan into it. (A windowless
-## run's window is only 64 pixels across, and the test branch stretches the
-## picture to the window while v0.2.0 does not, so every mouse point here is
+## run's window is only 64 pixels across, and the game stretches the
+## picture to the window (v0.2.0 did not), so every mouse point here is
 ## worked out from the viewport's size and mapped to window pixels, which is
 ## what input events carry; a point outside the viewport counts as a screen
 ## edge.)
@@ -156,7 +156,7 @@ func _space(down: bool) -> void:
 
 ## Window pixels for screen point `p`. Input events carry window pixels, and
 ## the viewport maps them back to its own screen pixels through the stretch
-## (the test branch stretches the picture to the window, v0.2.0 does not).
+## (the game stretches the picture to the window; v0.2.0 did not).
 func _win(p: Vector2) -> Vector2:
 	return get_viewport().get_final_transform() * p
 

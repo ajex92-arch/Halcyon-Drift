@@ -38,7 +38,7 @@ static func build(h: Hangar) -> void:
 		var d: Dictionary = Ships.HULLS[id]
 		# The hull's "size" (0..3) picks its size class.
 		var size_label: String = ["Strike craft · fits the jungle", "Corvette", "Frigate", "Capital ship"][int(d["size"])]
-		var sub := "%s\n%s\nHull %d · Shields %d · Top speed %d · Ability: %s (%s)" % [size_label, d["blurb"], int(d["hull"]), int(d["shield"]), int(d["max"]), d["special_label"], d["special_info"]]
+		var sub := "%s\n%s\nHull %d · Shields %d · Top speed %d · Ability: %s (%s)" % [size_label, Ships.blurb(id), int(d["hull"]), int(d["shield"]), int(d["max"]), d["special_label"], d["special_info"]]
 		var hid := id
 		h._make_card(g, "ship:" + id, String(d["label"]), sub, w, func() -> void: buy(h, hid))
 
@@ -77,10 +77,10 @@ static func refresh_card(h: Hangar, c: CardButton, id: String, shop: bool, ts: T
 	# Step 4: away from the shop, every hull but ours is blocked.
 	if not shop and not owned:
 		blocked = true
-	# Step 5: show it: green when ours, grey when blocked, amber otherwise.
+	# Step 5: show it: green when ours, grey when blocked, the highlight colour otherwise.
 	c.foot.text = foot
 	c.foot.visible = true
-	c.foot.add_theme_color_override("font_color", Palette.REPAIR if owned else (Palette.MIST if blocked else Palette.AMBER))
+	c.foot.add_theme_color_override("font_color", Palette.REPAIR if owned else (Palette.MIST if blocked else UiKit.accent()))
 	c.set_state(blocked, owned, 0.55)
 
 

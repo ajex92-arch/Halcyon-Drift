@@ -4,8 +4,19 @@ extends RefCounted
 ## into the final damage, using all of the game's damage rules. A part of
 ## Combat (steps 1-4 of Combat.apply_damage), kept in its own file.
 ##
-## HOW IT WORKS: start from the raw damage in the DamageInfo note, then
-## multiply, in this order:
+## HOW IT WORKS: it depends on the damage-modifiers switch
+## (Rules.damage_modifiers_removed()).
+## With the damage modifiers removed, the final damage IS the raw damage in
+## the DamageInfo note: no weapon kind against target size table, no extra
+## multiplier for who hits what (minions, turrets, the mothership), no bonus
+## against painted ships. What still changes a hit comes from elsewhere: the
+## damage a weapon is fired with (specials, gear, research, ace, support
+## aura, energy routing, the turret ramp), then the target's own defences
+## (feature multipliers in Unit.incoming_mults, shield zones, resistances;
+## see Combat.apply_damage). Feature modules can plug more rules in on top
+## (RoleScaling).
+## With the damage modifiers kept, start from the raw damage in the
+## DamageInfo note, then multiply, in this order:
 ##   1. the damage table, Rules.DAMAGE[weapon kind][target size class]: for
 ##      example torpedoes do x1.6 to large ships but only x0.35 to small
 ##      ones. Against SMALL targets also the weapon's small_bonus (the
@@ -32,11 +43,13 @@ extends RefCounted
 ##
 ## WHO USES IT: only Combat.apply_damage(), through Combat.scaling.
 
-## The world (we search its spatial hash for minions near a turret).
+## The world (we search its spatial hash for minions near a turret, when the
+## damage modifiers are kept).
 var world: World
-## A reusable list that the spatial hash fills for the backdoor check. It
-## must not be the list CombatBeamArea uses: apply_damage() runs inside
-## area()'s loop over that list, and this check must not overwrite it.
+## A reusable list that the spatial hash fills for the backdoor check (only
+## used while the damage modifiers are kept). It must not be the list
+## CombatBeamArea uses: apply_damage() runs inside area()'s loop over that
+## list, and this check must not overwrite it.
 var _scratch_backdoor: Array = []
 
 
@@ -45,10 +58,14 @@ func _init(w: World) -> void:
 	world = w
 
 
-## The final damage of hit `info` on `target`, after the rules 1-4 above.
+## The final damage of hit `info` on `target`: the raw damage when the damage
+## modifiers are removed, else the raw damage after the rules 1-4 above.
 ## When it comes out as 0 or less (for example when the raw damage was 0),
 ## Combat ignores the hit.
 func final_amount(target: Unit, info: DamageInfo) -> float:
+	# With the damage modifiers removed, a hit does its raw damage.
+	if Rules.damage_modifiers_removed():
+		return info.amount
 	# Step 1: the damage table, and the bonus against small targets.
 	var tc := target.size_class
 	var amount := info.amount * Rules.damage_mult(info.kind, tc)

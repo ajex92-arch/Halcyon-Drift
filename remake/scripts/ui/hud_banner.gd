@@ -64,6 +64,7 @@ func refresh() -> void:
 		sub = "Press P to resume."
 	elif hud.overlay.tool != "":
 		title = hud.overlay.hint()
+		# Amber is this banner's tone for a notice; red stays for danger.
 		col = Palette.AMBER
 	# Dead: the countdown, and how we died (HudFeed.last_cause).
 	elif h != null and h.state == "dead":

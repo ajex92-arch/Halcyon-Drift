@@ -10,8 +10,9 @@ extends Unit
 ##                   (its hull was hit in the last 5 s).
 ##   MODE_LOGISTICS  belongs to a Logistics corvette (a support pilot
 ##                   ship); serves ships within 1,200 of it, and also
-##                   repairs friendly turrets, repair bays and the
-##                   mothership (at half the medium-ship rate).
+##                   repairs friendly repair bays and the mothership (at
+##                   half the medium-ship rate). Never turrets: nothing
+##                   can repair a turret.
 ##   MODE_KIT        launched by a repair kit; heals only its owner, more
 ##                   weakly, flies along with the owner's speed, and shuts
 ##                   down after 10 s.
@@ -192,8 +193,8 @@ func _target_still_good() -> bool:
 
 
 ## Most-damaged friendly ship in range that still has room for a drone.
-## Logistics drones also consider structures. Only units below 99.5% hull
-## count. Returns null if there is no work.
+## Logistics drones also consider structures, except turrets. Only units below
+## 99.5% hull count. Returns null if there is no work.
 func _pick_target() -> Unit:
 	var best: Unit = null
 	var best_frac := 0.995
@@ -202,9 +203,10 @@ func _pick_target() -> Unit:
 	for u: Unit in world.unit_hash.query(owner_unit.global_position, r, _scratch):
 		if u.team != team or not u.alive or u == owner_unit:
 			continue
-		# Ships always; structures only for logistics drones.
+		# Ships always; structures only for logistics drones, and never a
+		# turret (nothing can repair one, so no drone should hover over it).
 		var ok := u.kind == Unit.K_SHIP
-		if mode == MODE_LOGISTICS and u.is_structure():
+		if mode == MODE_LOGISTICS and u.is_structure() and u.kind != Unit.K_TURRET:
 			ok = true
 		if not ok:
 			continue

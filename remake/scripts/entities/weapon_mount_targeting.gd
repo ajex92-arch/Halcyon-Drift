@@ -59,7 +59,7 @@ static func pick_target(m: WeaponMount, r: float) -> void:
 		if u.kind == Unit.K_WARD and not u.visible_to(m.owner.team):
 			continue
 		var d := mp.distance_to(u.global_position)
-		if d > r + u.radius:
+		if d > r + u.hit_radius():
 			continue
 		# Start from the distance, then add a penalty for the wrong size.
 		var score := d
@@ -110,7 +110,7 @@ static func target_point(m: WeaponMount) -> Vector2:
 		return Vector2(INF, INF)
 	# Drop it once it is more than 10% past our reach (plus its size).
 	var reach_now := maxf(m.reach, m.range_now) * 1.1
-	if mp.distance_to(m.target.global_position) > reach_now + m.target.radius:
+	if mp.distance_to(m.target.global_position) > reach_now + m.target.hit_radius():
 		m.target = null
 		return Vector2(INF, INF)
 	if m.is_beam:

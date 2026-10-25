@@ -15,9 +15,10 @@ extends RefCounted
 ##
 ## WHO USES IT: Game._ready() calls define_all() (through
 ## Game._define_actions()). The actions are read by PlayerController (the
-## human's flying), HudInput (the screen keys), CameraRig (zoom keys, the
-## move keys to pan the free camera, and Space, center_on_ship) and
-## tests/bot_pilot.gd and tests/camera_check.gd, which press them like a
+## human's flying), HudInput (the screen keys), CameraRig (zoom keys, the move
+## keys to pan the free camera, and Space, center_on_ship), WindowMode (F11 /
+## Alt+Enter, the "toggle_fullscreen" action, which Game._input listens for)
+## and tests/bot_pilot.gd and tests/camera_check.gd, which press them like a
 ## player would.
 ##
 ## The controls are defined in code rather than in project.godot so they
@@ -69,6 +70,13 @@ static func define_all() -> void:
 	_key("zoom_in", [KEY_EQUAL, KEY_KP_ADD])
 	_key("zoom_out", [KEY_MINUS, KEY_KP_SUBTRACT])
 	_key("cancel", [KEY_ESCAPE])
+	# Window: F11 or Alt+Enter switches between the window and borderless
+	# fullscreen (WindowMode). The web build leaves F11 to the browser, which
+	# uses it for its own fullscreen, so there only Alt+Enter is ours.
+	if not OS.has_feature("web"):
+		_key("toggle_fullscreen", [KEY_F11])
+	_alt_key("toggle_fullscreen", KEY_ENTER)
+	_alt_key("toggle_fullscreen", KEY_KP_ENTER)
 
 
 ## Add keyboard keys `keys` (key codes such as KEY_W) to action `action`,
@@ -81,6 +89,19 @@ static func _key(action: String, keys: Array) -> void:
 		var ev := InputEventKey.new()
 		ev.physical_keycode = k
 		InputMap.action_add_event(action, ev)
+
+
+## Add keyboard key `key` (such as KEY_ENTER) held together with the Alt key
+## to action `action`, making the action first if it doesn't exist yet. A
+## key press with Alt held down is a different press from the plain key, so
+## this does not make the plain key trigger the action.
+static func _alt_key(action: String, key: int) -> void:
+	if not InputMap.has_action(action):
+		InputMap.add_action(action)
+	var ev := InputEventKey.new()
+	ev.physical_keycode = key
+	ev.alt_pressed = true
+	InputMap.action_add_event(action, ev)
 
 
 ## Add mouse button `button` (such as MOUSE_BUTTON_LEFT) to action

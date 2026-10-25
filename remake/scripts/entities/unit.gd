@@ -90,11 +90,15 @@ var team := Rules.NEUTRAL
 ## What kind of unit this is: one of the K_* numbers above.
 var kind := K_SHIP
 ## Its size class, one of Rules.SIZE_* (small, medium, large, capital,
-## structure, mothership). It picks the column of the damage table, so a
-## weapon can be strong against small ships and weak against big ones.
+## structure, mothership). While the damage modifiers are kept it picks the
+## column of the damage table, so a weapon can be strong against small ships
+## and weak against big ones; with them removed it changes no damage. Lists
+## such as the shield delay and the focus cooldown are read by it either way.
 var size_class := Rules.SIZE_SMALL
-## How big it is, as a circle radius in world units (1 world unit is about
-## one pixel at normal zoom). Used for hit tests and spacing.
+## How big its body is, as a circle radius in world units (1 world unit is
+## about one pixel at normal zoom). Used for spacing and for bumping into
+## rocks, walls and other ships. What rounds, beams and blasts see is
+## hit_radius(), which is the same for every unit but the small pilot ships.
 var radius := 10.0
 ## Hull points left (its health). 0 means destroyed.
 var hull := 100.0
@@ -144,7 +148,8 @@ var aggro_time := -999.0
 ## Where that victim ship was at the time (world position), so turrets and
 ## minions can tell whether the attack happened near them.
 var aggro_victim_pos := Vector2.ZERO
-## Seconds left on the white "I was hit" flash (only for drawing).
+## Seconds left on the "I was hit" flash (only for drawing: the painters turn
+## the unit's outline toward white while it is above 0).
 var flash := 0.0
 ## Feature hook: extra multipliers on all the damage this unit takes, by
 ## name: key -> multiplier (0.2 = takes a fifth of the damage, 1.25 = a
@@ -246,10 +251,19 @@ func visible_to(viewer_team: int) -> bool:
 ## `b` in one tick; a "swept" test checks the whole line between them, so a
 ## fast round can't skip past us. Returns where along that line it first
 ## touches us, as a 0..1 fraction (0 = at a, 1 = at b), or -1 for a miss.
-## `pad` (world units) makes us a little bigger. A circle by default; the
-## mothership overrides this with its long hull.
+## `pad` (world units) makes us a little bigger. A circle of hit_radius() by
+## default; the mothership overrides this with its long hull.
 func hit_t(a: Vector2, b: Vector2, pad: float) -> float:
-	return Util.seg_circle_t(a, b, global_position, radius + pad)
+	return Util.seg_circle_t(a, b, global_position, hit_radius() + pad)
+
+
+## The size, as a circle radius in world units, that rounds, beams and blasts
+## see, and that the AI aims and fires against: the body's `radius` for every
+## unit, except that a small pilot ship overrides it (Ship.hit_radius()).
+## Every hit test and every "is it in reach of my gun?" test of a target asks
+## this; spacing, rocks, walls, docking and vision keep using `radius`.
+func hit_radius() -> float:
+	return radius
 
 
 ## Take a hit that Combat has already scaled. The shield zone facing the
@@ -280,9 +294,11 @@ func take_hit(info: DamageInfo, amount: float) -> float:
 
 
 ## Repair the hull by `amount` points (never above hull_max). Returns how
-## much was actually repaired. Dead units can't be healed.
+## much was actually repaired. Dead units can't be healed, and neither can
+## turrets: nothing repairs a turret (this is the one place every repair goes
+## through: the repair drones and Emergency Repair).
 func heal(amount: float) -> float:
-	if not alive or amount <= 0.0:
+	if not alive or amount <= 0.0 or kind == K_TURRET:
 		return 0.0
 	var before := hull
 	hull = minf(hull_max, hull + amount)

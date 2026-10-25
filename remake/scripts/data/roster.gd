@@ -2,7 +2,8 @@ class_name Roster
 extends RefCounted
 ## WHAT THIS IS: the pilots' callsigns (the short nicknames the game uses
 ## for its pilots in messages and on screen). Callsigns for pilots. Index 0
-## of Aurelian is the human when flying.
+## of the human's team is the human when flying (so "Lancer" for Aurelian, "Ash"
+## for Vhorr).
 ##
 ## HOW IT WORKS: each team has a list of 13 names. A pilot's "slot" is its
 ## seat number on the team (0, 1, 2, ...), and callsign() gives the name at

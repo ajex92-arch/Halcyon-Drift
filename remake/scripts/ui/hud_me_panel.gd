@@ -9,7 +9,8 @@ extends PanelContainer
 ## HOW IT WORKS: the layout is the scene scenes/ui/hud_me_panel.tscn: a
 ## see-through dark panel (the "MeLook" look) 8 pixels from the top-left
 ## corner, as big as its text, holding one column: Rows (Title, Line,
-## Earnings). Title is the amber first line, Line the grey lines under it
+## Earnings). Title is the first line, in the interface's highlight colour
+## (amber, or red when the human plays Vhorr), Line the grey lines under it
 ## and Earnings the earnings log. The mouse passes through it to the game.
 ## refresh() rewrites the text 10 times a second. on_credits() hears every
 ## payment in the game and adds a green "+amount reason" line for the

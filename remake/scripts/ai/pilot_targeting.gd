@@ -14,8 +14,9 @@ extends RefCounted
 ##     The pilot we are shooting now gets STICK_BONUS (250) off, and stays a
 ##     candidate out to STICK_RANGE (1.3) times the range, so two pilots of
 ##     about equal value don't make us swap every think. A bomber in the
-##     lane leaves small craft alone (its torpedoes do little to them and
-##     mostly miss): only turrets, repair bays and bigger hulls count.
+##     lane leaves small craft alone (its slow torpedoes mostly miss them,
+##     and do little to them while the damage modifiers are kept): only
+##     turrets, repair bays and bigger hulls count.
 ##   - push_target() finds a structure worth attacking with the wave (an
 ##     enemy turret, or the enemy mothership). Feature modules may change
 ##     how the turrets are scored (World.push_weight_hooks); with none, the
@@ -26,26 +27,35 @@ extends RefCounted
 ##     ships leave the enemy mothership alone (pick_target and push_target).
 ##   - prey() finds an enemy pilot worth hunting (one behind a rock scores
 ##     700 worse, as in pick_target()).
-##   - All three pass over the one unit that PilotCombat gave up on because
+##   - farm_target() finds an enemy minion near our wave's front minion
+##     (within FARM_RADIUS of it) to fly out to and shoot when nothing else
+##     is in range. It scores minions with minion_score(), the same score
+##     pick_target() uses, so a minion about to die is the best pick.
+##   - All four pass over the one unit that PilotCombat gave up on because
 ##     it stayed hidden behind rocks (PilotAI.skip_id), for 6 seconds.
 ##   - main_reach(), engage_range() and standoff() are plain calculations
 ##     about our guns ("static": they need no memory, only the ship).
 ##
 ## WHO USES IT: PilotGoals (lane, jungle and home thinking) calls
-## pick_target, push_target and prey, and uses standoff and engage_range;
-## PilotCombat uses main_reach. It asks PilotSenses about turrets, minions
-## and odds, runs the feature modules' World.push_weight_hooks, and asks the
-## asteroid field (AsteroidField.segment_blocked) whether a rock blocks the
-## line to a candidate (pick_target, prey). It reads how hurt a pilot is
+## pick_target, push_target, prey and farm_target, and uses standoff and
+## engage_range; PilotCombat uses main_reach. It asks PilotSenses about
+## turrets, minions and odds, runs the feature modules'
+## World.push_weight_hooks, and asks the asteroid field
+## (AsteroidField.segment_blocked) whether a rock blocks the line to a
+## candidate (pick_target, prey, farm_target). It reads how hurt a pilot is
 ## from Unit.total_frac() (pick_target, prey).
 ##
 ## Words used here:
 ##   tanking   our minions stand in an enemy turret's range, so it shoots
 ##             them instead of us.
-##   backdoor  turrets take only 30% damage from pilots unless a minion of
-##             the pilots' team is within 1,800 (TurretData.BACKDOOR_RADIUS).
-##   PD        point defense: small automatic guns that shred strike craft
-##             but barely scratch big ships.
+##   backdoor  while the damage modifiers are kept, turrets take only 30%
+##             damage from pilots unless a minion of the pilots' team is
+##             within 1,800 (TurretData.BACKDOOR_RADIUS). With the damage
+##             modifiers removed there is no such damage rule, and the AI
+##             still likes to push a turret with a minion wave of its own.
+##   PD        point defense: small, fast automatic guns that shoot down
+##             torpedoes and shred strike craft (and, while the damage
+##             modifiers are kept, barely scratch big ships).
 
 ## How far from our station (world units) we go for a push target.
 const PUSH_RANGE := 3500.0
@@ -57,6 +67,12 @@ const SEEK := [2600.0, 2000.0, 0.0, 0.0]
 ## How far from our station we chase prey, per size class (world units;
 ## see SEEK above; 0 = never).
 const LEASH := [3200.0, 2400.0, 0.0, 0.0]
+## How far (world units) from our wave's front minion an enemy minion may be
+## and still be worth flying out to and shooting. With nothing else in range,
+## a lane pilot farms the best minion inside this circle instead of waiting
+## at its station. A tuning knob: more sends the pilots further up the lane
+## after minions; less keeps them closer to the front.
+const FARM_RADIUS := 1500.0
 ## How much better (lower score) the pilot we are shooting now counts than
 ## any other target: a new pilot has to beat it by this much before we
 ## swap. A tuning knob: more makes pilots finish duels, less makes them
@@ -102,11 +118,8 @@ func pick_target(ship: Ship, r: float) -> Unit:
 	var world := brain.world
 	var best: Unit = null
 	var best_s := INF
-	# A rough guess of the damage of one of our volleys: a minion with less
-	# than two volleys of hull + shields left is a "last hit" (a kill that
-	# pays).
-	var my_dmg := 30.0
-	# Ships with weapons that hurt big hulls and structures a lot.
+	# Ships with big guns for big hulls and structures (they hurt those a lot
+	# while the damage modifiers are kept; this is the AI's choice either way).
 	var heavy_hitter := ship.hull_id in ["bomber", "ion", "destroyer", "battlecruiser", "lance"]
 	# Are we inside an enemy turret's range ourselves (plus 150)?
 	var me_covered := brain.senses.enemy_turret_at(ship.global_position, ship.team, 150.0) != null
@@ -116,8 +129,9 @@ func pick_target(ship: Ship, r: float) -> Unit:
 	if prev != null and not is_instance_valid(prev):
 		prev = null
 	var stick_on := prev != null and prev.kind == Unit.K_SHIP and prev.alive
-	# A bomber in the lane leaves small craft alone: its torpedoes do x0.35
-	# to them and miss 8 times in 10 (minions, drones, wards and small pilots).
+	# A bomber in the lane leaves small craft alone: its torpedoes miss them 8
+	# times in 10, and do only x0.35 to them while the damage modifiers are
+	# kept (minions, drones, wards and small pilots).
 	var bomber_lane := ship.hull_id == "bomber" and brain.state == "lane"
 	# Feature hook (eff:on): the weapon-aware target score, see EffFeature.
 	var eff_on := world.features.has("eff")
@@ -152,8 +166,8 @@ func pick_target(ship: Ship, r: float) -> Unit:
 				# unless our weapons are made for them.
 				if u.size_class > ship.size_class + 1 and not heavy_hitter:
 					s += 500.0
-				# Torpedoes are wasted on strike craft (x0.35 damage, easy to
-				# dodge).
+				# Torpedoes are wasted on strike craft (easy to dodge, and x0.35
+				# damage while the damage modifiers are kept).
 				if ship.hull_id == "bomber" and u.size_class == Rules.SIZE_SMALL:
 					s += 800.0
 				# Shooting a pilot under their turret makes the turret pick us.
@@ -163,14 +177,8 @@ func pick_target(ship: Ship, r: float) -> Unit:
 					if u.hull_frac() > 0.25 or ship.hull_frac() < 0.6:
 						continue
 			Unit.K_MINION:
-				s += 250.0
-				# Last hit: a big bonus.
-				if u.hull + u.shield_total() < my_dmg * 2.0:
-					s -= 700.0
-				# Heavy hitters like the bigger minions (medium size and up,
-				# such as the escort corvettes).
-				if heavy_hitter and u.size_class >= Rules.SIZE_MEDIUM:
-					s -= 300.0
+				# Minions: see minion_score() (a last hit scores best).
+				s = minion_score(u, d, heavy_hitter)
 			Unit.K_TURRET:
 				# Turrets: small and medium ships only shoot ones our minions
 				# tank; heavy hitters and tanked turrets score better.
@@ -225,8 +233,10 @@ func pick_target(ship: Ship, r: float) -> Unit:
 ## A structure worth attacking now (DESIGN A9: push the wave into turrets),
 ## or null. Either the nearest enemy turret within PUSH_RANGE of our
 ## station whose backdoor protection is off (our minions are within 1,440
-## of it) and which our minions are tanking (big ships only need the
-## minions near a PD turret, which can't hurt them much); or else the enemy
+## of it; the AI wants this whether or not the damage modifiers are kept) and
+## which our minions are tanking (big ships only need the minions near a PD
+## turret, which can't hurt them much while the damage modifiers are kept);
+## or else the enemy
 ## mothership when its hull is within 5,000 of our station and we are a big
 ## ship, a bomber, or 3+ of our minions are at its hull.
 ## Feature hook: when World.push_weight_hooks has functions in it, each
@@ -348,6 +358,68 @@ func prey(ship: Ship, station: Vector2) -> Unit:
 			best_s = s
 			best = u
 	return best
+
+
+## An enemy minion worth flying out to and shooting, or null: a live minion
+## we can see within FARM_RADIUS of `front` (our wave's front minion). Not
+## one under an enemy turret that our minions are not tanking, not one a
+## rock hides, and not one where the odds are against us (a fight with enemy
+## pilots there would be a bad one). A hurt ship (under half hull), a scout
+## and a logistics ship stay out of it, and a bomber leaves small minions
+## alone, as in pick_target(). Lower score = better: minion_score() from the
+## ship's own position, so a minion about to die wins.
+func farm_target(ship: Ship, front: Minion) -> Unit:
+	var brain := ai
+	var world := brain.world
+	if ship.hull_frac() < 0.5 or ship.hull_id == "scout" or ship.hull_id == "logistics":
+		return null
+	var heavy_hitter := ship.hull_id in ["bomber", "ion", "destroyer", "battlecruiser", "lance"]
+	var best: Unit = null
+	var best_s := INF
+	for m: Minion in world.minions:
+		# Step 1: a live enemy minion we can see, close to our front minion.
+		if m.team == ship.team or not m.alive or not m.visible_to(ship.team):
+			continue
+		if m.global_position.distance_to(front.global_position) > FARM_RADIUS:
+			continue
+		if brain.skip_id != 0 and m.get_instance_id() == brain.skip_id and world.time < brain.skip_until:
+			continue
+		if ship.hull_id == "bomber" and m.size_class == Rules.SIZE_SMALL:
+			continue
+		# Step 2: not under an enemy turret, unless our minions tank it (the
+		# same 250 margin as the station's keep-out in PilotGoals.think_lane).
+		var cover := brain.senses.enemy_turret_at(m.global_position, ship.team, 250.0)
+		if cover != null and not brain.senses.minions_tanking(cover, ship.team):
+			continue
+		# Step 3: score it. A candidate that would win gets 700 added if a rock
+		# blocks the line to it, and is dropped if the odds there are worse
+		# than -1 (the same test as prey()); both are checked only then, to
+		# save the cost.
+		var s := minion_score(m, ship.global_position.distance_to(m.global_position), heavy_hitter)
+		if s < best_s:
+			if world.asteroids.segment_blocked(ship.global_position, m.global_position):
+				s += 700.0
+				if s >= best_s:
+					continue
+			if brain.senses.odds_at(m.global_position, ship) < -1:
+				continue
+			best_s = s
+			best = m
+	return best
+
+
+## The score pick_target() and farm_target() give an enemy minion `u` that is
+## `d` world units from us (lower = better): its distance plus 250; a last
+## hit, a minion with less than two of our volleys of hull and shield left
+## (a volley is about 30), 700 better; and, for a heavy hitter, the bigger
+## minions (medium size and up, such as the Patrol Leaders) 300 better.
+static func minion_score(u: Unit, d: float, heavy_hitter: bool) -> float:
+	var s := d + 250.0
+	if u.hull + u.shield_total() < 30.0 * 2.0:
+		s -= 700.0
+	if heavy_hitter and u.size_class >= Rules.SIZE_MEDIUM:
+		s -= 300.0
+	return s
 
 
 ## How far our main guns reach (world units): the longest reach of our

@@ -2,10 +2,12 @@ class_name BomberRoleTargeting
 extends PilotTargeting
 ## WHAT THIS IS: a version of the AI pilot's "what to shoot" part
 ## (PilotTargeting) used by the bomber_role:torp variant. A Bomber on its
-## lane normally leaves every small craft alone, because its torpedoes did
-## only x0.35 to them and mostly missed. With the torpedo change they do
-## x0.6, so a Bomber that has nothing else to shoot may now fire at a small
-## enemy PILOT ship (never at small minions or drones).
+## lane normally leaves every small craft alone, because its torpedoes are
+## slow and mostly miss small, fast craft (and, while the damage modifiers
+## are kept, do only x0.35 to them). With this variant a Bomber that has
+## nothing else to shoot may fire at a small enemy PILOT ship (never at small
+## minions or drones); while the damage modifiers are kept, a pilot's
+## torpedo also does x0.6 to small craft then (BomberRoleFeature).
 ##
 ## HOW IT WORKS: pick_target() asks the original first. If a Bomber on the
 ## lane gets "nothing" (null), it looks for the nearest visible small enemy

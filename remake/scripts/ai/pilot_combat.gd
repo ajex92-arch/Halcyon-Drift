@@ -172,16 +172,16 @@ func fight(ship: Ship) -> void:
 		# The ion frigate's beam is fixed, so it turns to the target as soon as
 		# the target is in reach.
 		var far_hold := ship.global_position.distance_to(hold) > 500.0
-		if not (far_hold and (ship.hull_id != "ion" or d > reach + target.radius)):
+		if not (far_hold and (ship.hull_id != "ion" or d > reach + target.hit_radius())):
 			c.face_point = tp
-		c.fire = d < reach + target.radius
+		c.fire = d < reach + target.hit_radius()
 		# A FIXED main gun (the ion frigate's burst beam) only starts when
 		# the nose points at the target: one trigger pull commits the ship to
 		# a whole 2 s burst.
 		var fixed_main := main != null and main.mount_type == WeaponMount.FIXED
 		if fixed_main and c.fire:
 			var mp := main.world_pos()
-			var tol := asin(clampf((target.radius + 2.0) / maxf(mp.distance_to(tp), 1.0), 0.0, 1.0)) + 0.02
+			var tol := asin(clampf((target.hit_radius() + 2.0) / maxf(mp.distance_to(tp), 1.0), 0.0, 1.0)) + 0.02
 			if absf(Util.ang_diff(ship.rotation, (tp - mp).angle())) > tol:
 				c.fire = false
 		# Use the special in reach (a logistics ship saves its emergency
@@ -232,7 +232,7 @@ func fight(ship: Ship) -> void:
 				c.strafe = brain.orbit * 0.6
 			# Fire only when lined up (within 0.12 rad); the focus-shot
 			# special only against medium and bigger targets.
-			c.fire = d < reach + target.radius and ang_err < 0.12
+			c.fire = d < reach + target.hit_radius() and ang_err < 0.12
 			c.special = c.fire and target.size_class >= Rules.SIZE_MEDIUM and ship.special_ready()
 		_:
 			# Dogfight: close to within 90% of our reach, then creep in at
@@ -254,7 +254,7 @@ func fight(ship: Ship) -> void:
 				c.forward = 0.3
 				c.strafe = brain.orbit * 0.8
 			# The lance beam is cheap to hold (regen outpaces it), so sweep it on.
-			c.fire = d < reach + target.radius and ang_err < (0.2 if ship.hull_id == "lance" else 0.16)
+			c.fire = d < reach + target.hit_radius() and ang_err < (0.2 if ship.hull_id == "lance" else 0.16)
 			# Fighters snap-turn when the target is far off the nose (more
 			# than 1.2 rad) and within 600; scouts ping (reveal enemies)
 			# when within 1,500.

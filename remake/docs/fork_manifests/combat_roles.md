@@ -3,6 +3,8 @@
 This is the build manifest of one fun-experiment fork, kept as it was when the fork was merged into the game (v0.2.0), with only its paths, base names and a few notes (the user's later decisions, the API index) updated for this repository. Paths are relative to `remake/`; the build report is
 `../fun_plan/reports/combat_roles_build.md`.
 
+**Note on the damage-modifiers switch (2026-10-18, 2026-10-20):** the arbitrary damage modifiers are behind one switch, `Rules.DAMAGE_MODIFIERS_REMOVED` (DESIGN.md A5). With the switch off (the default of this build) the keys below do what this manifest says. With it on: `minion_cap` (E1) does nothing (its cap on a minion's strength is not applied; the key still loads), `lance_role` (E3) keeps only the prey hunt and the tail approach (no x1.35 on a rear shield zone, and no `rear_lance_hits` counter), and `bomber_role` keeps `seats` and the small-pilot targeting but has no `torp_small_mult` and no `torpedo_small_hits` counter. The text below describes the fork as it was merged.
+
 Base: the game with every AI fix (the AI deep dive's pass 3, banked into `remake/` before
 v0.1.0). Everything here is
 opt-in: with every key below at its default (`off`) nothing runs, no random

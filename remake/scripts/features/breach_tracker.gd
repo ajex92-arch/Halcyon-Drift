@@ -12,7 +12,7 @@ extends RefCounted
 ## no turret of the defending team is left on it, the lane is breached for
 ## the attacker for WAVES (8) free minion waves, about 280 s. A new breach on
 ## a lane that is already breached starts the count again.
-## The owner (a feature) calls serve() for the first escort corvette of each
+## The owner (a feature) calls serve() for the first Patrol Leader of each
 ## free wave that launches: it answers "yes, that lane is breached, give this
 ## wave its special unit" and uses up one wave of the breach. The tracker
 ## also tells the HUD about it: a one-line feed message when a breach starts
@@ -70,10 +70,10 @@ func _on_turret_destroyed(turret: Node, by_team: int) -> void:
 	(left[by_team] as Dictionary)[n.lane] = WAVES
 	(since[by_team] as Dictionary)[n.lane] = world.time
 	(_where[by_team] as Dictionary)[n.lane] = n.global_position
-	Events.feed.emit("The %s fleet has breached the %s: %d waves of reinforced escorts will follow." % [Rules.TEAM_NAMES[by_team], MapLayout.LANES[n.lane]["label"].to_lower(), WAVES], "info", -1)
+	Events.feed.emit("The %s fleet has breached the %s: %d waves of reinforced Patrol Leaders will follow." % [Rules.TEAM_NAMES[by_team], MapLayout.LANES[n.lane]["label"].to_lower(), WAVES], "info", -1)
 
 
-## A free wave's first escort corvette of `team` on `lane` has just launched
+## A free wave's first Patrol Leader of `team` on `lane` has just launched
 ## (`wave_id` = MinionDirector.next_wave then). Returns true when that lane is
 ## breached for `team` and this is the first corvette of this wave, and
 ## then uses up one wave of the breach. A second corvette of the same wave
@@ -101,8 +101,8 @@ func banner(team: int) -> Array:
 				continue
 			var label: String = MapLayout.LANES[lane]["label"]
 			if att == team:
-				return ["%s breached" % label, "Reinforced escorts launch with the next %d waves." % int((left[att] as Dictionary)[lane]), "amber"]
-			return ["%s breached" % label, "The enemy has broken our inner defences: expect reinforced escorts.", "cinder"]
+				return ["%s breached" % label, "Reinforced Patrol Leaders launch with the next %d waves." % int((left[att] as Dictionary)[lane]), "amber"]
+			return ["%s breached" % label, "The enemy has broken our inner defences: expect reinforced Patrol Leaders.", "cinder"]
 	return []
 
 

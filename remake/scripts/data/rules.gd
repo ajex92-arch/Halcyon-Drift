@@ -3,10 +3,11 @@ extends RefCounted
 ## WHAT THIS IS: the game's rule book, written as numbers. It holds the
 ## numbers that many different parts of the game share: the teams, how big
 ## things are ("size classes"), the damage table (which weapon hurts what,
-## and how much), the shield and battery settings a pilot can pick, money,
-## respawn times, the admiral's rally point, vision, and a few "variant"
-## switches for testing. Designers tune most other numbers in the other
-## files of scripts/data/; this file keeps the ones that cross many systems.
+## and how much) with the other fixed damage multipliers, the shield and
+## battery settings a pilot can pick, money, respawn times, the admiral's
+## rally point, vision, and a few "variant" switches for testing. Designers
+## tune most other numbers in the other files of scripts/data/; this file
+## keeps the ones that cross many systems.
 ##
 ## HOW IT WORKS: it is only a list of constants (fixed values that never
 ## change while the game runs) plus a few small helper functions. Nothing
@@ -16,6 +17,9 @@ extends RefCounted
 ## some of the game's numbers for one match: those numbers are read through
 ## tune(), and TUNABLES (at the bottom) lists every one of them. With no
 ## feature on, tune() simply gives back the normal number.
+## The damage table and the other fixed damage multipliers form one group,
+## the "damage modifiers". One switch, DAMAGE_MODIFIERS_REMOVED (the first
+## constant below this header), turns the whole group off.
 ## Units used below:
 ##   seconds; world units (1 world unit is about one pixel at normal zoom);
 ##   credits (the game's money); multipliers (x1.0 = normal, x0.5 = half,
@@ -32,14 +36,41 @@ extends RefCounted
 ## FeatureRegistry (the variant switches and TUNABLES). Many files call
 ## tune(); TUNABLES names them.
 ##
-## To add a weapon kind: add a W_* id, a row to DAMAGE, and handle it in
-## WeaponMount / Projectiles if it needs new behaviour.
+## To add a weapon kind: add a W_* id, a KIND_IDS entry and a row to DAMAGE,
+## and handle it in WeaponMount / Projectiles if it needs new behaviour.
+
+# --- the damage-modifiers switch ------------------------------------------------
+# One switch for a whole group of rules. Every place that applies one of them
+# asks damage_modifiers_removed() first.
+
+## THE SWITCH for the damage modifiers (DESIGN.md A5). false: the game plays
+## with all of them. They are the damage table
+## (DAMAGE: how much each weapon kind hurts each size of target), the Fighter
+## cannon's bonus against small ships, the fixed multipliers for who hits what
+## (MOTHERSHIP_ATTACKER and the minion multipliers, the turret "backdoor"
+## cut, the paint bonus, the asteroid multiplier), the flat half damage of a
+## flak burst on a mothership, and the damage parts of the lance_role,
+## minion_cap and bomber_role variants. true: they are all removed, and every
+## hit does its raw damage to every kind of target. This one constant is the
+## default for every match; the option --damage-modifiers-removed (or
+## =0 / =false) overrides it for one run (Game reads it).
+const DAMAGE_MODIFIERS_REMOVED := false
+
+
+## Is this match played with the damage modifiers removed? The answer is
+## DAMAGE_MODIFIERS_REMOVED, or the --damage-modifiers-removed option when
+## it was given (Game keeps the answer). CombatScaling, Projectiles,
+## CombatBeamArea, the feature modules and the texts that name a modifier
+## ask it; a modifier is applied only when the answer is false.
+static func damage_modifiers_removed() -> bool:
+	return Game.damage_modifiers_removed
+
 
 # --- teams -------------------------------------------------------------------
 # Every unit belongs to a team, stored as a number.
 
 ## Team number 0: Aurelian, the amber team (internal label: Halcyon). Its mothership starts on the left
-## (west) side of the map. A human player always plays for Aurelian.
+## (west) side of the map. A human player plays for Aurelian unless they pick Vhorr (Game.human_team).
 const HALCYON := 0
 ## Team number 1: Vhorr, the red team (internal label: Cinder). Its mothership starts on the right
 ## (east) side of the map.
@@ -62,6 +93,18 @@ static func enemy_of(team: int) -> int:
 	return 1 - team if team < 2 else -1
 
 
+## The team a human can play for that is called `text` by players: "aurelian" gives
+## HALCYON and "vhorr" gives CINDER (any capitals, spaces around it are ignored).
+## Any other word gives -1, which means "not a team". The launch option --team and the
+## settings file use these two words.
+static func team_from_name(text: String) -> int:
+	var word := text.strip_edges().to_lower()
+	for t: int in [HALCYON, CINDER]:
+		if word == String(TEAM_DISPLAY[t]).to_lower():
+			return t
+	return -1
+
+
 ## `text` with every internal team label (TEAM_NAMES) swapped for the player-facing name
 ## (TEAM_DISPLAY). Use it on text that is about to be shown on screen and was built from an
 ## internal label, such as the place name "Halcyon Mid" or "Cinder Mid" or a match-over reason. Logs, JSON and
@@ -76,13 +119,15 @@ static func display_label(text: String) -> String:
 
 # --- size / target classes (columns of the damage table) ----------------------
 # Every unit has a "size class": a number for roughly how big it is. It
-# picks the damage-table column when the unit is hit, and many lists below
-# are read by size class.
+# picks the damage-table column when the unit is hit (not while the damage
+# modifiers are removed: then a hit does the same damage to every size), and
+# many lists below are read by size class.
 
 ## Size class 0: small things. Strike craft (Scout, Fighter, Lance Fighter,
-## Bomber), minion fighters and bombers, drones, wards and snub fighters.
+## Bomber), the Snub-Fighter and Light Bomber minions, drones, wards and the
+## jungle carriers' snub fighters.
 const SIZE_SMALL := 0
-## Size class 1: medium. Corvettes (Logistics, Support, the escort corvette
+## Size class 1: medium. Corvettes (Logistics, Support, the Patrol Leader
 ## minion) and the derelict monsters.
 const SIZE_MEDIUM := 1
 ## Size class 2: large. Frigates (Flak Frigate, Ion Frigate).
@@ -94,11 +139,20 @@ const SIZE_STRUCTURE := 4
 ## Size class 5: the motherships.
 const SIZE_MOTHERSHIP := 5
 ## Size class 6: torpedoes. No unit has this size. It is only used as a
-## damage-table column, for shooting down torpedoes.
+## damage-table column, for shooting down torpedoes (read only while the
+## damage modifiers are kept).
 const SIZE_TORPEDO := 6
+## How much bigger than its body a small pilot ship (Scout, Fighter, Lance
+## Fighter, Bomber) counts for rounds, beams and blasts: 1.1 = 10% bigger
+## (Unit.hit_radius()). Its body (the physics circle, rocks, walls, pushing
+## apart from other ships, docking, landing, vision) stays the size of its
+## `radius`. Minions, drones, wards, turrets, repair bays, the motherships and
+## the bigger pilot ships are not affected.
+const SMALL_PILOT_HIT_MUL := 1.1
 # --- weapon kinds (rows of the damage table) -----------------------------------
 # Every weapon has a "kind" (the "kind" field in weapons.gd). It picks the
-# damage-table row, and some kinds behave in their own way: flak bursts,
+# damage-table row (not while the damage modifiers are removed), and some
+# kinds behave in their own way whatever the switch says: flak bursts,
 # torpedoes can be shot down, and bolt, flak and PD rounds can shoot them.
 
 ## Kind 0: "bolt", ordinary gun rounds (fighter guns, light turrets, minion
@@ -122,8 +176,11 @@ const W_ION := 6
 ## Kind 7: "collision", the damage a ship takes when it crashes into
 ## something too fast (ShipFlight).
 const W_COLLISION := 7
-## Kind 8: "pure", damage that is x1.0 against everything. Meant for
-## scripted specials; at the moment only the support_probe test uses it.
+## Kind 8: "pure", damage whose row in the damage table is x1.0 against
+## everything. Meant for scripted specials (the Barrage asset and some tests
+## use it). With the damage modifiers removed every kind does its raw
+## damage to everything, so "pure" then differs from the others only by its
+## id.
 const W_PURE := 8
 ## The kind names written in weapons.gd ("bolt", "torp", ...) turned into
 ## the numbers above. Weapons.kind_id() looks them up here.
@@ -145,6 +202,9 @@ const KIND_IDS := {"bolt": W_BOLT, "lance": W_LANCE, "torp": W_TORP, "flak": W_F
 ## the column says how much of their damage the torpedo takes.
 ## CombatScaling.final_amount() applies this table first, before the
 ## special rules below. Rules.damage_mult() reads one cell.
+## The table and the multipliers below it, down to MINION_VS_MINION_MULT,
+## are damage modifiers: they are read only while
+## damage_modifiers_removed() is false.
 const DAMAGE := [
 	#  small medium large capital struct  mship  torp
 	[1.0, 0.85, 0.6, 0.45, 0.5, 0.4, 0.6],   # bolt
@@ -179,12 +239,11 @@ const MOTHERSHIP_MINION_MULT := 0.5
 ## Minions chip turrets slowly: their damage to turrets is x0.35.
 const TURRET_MINION_MULT := 0.35
 ## Minions are low-skill bots: their damage to pilot ships is x0.6, less
-## than a pilot does, so pilots die mostly to other pilots. (Playtest:
-## minions used to be the top killer of pilots.)
+## than a pilot does, so pilots die mostly to other pilots, not to minions.
 const MINION_VS_SHIP_MULT := 0.6
 ## Minion-against-minion damage is x1.8, so two waves that meet finish
-## their fight fast (about 20 s), before the next wave arrives. (Playtest:
-## at x1 these fights took about 40 s and waves piled up in the middle.)
+## their fight fast (about 20 s), before the next wave arrives. At x1 these
+## fights take about 40 s and waves pile up in the middle.
 const MINION_VS_MINION_MULT := 1.8
 
 # --- shields -------------------------------------------------------------------
@@ -323,15 +382,26 @@ const KILL_BASE := 100.0
 ## The bounty also includes this share of what the destroyed ship was worth
 ## (its hull and module prices): 0.12 = 12%.
 const KILL_VALUE_SHARE := 0.12
-## Helpers ("assists") share this part of the bounty, paid on top of the
-## killer's bounty: 0.5 = half. When no pilot made the killing blow (a
-## turret, minion or monster did), the helpers share the whole bounty.
-const ASSIST_SHARE := 0.5
-## To count as a helper on a ship or monster kill, a pilot must have done
-## at least this share of the recent damage (0.1 = 10%).
+## Helpers ("assists") on a pilot's ship kill share this part of the
+## bounty, in equal parts. It comes out of the killer's pay, not on top: the
+## killer keeps the rest (two thirds), so a kill with helpers pays exactly its
+## bounty. With no helpers the killer gets the whole bounty. When no pilot
+## made the killing blow (a turret, minion or monster did), the helpers share
+## the whole bounty. (T-25. This replaces ASSIST_SHARE, 0.5,
+## which paid the helpers half the bounty ON TOP of the killer's bounty, so a
+## kill with helpers paid 1.5 times. The constant and its tuned number
+## "assist_share" are gone; no preset or variant ever set it.)
+const KILL_ASSIST_SHARE := 1.0 / 3.0
+## Helpers on a minion's last hit share this part of the minion's bounty, by
+## their share of the damage (0.25 = a quarter). The pilot who made the last
+## hit keeps the rest; with no helpers they keep all of it. It comes out of
+## the bounty, never on top. (T-25.)
+const MINION_ASSIST_SHARE := 0.25
+## To count as a helper on a ship, minion or monster kill, a pilot must have
+## done at least this share of the recent damage (0.1 = 10%).
 const ASSIST_MIN_FRACTION := 0.1
-## "Recent" damage for ship kills and turret kills means hits in the last
-## this many seconds. (Monster kills use 30 seconds.)
+## "Recent" damage for ship kills, minion last hits and turret kills means
+## hits in the last this many seconds. (Monster kills use 30 seconds.)
 const ASSIST_WINDOW := 15.0
 ## Extra bounty (credits) for ending a kill streak: this much for every
 ## kill in the victim's streak after the first.
@@ -471,7 +541,9 @@ const AI_OPENING_MAX := 180.0
 ## C12 "nodes_7", C13 "split" and C19 "siege" / "home", were taken out
 ## of the code; DESIGN.md keeps the results.) A switch that has a feature
 ## module (scripts/features/) installs it whenever its value is not the
-## default here (FeatureRegistry); every default keeps today's game.
+## default here (FeatureRegistry); every default keeps the old rules (the
+## launch name --preset=none). The standard rules are the pairs of
+## CouncilPresets "pick" on top of these defaults.
 const VARIANT_DEFAULTS := {
 	## C11: what a mothership does the first time its hull drops to 35%
 	## (see MothershipRetreat): "systems_failure" | "none" | "last_stand"
@@ -479,10 +551,9 @@ const VARIANT_DEFAULTS := {
 	## ship is "breached" and takes x1.25 damage for the rest of the match)
 	"retreat": "systems_failure",
 	## What the Escort Wing research does (docs/FUN_PLAN.md section 5;
-	## EscortWingFeature): "extra" (today's game: one more escort corvette
-	## per lane in every free wave, 11 minions) | "upgrade" (each wave keeps
-	## its 10 minions; its single corvette gets +40% hull and +15% weapon
-	## range instead)
+	## EscortWingFeature): "extra" (today's game: one more Patrol Leader
+	## per lane in every free wave) | "upgrade" (each wave keeps its size;
+	## its first Patrol Leader gets +40% hull and +15% weapon range instead)
 	"escort_wing": "extra",
 	## endgame_closure fork (docs/FUN_PLAN.md section 5; every key is "off" by
 	## default, so a match is today's game). Each value is listed in the
@@ -514,13 +585,16 @@ const VARIANT_DEFAULTS := {
 	## combat_roles fork (FORK_MANIFEST.md in remake/). Every key below defaults to
 	## "off", today's game.
 	## E1, MinionCapFeature: "on" = a minion's hit on a pilot ship counts as
-	## at most +15% strong (Reinforced Waves ignored for that hit)
+	## at most +15% strong (Reinforced Waves ignored for that hit); the cap
+	## is a damage modifier, so "on" does nothing while the damage modifiers
+	## are removed (the key still loads)
 	"minion_cap": "off",
 	## E2, EscortPdFeature: "on" = big ships' anti-strike-craft guns fire at
 	## x(0.6 + 0.2 x support), shields x0.7 when alone; ESCORTED / ISOLATED
 	"escort_pd": "off",
 	## E3, LanceRoleFeature: "on" = Lance beam x1.35 on a big ship's rear
-	## shield zone; Lance pilots hunt isolated big ships
+	## shield zone (not while the damage modifiers are removed); Lance pilots
+	## hunt isolated big ships and go round to their tail
 	"lance_role": "off",
 	## E4, RoutingPayoffFeature: "on" = holding Weapons / Shields / Thrusters
 	## long enough charges a one-shot bonus
@@ -533,7 +607,9 @@ const VARIANT_DEFAULTS := {
 	## the human camera may zoom out 1.5x further, "xwide" = 2x
 	"zoom_max": "off",
 	## Carry-overs, BomberRoleFeature: "seats" = seats 6 and 10 fly Fighters,
-	## "torp" = pilot torpedoes x0.6 (not x0.35) to small craft, "both"
+	## "torp" = Bomber pilots may also shoot a small enemy pilot ship, and
+	## their torpedoes do x0.6 (not x0.35) to small craft (that number is a
+	## damage modifier: not while the damage modifiers are removed), "both"
 	"bomber_role": "off",
 	## A1 Lane Slipstream (SlipstreamFeature, docs: FORK_MANIFEST.md): "off"
 	## (today's game) | "on" (pilots behind their own team's front run up to
@@ -668,7 +744,9 @@ static func size_index(size_class: int) -> int:
 
 ## One cell of the damage table: the multiplier for weapon kind `kind` (a
 ## W_* number) hitting something of size class `target_class` (a SIZE_*
-## number). CombatScaling and Projectiles call it.
+## number). CombatScaling, Projectiles, EffFeature and BomberRoleFeature call
+## it, and only while the damage modifiers are kept: with them removed the
+## table is never read.
 static func damage_mult(kind: int, target_class: int) -> float:
 	return float(DAMAGE[kind][target_class])
 
@@ -694,9 +772,10 @@ const TUNABLES := {
 	"kill_base": "base bounty in credits for destroying a pilot ship (KILL_BASE, 100; Economy)",
 	"kill_value_share": "share of the destroyed ship's value added to its bounty (KILL_VALUE_SHARE, 0.12; Economy)",
 	"shutdown_per_streak": "extra bounty in credits per kill of the victim's streak after the first (SHUTDOWN_PER_STREAK, 50; Economy)",
-	"assist_share": "share of a ship bounty that the helpers split on top of the killer's pay (ASSIST_SHARE, 0.5; Economy)",
-	"assist_min_fraction": "share of the recent damage a helper must have done, for ship and derelict kills (ASSIST_MIN_FRACTION, 0.1; Economy)",
-	"assist_window": "seconds of recent damage that count for ship and turret kills (ASSIST_WINDOW, 15; Economy)",
+	"kill_assist_share": "share of a ship bounty that the helpers split in equal parts, out of the killer's pay (KILL_ASSIST_SHARE, 1/3; Economy). It replaces \"assist_share\" (0.5 on top of the killer's pay), which is gone",
+	"minion_assist_share": "share of a minion's bounty that the helpers split by their damage, out of the last hitter's pay (MINION_ASSIST_SHARE, 0.25; Economy)",
+	"assist_min_fraction": "share of the recent damage a helper must have done, for ship, minion and derelict kills (ASSIST_MIN_FRACTION, 0.1; Economy)",
+	"assist_window": "seconds of recent damage that count for ship, minion and turret kills (ASSIST_WINDOW, 15; Economy)",
 	"minion_bounty_growth": "growth of the minion bounty per full 5 minutes of match time (MINION_BOUNTY_GROWTH, 0.05; Economy)",
 	"turret_bounty": "credits that the attacking pilots split for a destroyed turret (TURRET_BOUNTY, 350; Economy)",
 	"turret_treasury": "credits to the attacking team's treasury for a destroyed turret (TURRET_TREASURY, 400; Economy)",
@@ -742,8 +821,10 @@ const TUNABLES := {
 	# Minion waves (MinionDirector).
 	"wave_interval": "seconds between free minion waves (Minions.WAVE_INTERVAL, 35; MinionDirector)",
 	# Damage to a mothership from large and capital pilot ships (CombatScaling).
+	# Read only while the damage modifiers are kept (DAMAGE_MODIFIERS_REMOVED).
 	"mothership_attacker_large": "damage multiplier against a mothership for hits from large and capital pilot ships (MOTHERSHIP_ATTACKER, 2.0; CombatScaling)",
-	# Pilot torpedoes (BomberRoleFeature, the bomber_role variant).
+	# Pilot torpedoes (BomberRoleFeature, the bomber_role variant). Read only
+	# while the damage modifiers are kept.
 	"torp_small_mult": "damage multiplier of a PILOT's torpedo against small craft (the torp row of DAMAGE, 0.35; BomberRoleFeature)",
 	# The Fleet Command minion limit (FleetCapFeature, the fleet_cap variant).
 	"fleet_cap": "most bought minions a team may have alive at once, Fleet Command mode (Minions.CONTROL_CAP, 30; Minions.control_cap())",

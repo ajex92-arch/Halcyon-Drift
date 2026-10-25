@@ -11,7 +11,9 @@ extends RefCounted
 ##           Big ships use these: the pilot aims a reticle while the hull
 ##           faces wherever positioning demands.
 ##   AUTO    picks its own targets (flak and point defense). This is what
-##           lets a well-positioned big ship shred whatever comes at it.
+##           lets a well-positioned big ship keep firing at whatever comes
+##           at it (and shred small craft, while the damage modifiers are
+##           kept).
 ##           The target picking lives in WeaponMountTargeting
 ##           (weapon_mount_targeting.gd).
 ## Every tick (one small step of the game, 60 per second) the owner calls

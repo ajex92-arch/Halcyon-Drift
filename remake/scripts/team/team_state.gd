@@ -52,8 +52,12 @@ var team := 0
 var world: World = null
 ## The team's shared money, in credits. It starts at Rules.START_TREASURY
 ## (1,500). Mining, the mothership's income and destroyed enemy turrets and
-## repair bays add to it; the admiral spends it.
+## repair bays add to it (through earn()); the admiral spends it.
 var treasury := Rules.START_TREASURY
+## What every payment into the treasury (earn()) is multiplied by: 1.0 normally.
+## WorldSetup gives the enemy team of a single human the multiplier of the chosen
+## difficulty (Difficulty.team_income_mult()).
+var income_mult := 1.0
 ## Feature hook (fork economy_comebacks): when set, spend() calls it with
 ## the amount after every successful spend. Not set (the default) = no call.
 var spend_hook := Callable()
@@ -132,10 +136,11 @@ var ms_ion := 0
 ## Extra hull and damage for our minions, as a fraction (Reinforced Waves
 ## research; WorldSpawner uses it).
 var minion_buff := 0.0
-## Extra escort corvettes per lane in every free minion wave (Escort Wing
-## research; MinionDirector uses it). With --variant=escort_wing:upgrade
-## no corvette is added: above 0 it means each wave's own corvette is
-## upgraded instead (EscortWingFeature).
+## Extra Patrol Leaders (corvettes) per lane in every free minion wave
+## (Escort Wing research; MinionDirector uses it). With
+## --variant=escort_wing:upgrade no corvette is added: above 0 it means the
+## first Patrol Leader of each lane's wave is upgraded instead
+## (EscortWingFeature).
 var wave_corvettes := 0
 
 # --- feature hooks for the AI admiral (docs/FUN_PLAN.md, AdmiralSmartFeature) ---
@@ -270,6 +275,15 @@ func _init(t: int, w: World) -> void:
 
 
 # --- money ----------------------------------------------------------------------
+
+## Pay `amount` credits into the treasury, times income_mult. Everything the
+## team earns for its admiral goes through here: the mothership's income, the
+## ore share, the rewards for enemy turrets and repair bays destroyed. (Getting
+## back money the team spent, such as the refund of an admiral order, adds to
+## `treasury` directly: it is not income.)
+func earn(amount: float) -> void:
+	treasury += amount * income_mult
+
 
 ## Do we have `amount` credits? (A tiny 0.001 slack, so rounding never
 ## blocks a purchase we can exactly afford.)
@@ -441,7 +455,7 @@ func tick(dt: float) -> void:
 		return
 	# Step 4: the mothership's own income, in credits per second (a tuned
 	# number: a feature module may change it, see Rules.tune).
-	treasury += float(Rules.tune("mothership_skim", Rules.MOTHERSHIP_SKIM)) * dt
+	earn(float(Rules.tune("mothership_skim", Rules.MOTHERSHIP_SKIM)) * dt)
 	# Step 5: move the facility and research queues on (TeamTech).
 	tech.tick(dt, ms)
 	# Step 6: build mining drones (TeamDrones).

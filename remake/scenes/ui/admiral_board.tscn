@@ -43,7 +43,7 @@ text = "Close (Tab)"
 
 [node name="Away" type="Label" parent="Col"]
 layout_mode = 2
-theme_type_variation = &"AmberText"
+theme_type_variation = &"AccentText"
 theme_override_font_sizes/font_size = 13
 text = "You're out flying your own ship. Orders still work, but the mothership can only be moved while you're docked."
 autowrap_mode = 3

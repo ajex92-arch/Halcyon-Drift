@@ -7,11 +7,19 @@ extends Unit
 ##   - Two types (TurretData.TURRETS): "pd" (point defense: any node; rapid
 ##     fire that shreds strike craft and shoots down torpedoes) and "torp"
 ##     (only at inner nodes, the ones near our mothership: homing torpedoes
-##     that punish big hulls).
+##     that punish big hulls while the damage modifiers are kept).
 ##   - Building: a new turret is "under construction" for `build_left`
 ##     seconds (25 s for PD, 35 s for torpedo). It starts at 30% hull and
-##     its hull grows to full while it builds. It can't shoot or refill its
-##     shield until it is finished.
+##     its hull grows to full while it builds. It can't shoot until it is
+##     finished.
+##   - No shield and no repair: a turret has only its hull (TurretData
+##     "shield" is 0 for both types, so `shields` stays null), and nothing
+##     raises that hull once it is built: Unit.heal() refuses turrets, so a
+##     Logistics Corvette's repair drones and its Emergency Repair pass it by.
+##     What does raise it is only the build itself, Platform Armor research
+##     (which keeps the share of hull left, WorldResearch) and, in the rule
+##     set that has node_persist, the slow repair of a turret rebuilt on a node
+##     (NodePersistFeature).
 ##   - Choosing a target, 5 times a second: every enemy in range gets a
 ##     score, its distance plus a penalty by kind, and the LOWEST wins:
 ##        enemy ship that just hurt one of our ships near us   distance - 15000
@@ -28,10 +36,13 @@ extends Unit
 ##     (TurretData.TURRET_RAMP) to the damage of the next ones, up to +100%
 ##     (TURRET_RAMP_MAX). The count starts again when it switches to
 ##     another ship or to a target that isn't a ship.
-##   - Combat's special rules for turrets: pilot damage is x0.3 unless a
-##     minion of the attacker's team is within 1,800 ("backdoor
-##     protection": push a minion wave in to take a turret), and minion
-##     damage is x0.35.
+##   - Combat's special rules for turrets, while the damage modifiers are
+##     kept: pilot damage is x0.3 unless a minion of the attacker's team is
+##     within 1,800 ("backdoor protection": push a minion wave in to take a
+##     turret), and minion damage is x0.35. With the damage modifiers
+##     removed a turret takes the raw damage of every hit. The AI pilots
+##     still like to push a turret together with a minion wave
+##     (TurretData.BACKDOOR_RADIUS).
 ##   - When it is destroyed its slot frees up, but nobody can build on that
 ##     node for 60 s (TurretData.REBUILD_LOCK, tuned "rebuild_lock").
 ## Distances are in world units (1 world unit is about one pixel at normal
@@ -96,10 +107,13 @@ func setup(w: World, t: int, n: ResourceNode, slot_index: int, type_id: String, 
 	radius = float(tdef["radius"])
 	var ts: TeamState = w.teams[t]
 	hull_max = float(tdef["hull"]) * (1.0 + ts.turret_armor)
-	# One shared shield pool (no zones), refilling at 2% of its size per
-	# second after 8 s without a hit.
-	shields = ShieldZones.new()
-	shields.setup(float(tdef["shield"]), float(tdef["shield"]) * 0.02, 8.0, true)
+	# No shield: both turret types have 0 (TurretData), so `shields` stays null
+	# and every hit goes straight to the hull. A type with a shield number would
+	# get one shared pool (no zones), refilling at 2% of its size per second
+	# after 8 s without a hit.
+	if float(tdef["shield"]) > 0.0:
+		shields = ShieldZones.new()
+		shields.setup(float(tdef["shield"]), float(tdef["shield"]) * 0.02, 8.0, true)
 	range_r = float(tdef["range"])
 	vision_radius = float(tdef["vision"])
 	display_name = tdef["label"]
@@ -147,8 +161,10 @@ func sim_update(dt: float) -> void:
 		build_left -= dt
 		hull = minf(hull_max, hull + hull_max * 0.7 * dt / build_total)
 		return
-	# Step 2: refill the shield; choose a target every 0.2 s.
-	shields.tick(dt, 1.0)
+	# Step 2: refill the shield (if the type has one); choose a target every
+	# 0.2 s.
+	if shields != null:
+		shields.tick(dt, 1.0)
 	think_t -= dt
 	if think_t <= 0.0:
 		think_t = 0.2
@@ -163,7 +179,7 @@ func sim_update(dt: float) -> void:
 		# doesn't move), and fire once it is in reach (to its edge).
 		var m := mounts[0]
 		aim = Util.lead_point(global_position, Vector2.ZERO, target.global_position, target.velocity, float(m.def.get("speed", 1000.0)))
-		firing = global_position.distance_to(target.global_position) < reach() + target.radius
+		firing = global_position.distance_to(target.global_position) < reach() + target.hit_radius()
 		# Step 5: the damage ramp. A new ship starts the count again; a
 		# target that isn't a ship gets no ramp.
 		if target.kind == Unit.K_SHIP:
@@ -208,13 +224,13 @@ func _pick_target() -> void:
 	var best_score := INF
 	var r := reach()
 	# Step 1: look at every unit near us (a little past our reach).
-	for u: Unit in world.unit_hash.query(global_position, r + 200.0, _scratch):
+	for u: Unit in world.unit_hash.query(global_position, r + Projectiles.MAX_UNIT_RADIUS, _scratch):
 		# Skip the dead, the unshootable, friends and neutrals.
 		if not u.alive or u.team == team or u.team == Rules.NEUTRAL:
 			continue
-		# It must be in reach (measured to its edge).
+		# It must be in reach (measured to its edge, the size shots see).
 		var d := global_position.distance_to(u.global_position)
-		if d > r + u.radius:
+		if d > r + u.hit_radius():
 			continue
 		# Wards are stealthy: only shoot one our team can see.
 		if u.kind == Unit.K_WARD and not u.visible_to(team):

@@ -19,10 +19,14 @@ extends RefCounted
 ##   label     the weapon's name (for people reading this table; no script
 ##             reads it at the moment)
 ##   kind      bolt | lance | torp | flak | pd | shell | ion  (Rules.KIND_IDS)
-##             The kind picks the damage-table row (Rules.DAMAGE) and some
-##             behaviour: flak bursts, torpedoes can be shot down.
+##             The kind picks the damage-table row (Rules.DAMAGE; not while
+##             the damage modifiers are removed) and some behaviour whatever
+##             the switch says: flak bursts, torpedoes can be shot down, only
+##             bolt/flak/pd rounds shoot them down.
 ##   rate      shots per second (projectile weapons)
-##   dmg       damage per projectile/pellet before the damage table
+##   dmg       damage per projectile/pellet before the damage table (what
+##             the target takes before its shields and resistances, when the
+##             damage modifiers are removed)
 ##   speed     projectile speed (u/s); life seconds; range = speed * life
 ##             ("u/s" = world units per second; "life" = how many seconds
 ##             a round flies before it disappears; flak bursts then)
@@ -45,10 +49,11 @@ extends RefCounted
 ##             (how fast the gun swings round; missing = 3.0)
 ##   cuts      true = damages asteroids (capital-class guns only)
 ##   small_bonus  extra multiplier vs SMALL targets
-##             (1.25 = +25% damage against size class 0; missing = 1.0)
+##             (1.25 = +25% damage against size class 0; missing = 1.0;
+##             applied only while the damage modifiers are kept)
 ##   beam      true for continuous beams: dps, range, on (s), off (s), width
 ##             dps   damage per second while it hits, before the damage
-##                   table
+##                   table (and before shields and resistances)
 ##             range how long the beam is (world units)
 ##             on    how long one burst lasts (seconds); 0 = it fires for
 ##                   as long as the trigger is held
@@ -89,12 +94,12 @@ const WEAPONS := {
 	"ion_turret": {"label": "Ion turret", "kind": "ion", "beam": true, "dps": 80.0, "range": 1600.0, "on": 2.5, "off": 4.5, "width": 6.0, "energy": 12.0, "turn": 0.8, "cuts": true},
 
 	# --- minions ------------------------------------------------------------------------
-	# m_bolt: minion fighter. m_torp: minion bomber. m_cannon and m_pd: the
-	# escort corvette.
-	"m_bolt": {"label": "Minion gun", "kind": "bolt", "rate": 1.75, "dmg": 12.0, "speed": 1050.0, "life": 0.6, "spread": 0.1, "radius": 2.6, "pellets": 1, "energy": 0.0},
-	"m_torp": {"label": "Minion torpedo", "kind": "torp", "rate": 0.4, "dmg": 28.0, "speed": 480.0, "life": 2.2, "spread": 0.02, "radius": 6.0, "pellets": 1, "energy": 0.0, "torp_hp": 12.0},
-	"m_cannon": {"label": "Escort cannon", "kind": "bolt", "rate": 1.0, "dmg": 18.0, "speed": 1000.0, "life": 1.25, "spread": 0.03, "radius": 4.0, "pellets": 1, "energy": 0.0, "turn": 1.5},
-	"m_pd": {"label": "Escort PD", "kind": "pd", "rate": 5.0, "dmg": 3.0, "speed": 1600.0, "life": 0.3, "spread": 0.06, "radius": 2.5, "pellets": 1, "energy": 0.0, "turn": 5.0, "prefer": "torp_small"},
+	# m_bolt: the Snub-Fighter's gun. m_torp: the Light Bomber's torpedo.
+	# m_cannon and m_pd: the Patrol Leader's guns.
+	"m_bolt": {"label": "Snub-Fighter gun", "kind": "bolt", "rate": 1.75, "dmg": 12.0, "speed": 1050.0, "life": 0.6, "spread": 0.1, "radius": 2.6, "pellets": 1, "energy": 0.0},
+	"m_torp": {"label": "Light Bomber torpedo", "kind": "torp", "rate": 0.4, "dmg": 28.0, "speed": 480.0, "life": 2.2, "spread": 0.02, "radius": 6.0, "pellets": 1, "energy": 0.0, "torp_hp": 12.0},
+	"m_cannon": {"label": "Patrol cannon", "kind": "bolt", "rate": 1.0, "dmg": 18.0, "speed": 1000.0, "life": 1.25, "spread": 0.03, "radius": 4.0, "pellets": 1, "energy": 0.0, "turn": 1.5},
+	"m_pd": {"label": "Patrol PD", "kind": "pd", "rate": 5.0, "dmg": 3.0, "speed": 1600.0, "life": 0.3, "spread": 0.06, "radius": 2.5, "pellets": 1, "energy": 0.0, "turn": 5.0, "prefer": "torp_small"},
 
 	# --- turrets, bays, monsters ------------------------------------------------------------
 	# turret_pd_gun: PD turret. turret_torp: torpedo turret (its torpedoes

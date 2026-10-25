@@ -6,10 +6,15 @@ extends RefCounted
 ## HOW IT WORKS: this is a "static library" with no memory of its own: each
 ## function is handed the minion and changes its velocity and rotation;
 ## Minion.sim_update() then moves it by its velocity on every tick. Velocity
-## changes are limited by the minion's `accel` (world units per second, per
-## second) and turning by its `turn` (radians per second; a radian is about
-## 57 degrees). The rock push found at the last think (Minion._rock_push)
-## is added on top, so minions slide around asteroids.
+## changes go through steer(), which limits them by the minion's `accel`
+## (world units per second, per second) differently along and across the way
+## it flies, and turning is limited by its `turn` (radians per second; a
+## radian is about 57 degrees). The rock push found at the last think
+## (Minion._rock_push) is added on top, so minions slide around asteroids.
+##   - steer(): move the velocity toward a wanted one: speeding up and
+##     slowing down are held to 0.9 of accel, bending the path to 0.8 of it,
+##     and a mix of the two to the ellipse between them (so never more than
+##     accel in any direction).
 ##   - combat_move(): each type fights its own way:
 ##       fighter   flies at the target, then circles it ("circle-strafing")
 ##       bomber    straight attack runs; peels off sideways when close
@@ -30,6 +35,41 @@ extends RefCounted
 ## m.turn x `dt` radians this step.
 static func face(m: Minion, dir_angle: float, dt: float) -> void:
 	m.rotation = Util.wrap_angle(m.rotation + clampf(Util.ang_diff(m.rotation, dir_angle), -m.turn * dt, m.turn * dt))
+
+
+## Change minion `m`'s velocity toward the wanted velocity `want` for one step
+## of `dt` seconds. The change wanted, `want` less the velocity, is measured
+## against the way the minion flies now: `along` is the part in that direction
+## (speeding up or slowing down) and `side` the part across it (bending the
+## path). In one step the change may be at most
+## Minions.ALONG_ACCEL_MUL x accel x dt along and Minions.SIDE_ACCEL_MUL x
+## accel x dt across, and a change that is partly both is held to the ellipse
+## those two limits make: if it fits inside, the whole change is taken (the
+## velocity becomes the wanted one); if not, it is shrunk, keeping its
+## direction, until it just touches the ellipse. (Two separate limits would
+## let a half-and-half change use both at once, more than accel in all, so the
+## minion would turn faster than before.) A minion that is nearly standing
+## still (Minions.MIN_HEADING_SPEED or slower) has no way of flying yet, so
+## the whole change counts as along.
+static func steer(m: Minion, want: Vector2, dt: float) -> void:
+	var along_max := m.accel * Minions.ALONG_ACCEL_MUL * dt
+	# Step 1: too slow to have a direction: the whole change is "along".
+	var speed_sq := m.velocity.length_squared()
+	if speed_sq <= Minions.MIN_HEADING_SPEED * Minions.MIN_HEADING_SPEED:
+		m.velocity = m.velocity.move_toward(want, along_max)
+		return
+	# Step 2: split the change wanted into along and across the way we fly.
+	var dv := want - m.velocity
+	var heading := m.velocity / sqrt(speed_sq)
+	var along := dv.dot(heading)
+	var side := dv.dot(heading.orthogonal())
+	var side_max := m.accel * Minions.SIDE_ACCEL_MUL * dt
+	# Step 3: how far outside the ellipse the change is (1 = just on it).
+	var reach := (along * along) / (along_max * along_max) + (side * side) / (side_max * side_max)
+	if reach <= 1.0:
+		m.velocity = want
+	else:
+		m.velocity += dv / sqrt(reach)
 
 
 ## Fly minion `m`'s fighting pattern for one step of `dt` seconds. `tp` is
@@ -66,7 +106,7 @@ static func combat_move(m: Minion, tp: Vector2, d: float, reach: float, dt: floa
 				want = dir * m.speed
 				face(m, face_to.angle(), dt)
 		_:
-			# Escort corvette: stay between 55% and 85% of reach and let the
+			# Patrol Leader: stay between 55% and 85% of reach and let the
 			# cannon work. Close in when further, back off at half speed
 			# when nearer, otherwise stop (want stays zero).
 			if d > reach * 0.85:
@@ -74,9 +114,9 @@ static func combat_move(m: Minion, tp: Vector2, d: float, reach: float, dt: floa
 			elif d < reach * 0.55:
 				want = -dir * m.speed * 0.5
 			face(m, to.angle(), dt)
-	# Change our velocity toward the wanted one (no faster than accel
-	# allows), then add the rock push.
-	m.velocity = m.velocity.move_toward(want, m.accel * dt)
+	# Change our velocity toward the wanted one (steer() holds the change
+	# to what our handling allows), then add the rock push.
+	steer(m, want, dt)
 	m.velocity += m._rock_push * dt
 
 
@@ -106,12 +146,20 @@ static func lane_move(m: Minion, dt: float) -> void:
 	# Step 2: fly there at the wave's pace (never faster than
 	# Minions.FORMATION_SPEED, 330 world units per second, so the wave
 	# stays together), slowing down within 300 of the goal, plus the rock
-	# push.
+	# push. The wanted velocity is the one Steer.seek() works out for the
+	# other light units: straight at the goal at that pace, and in
+	# proportion to the distance left inside 300 of it (stopping within 1).
 	var max_s := minf(m.speed, Minions.FORMATION_SPEED)
-	m.velocity = Steer.seek(m.position, m.velocity, goal, max_s, m.accel, dt, 300.0)
+	var to := goal - m.position
+	var d := to.length()
+	var want := Vector2.ZERO
+	if d >= 1.0:
+		want = to / d * (max_s if d > 300.0 else max_s * d / 300.0)
+	steer(m, want, dt)
 	m.velocity += m._rock_push * dt
-	# Step 3: face the way we fly, but only when moving faster than 10 world
-	# units per second (length_squared is the speed times itself, so 100
-	# means 10), so a nearly still minion doesn't spin on the spot.
-	if m.velocity.length_squared() > 100.0:
+	# Step 3: face the way we fly, but only when moving faster than
+	# Minions.MIN_HEADING_SPEED (10 world units per second; length_squared is
+	# the speed times itself), so a nearly still minion doesn't spin on the
+	# spot.
+	if m.velocity.length_squared() > Minions.MIN_HEADING_SPEED * Minions.MIN_HEADING_SPEED:
 		face(m, m.velocity.angle(), dt)

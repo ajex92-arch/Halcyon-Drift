@@ -165,10 +165,10 @@ func _draw() -> void:
 			_chevron(to_map(mk["pos"]), Palette.team(mt), 1.0 if mt == Rules.HALCYON else -1.0)
 	# Rings and diamonds from feature modules (the Dreadnought, beacons).
 	_draw_feature_marks(vt)
-	# The rally waypoint: an amber ring as big as its real area.
+	# The rally waypoint: a ring in the highlight colour as big as its real area.
 	if vt >= 0 and world.teams[vt].has_waypoint():
 		var wp := to_map(world.teams[vt].waypoint)
-		draw_arc(wp, Rules.WAYPOINT_RADIUS * k, 0.0, TAU, 20, Palette.AMBER, 1.2, true)
+		draw_arc(wp, Rules.WAYPOINT_RADIUS * k, 0.0, TAU, 20, UiKit.accent(), 1.2, true)
 	# The marks that feature modules add (Barrage circle, bounty diamonds,
 	# Fortify shimmer ...); nothing in today's game.
 	if not world.command.marks.is_empty():

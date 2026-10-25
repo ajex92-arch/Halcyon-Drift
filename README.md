@@ -30,13 +30,15 @@ test and improve it.
 - `fun_plan/`: the fun-experiment fork briefs and build reports. The
   binding plan is `remake/docs/FUN_PLAN.md`.
 
-## Rule sets
+## Rules and teams
 
-Since v0.2.0 the game has two optional rule sets from the fun experiments,
-"Within requirements" and "Council's pick". Pick one in the RULE SET row of the
-start screen, or start the game with `--preset=within` or `--preset=pick`. With
-none chosen the game is exactly v0.1.0. `remake/docs/RELEASE_NOTES.md` says what
-each rule set changes, how it was tested and what is still open.
+Since v0.3.0 every match plays the standard rules, which are the fun experiments'
+"Council's pick" (v0.2.0 offered it as a rule set): the start screen has no rule-set row
+any more. It has a TEAM row, to play Aurelian or Vhorr, and a DIFFICULTY row. For tests
+and research the older rules are launch options: `--preset=none` plays the old
+standard rules of v0.1.0, `--preset=within` and `--preset=pick` the two rule sets of
+v0.2.0. `remake/docs/RELEASE_NOTES.md` says what each release changes, how it was tested
+and what is still open.
 
 ## Branches
 

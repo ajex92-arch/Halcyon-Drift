@@ -15,7 +15,11 @@ extends RefCounted
 ##          (a world unit of distance counts one point); one it does 1.8
 ##          times damage to scores 480 better. The most the term moves a
 ##          score is 500 either way. The "main gun" is the aimed (not
-##          automatic) gun with the highest damage per second.
+##          automatic) gun with the highest damage per second. With the
+##          damage modifiers removed there is no damage table: every gun does
+##          full damage to every target, so the term is always 0, "on"
+##          changes nothing (the value is still accepted) and "eff_picks"
+##          in Game.usage stays 0.
 ## The AI uses it by itself: the term is part of every think of every AI
 ## pilot while the variant is on. Counted in Game.usage as "eff_picks": the
 ## number of target picks whose chosen target had a term of 100 or more
@@ -45,10 +49,11 @@ static func install(_world: World) -> void:
 
 ## The score change for pilot `ship` looking at enemy `u`: negative (better)
 ## when its main gun does more than normal damage to `u`'s size class,
-## positive (worse) when less. 0 for a ship with no aimed gun or when the
-## variant is not "on".
+## positive (worse) when less. 0 for a ship with no aimed gun, when the
+## variant is not "on", and always when the damage modifiers are removed
+## (there is no damage table to read then).
 static func adjust(ship: Ship, u: Unit) -> float:
-	if Game.variant(KEY) != "on":
+	if Game.variant(KEY) != "on" or Rules.damage_modifiers_removed():
 		return 0.0
 	# Step 1: the main gun: the aimed gun with the highest damage per second.
 	var best_dps := -1.0

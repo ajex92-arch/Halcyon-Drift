@@ -11,10 +11,12 @@ extends RefCounted
 ## HOW IT WORKS: the record mostly holds numbers that other files change.
 ## It also answers questions about the gear slots (gear_stats(),
 ## free_slots(), kit_count() ...) and pays the pilot through earn(), which
-## announces the payment so the screens can show "+45 minion". The shop
-## rules (what may be bought or sold, and the paying) live in a part,
-## PilotProfileShop (pilot_profile_shop.gd); the shop functions here only
-## forward to it.
+## announces the payment so the screens can show "+45 minion", or through
+## earn_quietly(), which does not. Both multiply the payment by income_mult,
+## which is 1.0 except for the pilots of the team a difficulty level makes
+## richer or poorer (Difficulty). The shop rules (what may be bought or sold,
+## and the paying) live in a part, PilotProfileShop (pilot_profile_shop.gd);
+## the shop functions here only forward to it.
 ##
 ## WHO USES IT: WorldSetup makes one per pilot (and one for a human
 ## admiral). Economy pays pilots; MatchRules runs deaths and respawns;
@@ -73,15 +75,25 @@ var deaths := 0
 var assists := 0
 ## Enemy minions they finished off ("last hits").
 var minion_kills := 0
+## Enemy minions another pilot of their team finished off, where they did at
+## least 10% of the damage in the last 15 s and so shared the bounty
+## (Economy._minion_killed, T-25). An inner count for the test
+## reports: no screen shows it. `assists` is only for pilot ships.
+var minion_assists := 0
 ## Derelict monsters they helped destroy.
 var monster_kills := 0
 ## Kills in a row without dying (back to 0 when their ship is destroyed).
 var streak := 0
 ## Their longest streak this match.
 var best_streak := 0
-## All credits earned this match: pay through earn() and the passive
-## trickle (not refunds, sales or insurance).
+## All credits earned this match, after income_mult: pay through earn() and
+## earn_quietly() (the passive trickle too), not refunds, sales or insurance.
 var earned := 0.0
+## What every payment to this pilot is multiplied by: 1.0 normally. WorldSetup
+## gives the pilots of the enemy team of a single human the multiplier of the
+## chosen difficulty (Difficulty.team_income_mult()); a record made any other
+## way keeps 1.0.
+var income_mult := 1.0
 ## All the damage they dealt this match (Combat adds to it).
 var damage_done := 0.0
 
@@ -112,15 +124,26 @@ func _init(name_value: String, t: int, slot_index: int, human: bool) -> void:
 
 
 ## Pay the pilot `amount` credits for `reason` ("kill", "minion", "ore"
-## ...). Nothing happens for 0 or less. It also adds to `earned` and
-## announces the payment on Events (the game's message board:
-## credits_earned), so the screens can show "+45 minion".
+## ...), times income_mult. Nothing happens for 0 or less. It also adds to
+## `earned` and announces the payment on Events (the game's message board:
+## credits_earned) with the amount actually paid, so the screens can show
+## "+45 minion". Every payment that has a message goes through here.
 func earn(amount: float, reason: String) -> void:
 	if amount <= 0.0:
 		return
-	credits += amount
-	earned += amount
-	Events.credits_earned.emit(self, amount, reason)
+	var paid := amount * income_mult
+	credits += paid
+	earned += paid
+	Events.credits_earned.emit(self, paid, reason)
+
+
+## Pay the pilot `amount` credits, times income_mult, without a message: the
+## steady trickle (Economy.passive_income) and the running pay of a few feature
+## modules. It adds to `credits` and `earned` like earn().
+func earn_quietly(amount: float) -> void:
+	var paid := amount * income_mult
+	credits += paid
+	earned += paid
 
 
 # --- gear slots ---------------------------------------------------------------------

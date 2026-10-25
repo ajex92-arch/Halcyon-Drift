@@ -36,7 +36,7 @@ const TOOL_TEXT := {
 
 ## The game world (set by setup()).
 var world: World
-## The team these tools command: the human Admiral is always Aurelian.
+## The team these tools command: the human Admiral's team (World.human_team).
 var team := Rules.HALCYON
 ## The armed tool's name (see TOOL_TEXT), or "" when none is armed.
 var tool := ""
@@ -56,7 +56,7 @@ var _font: Font
 ## higher z_index draws on top).
 func setup(w: World) -> void:
 	world = w
-	team = Rules.HALCYON
+	team = w.human_team
 	z_index = 20
 	_font = ThemeDB.fallback_font
 

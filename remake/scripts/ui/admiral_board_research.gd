@@ -146,10 +146,10 @@ static func _refresh_facility(ts: TeamState, id: String, c: CardButton) -> void:
 			if not ts.can_afford(float(d["cost"])):
 				foot += " · %d short" % int(ceil(float(d["cost"]) - ts.treasury))
 				dim = true
-	# Step 4: show it: green when built, grey when dim, amber otherwise.
+	# Step 4: show it: green when built, grey when dim, the highlight colour otherwise.
 	c.foot.text = foot
 	c.foot.visible = true
-	c.foot.add_theme_color_override("font_color", Palette.REPAIR if sel else (Palette.MIST if dim else Palette.AMBER))
+	c.foot.add_theme_color_override("font_color", Palette.REPAIR if sel else (Palette.MIST if dim else UiKit.accent()))
 	c.set_state(dim, sel, 0.5)
 
 
@@ -180,10 +180,10 @@ static func _refresh_tech(ts: TeamState, id: String, c: CardButton) -> void:
 				foot = b
 		elif not ts.can_afford(float(d["cost"])):
 			dim = true
-	# Step 3: show it: green when done, grey when dim, amber otherwise.
+	# Step 3: show it: green when done, grey when dim, the highlight colour otherwise.
 	c.foot.text = foot
 	c.foot.visible = true
-	c.foot.add_theme_color_override("font_color", Palette.REPAIR if sel else (Palette.MIST if dim else Palette.AMBER))
+	c.foot.add_theme_color_override("font_color", Palette.REPAIR if sel else (Palette.MIST if dim else UiKit.accent()))
 	c.set_state(dim, sel, 0.5)
 
 

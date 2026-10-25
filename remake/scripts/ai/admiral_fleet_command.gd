@@ -22,7 +22,7 @@ extends RefCounted
 ## module. Purchases go through AdmiralCommand.buy_minion().
 
 ## The order we buy minion types in, repeating: roughly the mix of a free
-## wave (fighters, bombers and an escort corvette). Ids are keys of
+## wave (Snub-Fighters, Light Bombers and a Patrol Leader). Ids are keys of
 ## Minions.TYPES.
 const FLEET_MIX := ["fighter", "fighter", "bomber", "fighter", "bomber", "corvette"]
 

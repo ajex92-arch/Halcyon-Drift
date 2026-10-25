@@ -122,7 +122,7 @@ func sim_update(dt: float) -> void:
 		engaged_t = 6.0
 		var m := mounts[0]
 		aim = Util.lead_point(global_position, Vector2.ZERO, target.global_position, target.velocity, float(m.def.get("speed", 1000.0)))
-		firing = global_position.distance_to(target.global_position) < m.reach + target.radius
+		firing = global_position.distance_to(target.global_position) < m.reach + target.hit_radius()
 		_launch_snubs(dt)
 	else:
 		# Step 4: nobody to fight: count down, then reset.

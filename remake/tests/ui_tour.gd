@@ -234,7 +234,7 @@ func _keep_lines_alive() -> void:
 ## overlaps.
 func _busy_hud(with_toast: bool = true) -> void:
 	for l: Array in FEED_LINES:
-		Events.feed.emit(l[0], l[1], 0)
+		Events.feed.emit(l[0], l[1], world.human_team)
 	for r: String in EARN_REASONS:
 		Events.credits_earned.emit(world.human, 40.0, r)
 	if with_toast:
@@ -260,7 +260,7 @@ func _pilot_steps() -> Array:
 		[2.0, func() -> void: await _shot("p02_hangar_gear")],
 		# Buy a fighter and a repair kit, then the Modules tab, then Kits.
 		[2.5, func() -> void:
-			world.human.buy_hull("fighter", world.teams[0])
+			world.human.buy_hull("fighter", world.teams[world.human_team])
 			world.human.buy_kit()
 			hud.hangar._set_tab("Modules")],
 		[3.0, func() -> void: await _shot("p03_hangar_modules")],
@@ -363,14 +363,14 @@ func _admiral_steps() -> Array:
 		# the map, and look at the spot (9000, 13000).
 		[6.5, func() -> void:
 			hud._toggle_board()
-			world.teams[0].repair_bays = true
+			world.teams[world.human_team].repair_bays = true
 			hud.overlay.arm("bay")
-			world.camera.look_at_point(Vector2(9000, 13000))],
+			world.camera.look_at_point(_my_side(Vector2(9000, 13000)))],
 		[8.0, func() -> void: await _shot("a07_tool_bay")],
 		# Place the bay there, put the tool away, and look at the middle
 		# of the map (20000, 13000).
 		[8.5, func() -> void:
-			hud.overlay.apply_at(Vector2(9000, 13000))
+			hud.overlay.apply_at(_my_side(Vector2(9000, 13000)))
 			hud.overlay.disarm()
 			world.camera.look_at_point(Vector2(20000, 13000))],
 		[11.0, func() -> void: await _shot("a08_map_mid")],
@@ -399,6 +399,12 @@ func _admiral_steps() -> Array:
 	]
 
 
+## A map point written for Aurelian's side of the map, as the human's side has it:
+## the same point for Aurelian, its mirror image across the centre line for Vhorr.
+func _my_side(p: Vector2) -> Vector2:
+	return p if world.human_team == Rules.HALCYON else MapLayout.mirror(p)
+
+
 ## The admiral tour's order step: for each command order that a feature
 ## module added (CommandOrders; there are none unless --variant switches one
 ## on), press its button on the Fleet tab. An order that needs a spot arms
@@ -410,8 +416,8 @@ func _tour_orders() -> void:
 	var orders: Dictionary = world.command.orders
 	if orders.is_empty():
 		return
-	world.teams[0].treasury = 20000.0
-	var spot := world.mothership(0).global_position + Vector2(2500, 0)
+	world.teams[world.human_team].treasury = 20000.0
+	var spot := _my_side(world.mothership(Rules.HALCYON).global_position + Vector2(2500, 0))
 	for id in orders:
 		hud.board._refresh()
 		var btn: Button = hud.board._cards.get("order:" + str(id))

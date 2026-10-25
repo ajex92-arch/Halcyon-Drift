@@ -5,7 +5,8 @@ extends Node
 ## shooting at targets hidden behind asteroids, big ships that can't reach
 ## the spot they want to hold, pilots who don't shoot back on the way home,
 ## missing routes, flip-flopping, and how pilots die. It also keeps
-## books on the damage pilots deal and take, on retreats (how much health
+## books on the damage pilots deal and take (what a ship took and how long it
+## scraped rocks are also counted per hull), on retreats (how much health
 ## a ship had when it turned back and how the retreat ended), on ships
 ## pressed against a mothership hull, and on what each big ship aims at
 ## during a siege.
@@ -106,6 +107,9 @@ func _on_damage(target: Node, info: RefCounted, amount: float, hull_dmg: float) 
 		_add("dmg_in", amount)
 		_add("dmg_in_hull", hull_dmg)
 		_add("dmg_in_from_" + _kind_name(src), amount)
+		# The same, counted per hull of the ship that was hit.
+		_add("dmgin_" + (t as Ship).hull_id, amount)
+		_add("dmgin_hull_" + (t as Ship).hull_id, hull_dmg)
 
 
 ## Add `n` to counter `key`.
@@ -148,6 +152,7 @@ func _physics_process(dt: float) -> void:
 		if rock:
 			var b := s.controller as PilotAI
 			_add("rock_contact_ticks")
+			_add("rock_ticks_hull_" + s.hull_id)
 			_add("rock_contact_ticks_" + b.state)
 			if b.target != null and is_instance_valid(b.target) and b.state != "home" and not b.combat.target_far(s):
 				_add("rock_contact_ticks_fighting")

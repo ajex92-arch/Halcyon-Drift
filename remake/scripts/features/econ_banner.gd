@@ -65,6 +65,8 @@ func _ready() -> void:
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_label.add_theme_font_size_override("font_size", 17)
+	# The same gold for both teams, like the bounty rings: it is the colour of the
+	# comeback bounty, not the interface's highlight colour.
 	_label.add_theme_color_override("font_color", Palette.AMBER)
 	_label.add_theme_color_override("font_outline_color", Palette.VOID)
 	_label.add_theme_constant_override("outline_size", 5)

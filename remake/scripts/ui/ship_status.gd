@@ -10,7 +10,8 @@ extends Control
 ##   up), one arc per shield zone: front (top), rear (bottom), left, right.
 ##   An arc's thickness is the share of the shield that the current focus
 ##   gives that zone; how much of its length is filled is how full that
-##   zone is. The focused zone gets an amber outline, and a zone that just
+##   zone is. The focused zone gets an outline in the interface's highlight
+##   colour (amber, or red when the human plays Vhorr), and a zone that just
 ##   broke flashes red. The icon's colour goes from green (full hull) to
 ##   red (no hull). Under it: the shield focus and its cooldown.
 ##   Right: hull / shields / energy bars, the four energy routing buttons
@@ -100,11 +101,12 @@ func _draw_diamond() -> void:
 		# Step 3: a red flash on a zone that just broke (flash fades to 0).
 		if sh.flash[z] > 0.0:
 			draw_arc(c, r, mid - half, mid + half, 18, Palette.with_alpha(Palette.CINDER, sh.flash[z] * 2.0), thick + 2.0, true)
-		# Step 4: an amber outline on the focused zone. Focus numbers are
-		# zone + 1 (Rules.FOCUS_FRONT = 1 ... FOCUS_RIGHT = 4; 0 = balanced).
+		# Step 4: an outline in the highlight colour on the focused zone. Focus
+		# numbers are zone + 1 (Rules.FOCUS_FRONT = 1 ... FOCUS_RIGHT = 4; 0 =
+		# balanced).
 		var focused := sh.focus != Rules.FOCUS_BALANCED and sh.focus - 1 == z
 		if focused:
-			draw_arc(c, r + thick * 0.5 + 3.0, mid - half, mid + half, 18, Palette.AMBER, 2.0, true)
+			draw_arc(c, r + thick * 0.5 + 3.0, mid - half, mid + half, 18, UiKit.accent(), 2.0, true)
 	# Ship icon, nose up. Its colour slides ("lerps", short for linear
 	# interpolation: mixes in a straight line) from green to red as the
 	# hull drops.
@@ -112,12 +114,12 @@ func _draw_diamond() -> void:
 	var hull_col := Palette.REPAIR.lerp(Palette.CINDER, 1.0 - ship.hull_frac())
 	draw_colored_polygon(pts, Palette.with_alpha(hull_col, 0.85))
 	draw_polyline(pts + PackedVector2Array([pts[0]]), Palette.ICE, 1.0, true)
-	# The focus line: amber when focus can be changed, grey with the
-	# seconds left while it is cooling down.
+	# The focus line: in the highlight colour when focus can be changed, grey
+	# with the seconds left while it is cooling down.
 	var focus_text := "Focus: %s" % Rules.FOCUS_NAMES[sh.focus]
 	if ship.focus_cd > 0.0:
 		focus_text += " (%.1fs)" % ship.focus_cd
-	_text(Vector2(8, H - 8), focus_text, 11, Palette.AMBER if ship.focus_cd <= 0.0 else Palette.MIST)
+	_text(Vector2(8, H - 8), focus_text, 11, UiKit.accent() if ship.focus_cd <= 0.0 else Palette.MIST)
 
 
 ## Draw the right half, top to bottom: three bars, the energy routing
@@ -136,17 +138,19 @@ func _draw_bars() -> void:
 	_bar(Rect2(x, y, w, 13), ship.shields.fraction(), Palette.SHIELD)
 	_text(Vector2(x + 4, y + 10), "Shields %d / %d" % [int(ship.shields.total()), int(ship.shields.max_total)], 10, Palette.ICE, true)
 	y += 16.0
+	# The energy bar is amber for both teams: amber means energy here, it is not
+	# the interface's highlight colour.
 	_bar(Rect2(x, y, w, 13), ship.energy.fraction(), Palette.AMBER)
 	_text(Vector2(x + 4, y + 10), "Energy %d / %d" % [int(ship.energy.value), int(ship.energy.max_value)], 10, Palette.ICE, true)
 	y += 18.0
 	# Step 3: energy routing: four buttons with 3-pixel gaps; the active
-	# one is filled amber.
+	# one is filled with the highlight colour.
 	var bw := (w - 9.0) / 4.0
 	for i in 4:
 		var mode: int = ROUTE_ORDER[i]
 		var r := Rect2(x + float(i) * (bw + 3.0), y, bw, 18)
 		var on := ship.energy.mode == mode
-		draw_rect(r, Palette.AMBER if on else Palette.INK)
+		draw_rect(r, UiKit.accent() if on else Palette.INK)
 		draw_rect(r, Palette.LINE, false, 1.0)
 		_text(r.position + Vector2(5, 13), ROUTE_SHORT[mode], 11, Palette.VOID if on else Palette.MIST)
 	# Under the buttons, a thin bar shrinks while routing is cooling down.
@@ -163,7 +167,7 @@ func _draw_bars() -> void:
 	var sp_col := Palette.ICE
 	if ship.special_t > 0.0:
 		sp_text = "%s: active %.1fs" % [sp_label, ship.special_t]
-		sp_col = Palette.AMBER
+		sp_col = UiKit.accent()
 	elif ship.special_cd > 0.0:
 		sp_text = "%s: %.1fs" % [sp_label, ship.special_cd]
 		sp_col = Palette.MIST

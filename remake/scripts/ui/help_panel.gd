@@ -9,10 +9,10 @@ extends PanelContainer
 ## scrolling area, at least 120 pixels tall: it takes the height that is
 ## left). Each page button shows its page's name, which is also
 ## the page's key in PAGES, where all the text lives. _show() fills Body
-## with the chosen page: each entry is an amber heading and a wrapped
-## paragraph, made in code. The current page's button is amber. When the
-## window's width changes, HudPanels calls rebuild() so the paragraphs wrap
-## to the new width.
+## with the chosen page: each entry is a heading in the interface's highlight
+## colour and a wrapped paragraph, made in code. The current page's button is
+## in the highlight colour too. When the window's width changes, HudPanels
+## calls rebuild() so the paragraphs wrap to the new width.
 ##
 ## WHO USES IT: HudPanels makes it from scenes/ui/help_panel.tscn (H toggles
 ## it, through HudInput) and hides it when `closed` is sent.
@@ -21,16 +21,18 @@ extends PanelContainer
 signal closed
 
 ## The help text: page name -> list of [heading, paragraph] pairs, shown in
-## this order.
+## this order. (Two paragraphs, "Goal" and "Turrets", read differently while
+## the damage modifiers are removed: see PAGES_MODIFIERS_REMOVED.)
 const PAGES := {
 	"The match": [
 		["Goal", "Destroy the enemy mothership. Nothing else ends the match. Motherships are huge: strike craft barely scratch them; frigates and capital ships tear into them, so late in the match fleets mass their big ships for sieges."],
 		["The map", "Three lanes (top, mid, bottom) run between the motherships, joined by the Crossing, a lane straight down the middle. Between the lanes is the jungle: dense asteroids with gaps only strike craft (Scout to Bomber) fit through. You can't see through asteroids."],
-		["Minions", "From 0:45 and every 35 seconds, each mothership launches a wave down every lane: 5 fighters, 4 bombers and an escort corvette. Minions fight anything in their way. Finishing one off (the last hit) pays you credits."],
+		["Minions", "From 0:45 and every 35 seconds, each mothership launches a wave down every lane. The top and bottom lanes get 3 Snub-Fighters, 1 Light Bomber and a Patrol Leader; the middle lane gets 5 Snub-Fighters, 4 Light Bombers and 2 Patrol Leaders. They are weaker versions of the pilots' Fighter, Bomber and corvettes. Minions fight anything in their way. Finishing one off (the last hit) pays you its credits. If teammates also did at least a tenth of the damage in the last 15 seconds, they share a quarter of the credits, by damage, and you keep the rest."],
 		["Turrets", "Each side's Admiral builds turrets at the asteroid resource nodes. They are tough: alone, pilots deal only 30% damage to a turret, so push with your minion wave and let the minions tank. If you shoot an enemy pilot near an enemy turret, that turret targets you."],
 		["The jungle", "Derelict monster camps (gunships, and carriers that launch snub fighters) sit in the jungle and pay a reward split by damage, with a bonus for the last hit. They respawn 1-2 minutes after being cleared."],
 		["Credits", "Pilots earn credits from last hits, kills and assists, derelicts, destroying turrets and drones, and a share of every ore delivery. Spend them in the hangar on ships, modules, pilot gear and repair kits. The Admiral spends the separate team treasury."],
 		["Respawning", "Destroyed pilots respawn at the mothership after a few seconds (longer as the match goes on). Gear is kept; the ship and its modules are lost. When 4 or more pilots respawn within 30 seconds, the mothership is strained: its guns slow and its shields stop recharging for a while."],
+		["Fullscreen", "F11 or Alt+Enter switches between the window and borderless fullscreen."],
 	],
 	"Flying": [
 		["Moving", "The mouse aims and your ship turns to face it. W thrusts forward, S brakes and reverses, A / D slide sideways, Shift boosts (strike craft). Hold Ctrl to lock your heading: big ships keep their shields facing a threat while their turrets keep tracking the mouse. V toggles flight assist (off = drift)."],
@@ -52,6 +54,15 @@ const PAGES := {
 		["Fleet Command", "Late game, the Fleet Command Module stops free minion waves: instead, buy minions and command them. Drag a box on the map to select, right-click to send them, or use the Fleet tab."],
 		["Flying yourself", "You can launch a ship of your own from the hangar (B) with your personal credits. You can still give orders and look anywhere while flying (C switches the camera between your ship and free; Space centers it on your ship, and holding Space keeps it there), but moving the mothership needs you docked."],
 	],
+}
+
+## The lines of PAGES that name a damage modifier, with the words shown
+## instead of them while the damage modifiers are removed
+## (Rules.damage_modifiers_removed()): heading -> paragraph. _show() swaps
+## them in.
+const PAGES_MODIFIERS_REMOVED := {
+	"Goal": "Destroy the enemy mothership. Nothing else ends the match. Motherships are huge and well defended, so late in the match fleets mass their big ships for sieges.",
+	"Turrets": "Each side's Admiral builds turrets at the asteroid resource nodes. They are tough, so push with your minion wave and let the minions tank. If you shoot an enemy pilot near an enemy turret, that turret targets you.",
 }
 
 ## The page being shown (a key of PAGES).
@@ -78,14 +89,14 @@ func rebuild() -> void:
 	_show(_page)
 
 
-## Show page `p`: mark its button amber, clear the old entries, and add a
+## Show page `p`: mark its button in the highlight colour, clear the old entries, and add a
 ## heading and a paragraph per entry. Paragraphs are pinned to the panel's
 ## width (UiKit.panel_width, not our `size`, which cannot shrink below the
 ## paragraphs) minus 60 pixels (but at least 400) so they wrap neatly.
 func _show(p: String) -> void:
 	_page = p
 	for b in _tabs:
-		b.add_theme_color_override("font_color", Palette.AMBER if b.text == p else Palette.ICE)
+		b.add_theme_color_override("font_color", UiKit.accent() if b.text == p else Palette.ICE)
 	# queue_free removes each old entry at the end of this frame.
 	for c in _body.get_children():
 		c.queue_free()
@@ -98,7 +109,12 @@ func _show(p: String) -> void:
 	for entry: Array in entries:
 		var row := UiKit.vbox(2)
 		_body.add_child(row)
-		row.add_child(UiKit.label(entry[0], 15, Palette.AMBER))
-		var l := UiKit.label(entry[1], 14, Palette.ICE, true)
+		row.add_child(UiKit.label(entry[0], 15, UiKit.accent()))
+		# A line that names a damage modifier reads differently while the
+		# damage modifiers are removed.
+		var text: String = entry[1]
+		if Rules.damage_modifiers_removed() and PAGES_MODIFIERS_REMOVED.has(entry[0]):
+			text = PAGES_MODIFIERS_REMOVED[entry[0]]
+		var l := UiKit.label(text, 14, Palette.ICE, true)
 		UiKit.pin_width(l, w)
 		row.add_child(l)

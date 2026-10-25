@@ -14,8 +14,8 @@ extends PanelContainer
 ##   Head (Texts (Title, Status), Close): the title with the treasury, the
 ##     status line under it (what is building and researching), and Close
 ##     (at least 40 pixels tall);
-##   Away: the amber note shown while the Admiral is out flying their own
-##     ship;
+##   Away: the note, in the highlight colour, shown while the Admiral is out
+##     flying their own ship;
 ##   Tabs (Research, Build, Mothership, Fleet, Pilots): one button per tab
 ##     (page), 120 pixels wide; each button's text is its tab's name;
 ##   Scroll > Content: the scroll area (at least 120 pixels tall) and the
@@ -72,7 +72,8 @@ var world: World
 ## The Admiral's map layer: map tools, the minion selection, and whether
 ## the human may give orders right now (can_command). Set by setup().
 var overlay: CommandOverlay
-## The team this board commands: Aurelian (team 0). Nothing changes it.
+## The team this board commands: the human Admiral's team (World.human_team), set
+## by setup().
 var team := Rules.HALCYON
 ## The tab being shown (one tab button's text: "Research", "Build",
 ## "Mothership", "Fleet" or "Pilots"). The HUD reads it to rebuild the same
@@ -93,10 +94,12 @@ var _scoreboard: Scoreboard = null
 ## The line under the title: what is building and researching, and how
 ## many mining drones we have.
 @onready var _status: Label = $Col/Head/Texts/Status
-## The amber warning shown while the Admiral is out flying their own ship.
+## The note, in the highlight colour, shown while the Admiral is out flying their
+## own ship.
 @onready var _away: Label = $Col/Away
 ## The tab buttons in the Tabs row, in the order they appear. Each one's
-## text is its tab's name; _set_tab() colours the selected one amber.
+## text is its tab's name; _set_tab() colours the selected one in the highlight
+## colour.
 @onready var _tab_buttons: Array[Button] = [$Col/Tabs/Research, $Col/Tabs/Build, $Col/Tabs/Mothership, $Col/Tabs/Fleet, $Col/Tabs/Pilots]
 ## The column inside the scroll area that holds the current tab's cards.
 @onready var _content: VBoxContainer = $Col/Scroll/Content
@@ -114,23 +117,27 @@ func _ready() -> void:
 		b.pressed.connect(_set_tab.bind(b.text))
 
 
-## Connect the board to world `w` and map layer `ov`, then build the
-## current tab. The HUD calls this once, right after making the board.
+## Connect the board to world `w` and map layer `ov`, command the human's team,
+## then build the current tab. The HUD calls this once, right after making the
+## board.
 func setup(w: World, ov: CommandOverlay) -> void:
 	world = w
 	overlay = ov
+	team = w.human_team
 	_set_tab(tab)
 
 
-## Show tab `t` (one tab button's text): colour its button amber, throw
+## Show tab `t` (one tab button's text): colour its button in the highlight colour, throw
 ## away the old cards, build the new tab's cards and fill them in at once.
 ## Other files call it too (the HUD after a resize, tests/ui_tour.gd).
 func _set_tab(t: String) -> void:
 	tab = t
-	# Step 1: the selected tab's button gets amber text and border.
+	# Step 1: the selected tab's button gets text and border in the interface's
+	# highlight colour.
+	var hi := UiKit.accent()
 	for b in _tab_buttons:
-		b.add_theme_color_override("font_color", Palette.AMBER if b.text == t else Palette.ICE)
-		b.add_theme_stylebox_override("normal", UiKit.box(Palette.INK, Palette.AMBER if b.text == t else Palette.LINE, 8))
+		b.add_theme_color_override("font_color", hi if b.text == t else Palette.ICE)
+		b.add_theme_stylebox_override("normal", UiKit.box(Palette.INK, hi if b.text == t else Palette.LINE, 8))
 	# Step 2: remove the old cards (queue_free deletes a node at the end of
 	# this frame).
 	for c in _content.get_children():

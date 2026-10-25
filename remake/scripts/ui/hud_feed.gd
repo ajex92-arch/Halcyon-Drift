@@ -72,7 +72,9 @@ func _vt() -> int:
 
 
 ## The colour for news that is good for `team`: amber if that is our
-## team, cinder (red) if not. A spectator sees team colours instead.
+## team, cinder (red) if not, whichever team the human plays (amber means good
+## news here, it is not the interface's highlight colour). A spectator sees
+## team colours instead.
 func _good_bad(team: int) -> Color:
 	if _vt() < 0:
 		return Palette.team(team)

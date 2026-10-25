@@ -10,7 +10,7 @@ extends RefCounted
 ##     (the Capital Ship Facility stands), the AI builds it. From then on the
 ##     free minion waves of that team stop and AdmiralFleetCommand buys
 ##     minions with the team's money (up to Minions.control_cap() alive: 30
-##     in today's game, 60 in both council presets through fleet_cap). The
+##     in the old rules, 60 in the standard rules through fleet_cap). The
 ##     mothership is not weakened by this spending.
 ##   - Ward refresh: while the treasury is over 3,000 the AI places a new
 ##     ward at one of its jungle entrances every 45 s, even when it already
