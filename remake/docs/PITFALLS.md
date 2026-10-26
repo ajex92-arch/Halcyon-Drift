@@ -64,6 +64,16 @@ entries plain and short. Dates, ticket IDs and who said what belong in PROGRESS.
   `Web` preset leaves `tests/` out, so keep it in a copy of the preset) into `tools/ui_layout_check.py`, in a
   browser for the web build. The tour must end with `ui_tour: done`: the checker reads a timed-out tour's partial
   dump as clean.
+- **In a browser the game's window must follow the canvas: no minimum window size in a web build.** Symptom: on the
+  first load of the browser build, in a page shorter than 720 pixels (a laptop's page area, or any window with a
+  tall toolbar), the top of the picture is cut off and a button reacts only when the pointer is moved down by about
+  the missing height; after any resize all is right. A page narrower than 1280 loses the right end of the picture
+  on the first load. Cause: `Window.min_size` (set by `WindowMode.apply_minimum_size`) raises the game's window to
+  1280x720 while the canvas stays the size the browser gives it; the picture is drawn from the bottom left, and
+  the mouse arrives in the canvas's own pixels. Fix: `apply_minimum_size` does nothing when
+  `OS.has_feature("web")`. A check on the desktop cannot see this: send real mouse events at known page points to
+  the web build in a browser (the DevTools protocol's `Input.dispatchMouseEvent`) and compare with where the
+  buttons are drawn in a screenshot, at page sizes under 720 pixels tall, on the first load and after a resize.
 - **Two Godot runs on one fresh folder race the first import.** Symptom: both fail to parse the scripts and
   hang until their timeout. Fix: import the folder once first (`vc_export` does); never start two runs on a
   folder that has no `.godot`.
