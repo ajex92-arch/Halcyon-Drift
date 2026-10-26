@@ -8,7 +8,14 @@ extends RefCounted
 ## were 1280 x 720 or a little wider or taller, and Godot then enlarges
 ## everything to fill the real window. A window smaller than 1280 x 720
 ## would squeeze the screens below the size they were laid out for, so the
-## window may never be smaller than that (MIN_SIZE).
+## window may never be smaller than that (MIN_SIZE). A web page is the
+## exception: the browser decides how big the game's canvas is and a page has
+## no minimum size, so there the limit is left off. Asking for it anyway made
+## the game believe the window was 1280 x 720 or more while the canvas was
+## smaller (a page under 720 pixels tall is common): on the first load the
+## picture was cut off at the top and a click landed as far above the pointer
+## as the page was short; after the first resize the game took the canvas's
+## real size and the stretch squeezed the screens to fit.
 ##   - apply_minimum_size() sets that limit on the game's window once, at
 ##     startup.
 ##   - toggle_fullscreen() switches between the window (or the maximised
@@ -47,9 +54,11 @@ static var _before_fullscreen: DisplayServer.WindowMode = DisplayServer.WINDOW_M
 
 ## Stop `window` (the game's main window) from being made smaller than
 ## MIN_SIZE. A window with no screen (the --headless runs the tests use)
-## is left alone, so those runs lay the screens out exactly as before.
+## is left alone, so those runs lay the screens out exactly as before. So
+## is a web page (see the header): the browser's canvas cannot be held to a
+## minimum, and the game's window must be the canvas's size.
 static func apply_minimum_size(window: Window) -> void:
-	if DisplayServer.get_name() == "headless":
+	if DisplayServer.get_name() == "headless" or OS.has_feature("web"):
 		return
 	window.min_size = MIN_SIZE
 
