@@ -51,6 +51,19 @@ entries plain and short. Dates, ticket IDs and who said what belong in PROGRESS.
   `script_error_scan -Recurse` (it must end `SCRIPT ERRORS: 0`) before you trust a number or a picture,
   windowed runs outside the queue included. `ERROR: N resources still in use at exit` and
   `WARNING: N ObjectDB instances leaked` end every run: harmless.
+- **An exported game is not the project folder: converted scenes lose anchors.** Symptom: every check passes on
+  the project folder, yet the exported game (the browser build, and the Windows preset's game data, which the exe
+  carries) piles the HUD into the top-left corner: the controls hint, the "me" panel, the gear slots, the pop-up
+  hint and the big message sit on top of one another and the top bar is at the left edge instead of the centre;
+  the minimap and the ship readout keep their anchors. Cause: the export turns text scenes (`.tscn`) into binary ones, and the binary `hud.scn` stores
+  `layout_mode = 0` (and mostly `anchors_preset = 0`, top left) on every instanced scene that `hud.tscn` does not
+  give properties of its own, so loading it resets the anchors and offsets that the instanced scene's root sets.
+  Fix: `editor/export/convert_text_resources_to_binary` is off in `project.godot`, so the export keeps the text
+  scenes the checks run on. Check an export, not only the project folder: `ui_tour --dump-layout` on the exported
+  data (`godot --headless --main-pack <index.pck> -- ... --test=ui_tour --dump-layout`; the web export of the
+  `Web` preset leaves `tests/` out, so keep it in a copy of the preset) into `tools/ui_layout_check.py`, in a
+  browser for the web build. The tour must end with `ui_tour: done`: the checker reads a timed-out tour's partial
+  dump as clean.
 - **Two Godot runs on one fresh folder race the first import.** Symptom: both fail to parse the scripts and
   hang until their timeout. Fix: import the folder once first (`vc_export` does); never start two runs on a
   folder that has no `.godot`.

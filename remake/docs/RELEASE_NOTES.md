@@ -4,6 +4,22 @@ What each release of Halcyon Drift changes, newest first. The Windows version of
 each release is on the GitHub Releases page; the browser version always shows the
 newest `main`.
 
+## v0.3.1: the HUD is back in place in the browser and the Windows download
+
+### For players
+
+**The HUD is back in place.** In v0.3.0 the packaged game, both the browser version and the Windows download, drew the top bar, the panel with your name and credits, the gear slots, the key line, the pop-up hints and the big messages on top of one another in the top-left corner, and at some window sizes the ship readout and the minimap were missing. Running the game from the project folder never showed it. Everything is where it belongs again, at every window size. Nothing else changes from v0.3.0: the rules, the looks and the controls are the same, and a match plays exactly as before.
+
+**Known issues** (unchanged from v0.3.0)
+- The big Aurelian ships have several engine nozzles but one exhaust trail until a later release.
+- Ships still get stuck in the rocks now and then, the big Battlecruisers most of all.
+
+### For developers
+
+- **Cause.** Godot's export turns text scenes (`.tscn`) into binary ones by default (the project setting `editor/export/convert_text_resources_to_binary`). In the binary HUD scene, the scenes that `scenes/ui/hud.tscn` instances without properties of their own (the top bar, the "me" panel, the kill feed, the big message, the pop-up hint and the gear slots) got their layout mode and anchors reset, so they lost the anchors and offsets set inside their own scenes. The ship readout and the minimap name their anchors in `hud.tscn`, so they kept them. Every check runs on the project folder, which loads the text scenes, so none of them could see it.
+- **Fix.** `project.godot` turns the conversion off, so the exported game loads the same text scenes the checks test. No script, scene, rule or number changed. `docs/PITFALLS.md` has the entry.
+- **How it was tested.** The UI tour's layout dump, taken in the exported browser build in a headless browser and fed to `tools/ui_layout_check.py`: before the fix 305 to 338 problem lines at each of 11 window sizes for a pilot and 121 to 125 for the Admiral; after it, 0 everywhere. The layout check on the project folder stays clean, all checks pass, and the replay check is identical to v0.3.0 (normal and late).
+
 ## v0.3.0: two playable teams, the standard rules, new looks and smaller waves
 
 ### For players
