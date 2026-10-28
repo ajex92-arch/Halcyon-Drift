@@ -1,0 +1,110 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/admiral_board.gd" id="1_root"]
+
+[node name="AdmiralBoard" type="PanelContainer"]
+mouse_filter = 0
+mouse_force_pass_scroll_events = false
+theme_type_variation = &"BoardLook"
+script = ExtResource("1_root")
+
+[node name="Col" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Head" type="HBoxContainer" parent="Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Texts" type="VBoxContainer" parent="Col/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Col/Head/Texts"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Admiral board"
+
+[node name="Status" type="Label" parent="Col/Head/Texts"]
+layout_mode = 2
+theme_type_variation = &"MistText"
+theme_override_font_sizes/font_size = 12
+
+[node name="Close" type="Button" parent="Col/Head"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Close (Tab)"
+
+[node name="Away" type="Label" parent="Col"]
+layout_mode = 2
+theme_type_variation = &"AccentText"
+theme_override_font_sizes/font_size = 13
+text = "You're out flying your own ship. Orders still work, but the mothership can only be moved while you're docked."
+autowrap_mode = 3
+
+[node name="Tabs" type="HBoxContainer" parent="Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Research" type="Button" parent="Col/Tabs"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Research"
+
+[node name="Build" type="Button" parent="Col/Tabs"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Build"
+
+[node name="Mothership" type="Button" parent="Col/Tabs"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Mothership"
+
+[node name="Fleet" type="Button" parent="Col/Tabs"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Fleet"
+
+[node name="Pilots" type="Button" parent="Col/Tabs"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Pilots"
+
+[node name="Scroll" type="ScrollContainer" parent="Col"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 1
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Col/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Detail" type="Label" parent="Col"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"MistText"
+theme_override_font_sizes/font_size = 13
+text = "Hover over anything for details."
+autowrap_mode = 3

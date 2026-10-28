@@ -1,0 +1,126 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/end_screen.gd" id="1_root"]
+
+[node name="EndScreen" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+mouse_force_pass_scroll_events = false
+script = ExtResource("1_root")
+
+[node name="Cover" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Center" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="Center"]
+layout_mode = 2
+mouse_filter = 0
+theme_type_variation = &"EndLook"
+
+[node name="Col" type="VBoxContainer" parent="Center/Card"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/Card/Col"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+
+[node name="Reason" type="Label" parent="Center/Card/Col"]
+layout_mode = 2
+theme_type_variation = &"MistText"
+
+[node name="Teams" type="HBoxContainer" parent="Center/Card/Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="Halcyon" type="VBoxContainer" parent="Center/Card/Col/Teams"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Name" type="Label" parent="Center/Card/Col/Teams/Halcyon"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="Kills" type="Label" parent="Center/Card/Col/Teams/Halcyon"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Turrets" type="Label" parent="Center/Card/Col/Teams/Halcyon"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Ore" type="Label" parent="Center/Card/Col/Teams/Halcyon"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Research" type="Label" parent="Center/Card/Col/Teams/Halcyon"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Hull" type="Label" parent="Center/Card/Col/Teams/Halcyon"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Cinder" type="VBoxContainer" parent="Center/Card/Col/Teams"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Name" type="Label" parent="Center/Card/Col/Teams/Cinder"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="Kills" type="Label" parent="Center/Card/Col/Teams/Cinder"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Turrets" type="Label" parent="Center/Card/Col/Teams/Cinder"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Ore" type="Label" parent="Center/Card/Col/Teams/Cinder"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Research" type="Label" parent="Center/Card/Col/Teams/Cinder"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="Hull" type="Label" parent="Center/Card/Col/Teams/Cinder"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="TopHeading" type="Label" parent="Center/Card/Col"]
+layout_mode = 2
+theme_type_variation = &"MistText"
+theme_override_font_sizes/font_size = 12
+text = "TOP PILOTS"
+
+[node name="Buttons" type="HBoxContainer" parent="Center/Card/Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="NewMatch" type="Button" parent="Center/Card/Col/Buttons"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+theme_type_variation = &"PrimaryButton"
+text = "New match"
+
+[node name="Quit" type="Button" parent="Center/Card/Col/Buttons"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Quit"
