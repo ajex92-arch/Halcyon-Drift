@@ -1,0 +1,12 @@
+batch: stuck2_tip
+run: 40784939245
+finished: 2026-10-28T23:26:36Z
+runs: 3
+jobs: 9
+expected: 81
+present: 81
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
