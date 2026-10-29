@@ -1,0 +1,12 @@
+batch: stuck3_r2
+run: 40796622017
+finished: 2026-10-29T01:19:41Z
+runs: 1
+jobs: 6
+expected: 54
+present: 54
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
