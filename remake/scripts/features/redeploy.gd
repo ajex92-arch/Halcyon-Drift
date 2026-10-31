@@ -116,8 +116,14 @@ func start(p: PilotProfile, site: Unit) -> String:
 ## this). Launch the ship and put it next to the site, or at the mothership
 ## if the site died meanwhile.
 func finish(p: PilotProfile) -> void:
-	# Step 1: remember and forget the site, and launch the normal way.
-	var site := p.spool_site
+	# Step 1: remember and forget the site, and launch the normal way. A bay or
+	# turret destroyed during the spool is freed at the end of that frame while
+	# the pilot still holds it, so the site is only taken over while it is a
+	# live object (a freed one stays null here; site_ok()'s typed parameter
+	# would refuse it).
+	var site: Unit = null
+	if is_instance_valid(p.spool_site):
+		site = p.spool_site
 	p.spool_site = null
 	var ship := world.launch(p)
 	if ship == null:

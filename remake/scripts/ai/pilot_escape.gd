@@ -9,15 +9,24 @@ extends RefCounted
 ## about one ship in every one or two 15-minute matches).
 ##
 ## HOW IT WORKS:
-##   - note_unstick(): PilotFlight calls it every time its stuck timer fires.
-##     The second fire within 25 seconds and 300 units of the first means
-##     the plain unstick did not help, so it plans an escape.
+##   - note_unstick(): PilotFlight calls it every time the ship is stalled
+##     (PilotFlight.stall()). The first stall retraces the ship's own track
+##     (its breadcrumb trail, PilotTrail) back to a spot where it can join the
+##     route graph again; the second within 25 seconds and 300 units of the
+##     first means that did not help, so it plans an escape.
+##   - plan_now(): PilotFlight calls it at once when the ship has no dot of
+##     the route graph it can fly to (the route's first leg would end at a dot
+##     that rocks hide), so the ship leaves the rocks first.
 ##   - _plan_escape(): lays a grid of small cells over the rocks around the
 ##     ship, floods it from the ship's cell, and finds the nearest cell with
-##     a clear line to one of the route graph's dots. The path to that cell
-##     is pulled tight into a few waypoints. The search has a work budget
-##     (WORK_MAX), so one plan never holds up the game for much more than
-##     50 milliseconds.
+##     a clear line to one of the route graph's dots (the cheapest ones to
+##     join on the way to the goal). If that coarse try sees no dot at all, a
+##     second try with a finer grid looks again, so that a narrow gap a ship
+##     really passes is not missed. The path to the cell is pulled tight into
+##     a few waypoints, and the brain's route is set to those waypoints and the
+##     route on from their dot while the escape flies. The search has a work
+##     budget (WORK_MAX), so one plan never holds up the game for much more
+##     than 50 milliseconds.
 ##   - follow(): PilotFlight.travel() hands the controls to it while an
 ##     escape is on. It flies the waypoints slowly and exactly, then plans
 ##     the normal route again from the dot it was led to.
@@ -25,8 +34,9 @@ extends RefCounted
 ## one is planned for 15 seconds); the plain unstick then carries on.
 ##
 ## WHO USES IT: PilotFlight (it makes one part per brain, asks is_active()
-## and follow() at the top of travel(), and calls note_unstick() when its
-## stuck timer fires). It reads the rocks (world.asteroids) and the route
+## and follow() at the top of travel(), calls note_unstick() when the ship is
+## stalled and plan_now() when the ship has no way onto the route graph).
+## It reads PilotFlight.trail and asks PilotFlight.can_join_route(). It reads the rocks (world.asteroids) and the route
 ## graph (world.map.route), and when an escape ends it sets the brain's
 ## route (PilotAI.path, path_i, path_goal).
 ##
@@ -40,13 +50,46 @@ extends RefCounted
 ##             clock makes a plan do the same thing on every PC (a match
 ##             with the same seed stays the same match).
 
+## After plan_now() planned nothing, this many seconds pass before it tries
+## again (a plan can cost a few milliseconds, and a ship in a closed pocket
+## would ask once a second).
+const PLAN_RETRY := 3.0
+## A retrace flies back along the breadcrumb trail (PilotTrail), starting at
+## the newest crumb that is at least this far (world units) from the ship.
+const RETRACE_MIN := 40.0
+## Seconds a retrace may take, besides 0.012 s per world unit of its length.
+const RETRACE_TIME := 10.0
+## An escape to a "farthest cell" (no route dot in sight from any cell the
+## ship can reach) must lead at least this far (world units) from the ship; a
+## ship in a smaller closed space stays where it is.
+const FAR_MIN := 120.0
+## Cells nearer than this (world units) to the ship are not tested for a clear
+## line to a dot: the ship's own spot has none.
+const TEST_MIN := 30.0
+## The coarse try searches a square this wide on each side of the ship (world
+## units) with cells of the ship's size...
+const COARSE_HALF := 1100.0
+## ...and a rock blocks the cells whose centre is within its radius plus the
+## ship's radius plus this many world units.
+const COARSE_MARGIN := 4.0
+## The fine try (for a tight notch) searches a smaller square, this far (world
+## units) from the ship on each side...
+const FINE_HALF := 800.0
+## ...with cells this small (world units)...
+const FINE_CELL := 6.0
+## ...and almost no margin around the rocks (world units).
+const FINE_MARGIN := 0.4
+## How many route dots a search tries to see from the cells of its flood (the
+## cheapest ones to join on the way to the goal), besides the goal itself.
+const CANDIDATE_DOTS := 8
 ## The most work (units) one plan may spend, both tries together (about 50
 ## milliseconds). Playtest: without a limit one plan took up to 0.4 s in a
 ## match (0.6 s in a test) when no cell saw a dot early, a freeze of 6 to 25
 ## frames. When the work is used up the search stops and the escape leads to the
 ## farthest cell reached, as when no cell sees a dot at all.
 const WORK_MAX := 50000
-## Work units for laying out one grid (see WORK_MAX).
+## The least work units for laying out one grid (see WORK_MAX); a grid with
+## many cells costs one unit for every 12 of them instead (see _search()).
 const WORK_GRID := 4000
 ## Work units for each cell the flood visits (see WORK_MAX).
 const WORK_CELL := 3
@@ -87,6 +130,10 @@ var _path := PackedVector2Array()
 var _path_i := 0
 ## Seconds left to follow the escape path (0 = no escape is on).
 var _time_left := 0.0
+## True while `_path` is a retrace (the ship's own breadcrumb trail flown
+## backwards) and not a planned escape: it ends as soon as the ship can join
+## the route graph again (see follow()).
+var _retrace := false
 ## The route dot the escape leads to (Vector2.INF = it leads to no dot, only
 ## to the farthest free cell). The normal route is planned from it.
 var _dot := Vector2.INF
@@ -100,6 +147,9 @@ var _no_progress := 0.0
 ## Game time (seconds) before which no new escape is planned (it is set
 ## after an escape had to be given up).
 var _cool_until := 0.0
+## Game time (seconds) before which plan_now() does not try again (it is set
+## after a plan that found nothing).
+var _retry_at := 0.0
 ## How many times in a row the stuck timer fired close together in time and
 ## place.
 var _fires := 0
@@ -121,9 +171,11 @@ func is_active() -> bool:
 	return _time_left > 0.0
 
 
-## The stuck timer just fired. Count fires that happen close together in
-## time (25 s) and place (300 units); the second one plans a way out of the
-## pocket. `to` is the final goal of the trip.
+## The ship is stalled (PilotFlight.stall()). Count stalls that happen close
+## together in time (25 s) and place (300 units). The first one retraces the
+## ship's own track back to a spot where it can join the route graph again
+## (_start_retrace()); the second plans a way out of the pocket. `to` is the
+## final goal of the trip.
 func note_unstick(ship: Ship, to: Vector2) -> void:
 	var now := ai.world.time
 	var p := ship.global_position
@@ -135,54 +187,111 @@ func note_unstick(ship: Ship, to: Vector2) -> void:
 	_fire_pos = p
 	if _fires >= 2 and now >= _cool_until:
 		_plan_escape(ship, to)
+	elif _fires == 1:
+		_start_retrace(ship, to)
 
 
-## Plan a way out of the rocks around the ship. A grid of small cells (about
-## the ship's size) is laid over a square 2,200 wide around it (the second
-## try, `fine`, uses a square 1,000 wide with 6-unit cells); a cell is
-## blocked when a rock, grown by the ship's radius, covers its centre. A
-## flood search visits the free cells from the ship's cell, nearest first,
-## until it reaches a cell with a clear straight line to one of the 8
-## nearest route dots (or to the goal itself). Only about one cell in every
-## few (TEST_GAP) is tested, and a cheap look along the grid (_ray_free())
-## rules out most lines before the exact rock test. The path to that cell is
-## pulled tight into a few waypoints (`_path`); when it has been flown, the
-## route is planned again FROM that dot (the route graph alone joins at the
-## nearest dot in sight, which can lie on the far side of a rock wall: the
-## ship would press against the wall for ever, or be led back into the same
-## notch). With no such cell, or when the work budget (WORK_MAX) is used up,
-## it goes to the farthest cell reached. A plan usually costs a few
-## milliseconds and never much more than 50, and only runs when a ship is
-## stuck for the second time. `fine` is the second try for a tight notch
-## (small cells and almost no margin around the rocks); `spent` is the work
-## units the first try already used (the second try gets what is left).
-func _plan_escape(ship: Ship, to: Vector2, fine := false, spent := 0) -> void:
-	if spent + WORK_GRID >= WORK_MAX:
+## Fly back along the ship's breadcrumb trail (PilotFlight.trail) instead of
+## backing off a second and planning the same route again: the ship has been
+## on every crumb, so the way back is free. The retrace is the escape path
+## (follow() flies it slowly and exactly) and ends at the first crumb where
+## the ship can join the route graph again. Nothing happens when the ship can
+## join it right here (the plain unstick is enough) or the trail is empty.
+func _start_retrace(ship: Ship, to: Vector2) -> void:
+	var flight := ai.flight
+	if flight.can_join_route(ship, to):
 		return
-	var world := ai.world
-	var field := world.asteroids
-	var p := ship.global_position
-	var route := world.map.route
-	var small := JungleBigFeature.route_small(ship)
-	# Step 1: the 8 nearest dots we may use, nearest first, then the goal.
-	var order: Array = []
-	for k in route.pos.size():
-		if small or route.jungle[k] == 0:
-			order.append([p.distance_squared_to(route.pos[k]), k])
-	order.sort_custom(func(x, y): return x[0] < y[0])
-	var cands := PackedVector2Array()
-	for k in mini(8, order.size()):
-		cands.append(route.pos[order[k][1]])
-	cands.append(to)
-	var half := 1100.0
+	var back := flight.trail.back_from(ship.global_position, RETRACE_MIN)
+	if back.is_empty():
+		return
+	var length := ship.global_position.distance_to(back[0])
+	for i in range(1, back.size()):
+		length += back[i - 1].distance_to(back[i])
+	_path = back
+	_path_i = 0
+	_time_left = RETRACE_TIME + 0.012 * length
+	_dot = Vector2.INF
+	_goal = to
+	_best = INF
+	_no_progress = 0.0
+	_retrace = true
+	_publish_route(ship)
+
+
+## Plan an escape now, without waiting for the stuck timer to fire twice.
+## PilotFlight asks for it when the ship has no dot it can fly to (RouteGraph
+## .entry() found none): flying at a dot that rocks hide only presses the ship
+## against them. `to` is the final goal of the trip. Returns true when an
+## escape path is on. Not while the cool-down after a given-up escape runs, nor
+## within PLAN_RETRY seconds of a plan that found nothing.
+func plan_now(ship: Ship, to: Vector2) -> bool:
+	var now := ai.world.time
+	if now < _cool_until or now < _retry_at:
+		return false
+	_plan_escape(ship, to)
+	if not is_active():
+		_retry_at = now + PLAN_RETRY
+		return false
+	return true
+
+
+## Plan a way out of the rocks around the ship (see HOW IT WORKS at the top),
+## in up to two tries. The first (a coarse grid over a square 2,200 wide)
+## searches for a cell with a clear straight line to one of the dots the
+## route would use. When it finds no such cell anywhere it can reach (it cannot
+## see narrow gaps: a cell is blocked when a rock, grown by the ship's radius
+## and COARSE_MARGIN, covers its centre), the second try looks again with a fine
+## grid (small cells and almost no margin around the rocks, FINE_CELL and
+## FINE_MARGIN) over a smaller square, before the ship settles for the farthest
+## cell of either try. Any exit to a dot is taken, however near (a ship wedged
+## in a notch often has its way out 100 units away); a farthest cell must be
+## FAR_MIN away to be worth flying to. When it plans a way, the escape path and
+## the route that goes on from its dot are set (_start()).
+func _plan_escape(ship: Ship, to: Vector2) -> void:
+	var best := _search(ship, to, false, 0)
+	if best["dot"] == Vector2.INF:
+		var fine := _search(ship, to, true, int(best["work"]))
+		if fine["dot"] != Vector2.INF or float(fine["dist"]) > float(best["dist"]):
+			best = fine
+	var pts: PackedVector2Array = best["pts"]
+	if pts.is_empty() or (best["dot"] == Vector2.INF and float(best["dist"]) < FAR_MIN):
+		return
+	_start(ship, to, pts, best["dot"], float(best["dist"]))
+
+
+## One try of the search for a way out (see _plan_escape()): `fine` picks the
+## fine grid, `spent` is the work units the first try already used (this try
+## gets what is left). A grid of cells is laid over a square around the ship; a
+## cell is blocked when a rock, grown by the ship's radius plus a margin,
+## covers its centre. A flood search visits the free cells from the ship's
+## cell, nearest first, until it reaches a cell with a clear straight line to
+## one of the wanted dots (_candidates()) or to the goal itself. Only about
+## one cell in every few (TEST_GAP) is tested, and a cheap look along the grid
+## (_ray_free()) rules out most lines before the exact rock test. The path to
+## that cell is pulled tight into a few waypoints. With no such cell, or when
+## the work budget (WORK_MAX) is used up, the path goes to the farthest cell
+## reached. Answers a Dictionary: "pts" (the waypoints, empty when the ship has
+## no room to move), "dot" (the dot the path leads to, Vector2.INF when it leads
+## only to the farthest cell), "dist" (from the ship to the end of the path,
+## world units) and "work" (the work units used so far).
+func _search(ship: Ship, to: Vector2, fine: bool, spent: int) -> Dictionary:
+	var half := COARSE_HALF
 	var cs := clampf(maxf(ship.radius * 1.2, half / 100.0), 12.0, 40.0)
-	var grow := ship.radius + 4.0
+	var grow := ship.radius + COARSE_MARGIN
 	if fine:
-		# Second try, for a tight notch: small cells and almost no margin.
-		half = 500.0
-		cs = 6.0
-		grow = ship.radius + 0.4
+		half = FINE_HALF
+		cs = FINE_CELL
+		grow = ship.radius + FINE_MARGIN
 	var n := int(2.0 * half / cs)
+	# The work of laying out the grid grows with its cells.
+	var grid := maxi(WORK_GRID, n * n / 12)
+	var none := {"pts": PackedVector2Array(), "dot": Vector2.INF, "dist": 0.0, "work": spent}
+	if spent + grid >= WORK_MAX:
+		return none
+	var field := ai.world.asteroids
+	var p := ship.global_position
+	# Step 1: the dots we want to see: the cheapest ones to join, then the goal.
+	var cands := _candidates(ship, to)
 	var o := p - Vector2(half, half)
 	# Step 2: the blocked cells.
 	var blocked := PackedByteArray()
@@ -241,11 +350,11 @@ func _plan_escape(ship: Ship, to: Vector2, fine := false, spent := 0) -> void:
 		var ci := cur % n
 		var cj := cur / n
 		var cc := o + Vector2((float(ci) + 0.5) * cs, (float(cj) + 0.5) * cs)
-		if cur != s_idx and cc.distance_squared_to(p) > 10000.0:
+		if cur != s_idx and cc.distance_squared_to(p) > TEST_MIN * TEST_MIN:
 			k_test += 1
 			if k_test % stride == 0:
 				# Out of work: stop here, the farthest cell reached will do.
-				if _work_used(spent, head, looks, tests) > WORK_MAX:
+				if _work_used(spent + grid, head, looks, tests) > WORK_MAX:
 					break
 				for q in cands:
 					looks += 1
@@ -272,15 +381,13 @@ func _plan_escape(ship: Ship, to: Vector2, fine := false, spent := 0) -> void:
 			came[nb] = cur
 			queue[tail] = nb
 			tail += 1
+	var work := _work_used(spent + grid, head, looks, tests)
 	if found < 0:
 		found = last
-	# Step 5: no room to move (the ship is wedged tighter than a cell): try
-	# again with finer cells, or give up.
-	var fc := o + Vector2((float(found % n) + 0.5) * cs, (float(found / n) + 0.5) * cs)
-	if found == s_idx or fc.distance_to(p) < 120.0:
-		if not fine:
-			_plan_escape(ship, to, true, _work_used(spent, head, looks, tests))
-		return
+	# Step 5: no room to move (the ship is wedged tighter than a cell).
+	if found == s_idx:
+		none["work"] = work
+		return none
 	# Step 6: walk back from the goal cell to the start, then pull the cell
 	# path tight: from each point jump to the farthest later cell that can be
 	# reached in a straight line over free cells.
@@ -298,21 +405,72 @@ func _plan_escape(ship: Ship, to: Vector2, fine := false, spent := 0) -> void:
 			b -= 1
 		pts.append(o + Vector2((float(cells[b] % n) + 0.5) * cs, (float(cells[b] / n) + 0.5) * cs))
 		a = b
+	var fc := o + Vector2((float(found % n) + 0.5) * cs, (float(found / n) + 0.5) * cs)
+	return {"pts": pts, "dot": found_dot, "dist": fc.distance_to(p), "work": work}
+
+
+## The points a way out of the rocks should lead the ship to see: the
+## CANDIDATE_DOTS route dots it may use that are cheapest to join on the way to
+## the goal ("distance from the ship to the dot" + "cost of the rest of the
+## route", as RouteGraph.entry() weighs them), topped up with the nearest dots
+## when fewer than that are in range; then the goal itself.
+func _candidates(ship: Ship, to: Vector2) -> PackedVector2Array:
+	var route := ai.world.map.route
+	var p := ship.global_position
+	var small := JungleBigFeature.route_small(ship)
+	var costs := route.costs_to(route.nearest(to, small), small)
+	var order: Array = []
+	for k in route.pos.size():
+		if small or route.jungle[k] == 0:
+			var d := p.distance_to(route.pos[k])
+			if not costs.is_empty() and costs[k] != INF and d <= RouteGraph.ENTRY_RANGE:
+				order.append([d + costs[k], k])
+			else:
+				order.append([RouteGraph.ENTRY_RANGE * 1000.0 + d, k])
+	order.sort_custom(func(x, y): return x[0] < y[0] or (x[0] == y[0] and x[1] < y[1]))
+	var cands := PackedVector2Array()
+	for k in mini(CANDIDATE_DOTS, order.size()):
+		cands.append(route.pos[order[k][1]])
+	cands.append(to)
+	return cands
+
+
+## Start flying the planned way out: `pts` are its waypoints, `dot` the route
+## dot it leads to (Vector2.INF = none), `dist` how far the end of the path is
+## from the ship, `to` the final goal of the trip. The brain gets a route at
+## once, the waypoints and the route that goes on from the dot, so that a ship
+## that flies an escape still has a plan for whatever reads it (the audit).
+func _start(ship: Ship, to: Vector2, pts: PackedVector2Array, dot: Vector2, dist: float) -> void:
 	_path = pts
 	_path_i = 0
-	_time_left = 14.0 + 0.012 * fc.distance_to(p)
-	_dot = found_dot
+	_time_left = 14.0 + 0.012 * dist
+	_dot = dot
 	_goal = to
 	_best = INF
 	_no_progress = 0.0
+	_retrace = false
+	_publish_route(ship)
 
 
-## The work units (see WORK_MAX) one try of _plan_escape() has used so far:
-## the grid, the `cells` the flood has visited, the cheap `looks` and the
-## exact line `tests`, on top of `spent` (the work of the first try; 0 for
-## the first try itself).
+## Put the escape's waypoints, and the route from the dot it leads to, in the
+## brain's route (PilotAI.path), which travel() does not touch while the
+## escape is on.
+func _publish_route(ship: Ship) -> void:
+	var brain := ai
+	var route := PackedVector2Array(_path)
+	if _dot != Vector2.INF:
+		route.append_array(brain.world.map.route.path(_dot, _goal, JungleBigFeature.route_small(ship)))
+	brain.path = route
+	brain.path_i = 0
+	brain.path_goal = _goal
+
+
+## The work units (see WORK_MAX) one try of _search() has used so far: `spent`
+## (the grid, and the work of the first try for the second try; 0 for the
+## first try itself) plus the `cells` the flood has visited, the cheap `looks`
+## and the exact line `tests`.
 func _work_used(spent: int, cells: int, looks: int, tests: int) -> int:
-	return spent + WORK_GRID + cells * WORK_CELL + looks * WORK_RAY + tests * WORK_LINE
+	return spent + cells * WORK_CELL + looks * WORK_RAY + tests * WORK_LINE
 
 
 ## A cheap look from `a` toward `b` over the grid (`n` cells wide, `o` the
@@ -369,12 +527,17 @@ func follow(ship: Ship) -> bool:
 	var c := ship.controls
 	var p := ship.global_position
 	_time_left -= 1.0 / 60.0
-	# Step 1: count the waypoints we have reached.
+	# Step 1: count the waypoints we have reached. A retrace is over at the
+	# first crumb where the ship can join the route graph again.
 	var reach := maxf(35.0, ship.radius * 2.0)
+	var reached := false
 	while _path_i < _path.size() and p.distance_to(_path[_path_i]) < reach:
 		_path_i += 1
 		_best = INF
 		_no_progress = 0.0
+		reached = true
+	if reached and _retrace and _path_i < _path.size() and brain.flight.can_join_route(ship, _goal):
+		_path_i = _path.size()
 	# Step 2: the escape is over (all waypoints flown, out of time, or thrown
 	# far off the path). Plan the rest of the way from the dot we were led to,
 	# or from scratch, and start the stuck measurement afresh.
@@ -394,7 +557,8 @@ func follow(ship: Ship) -> bool:
 	var wp := _path[_path_i]
 	# Step 3: no progress toward this waypoint for 2 s means the path cannot
 	# be flown (a gap too tight for the real ship). Give up and let the plain
-	# unstick run; no new escape for 15 s.
+	# unstick run; no new planned escape for 15 s (a retrace that fails does
+	# not hold the planner back).
 	var dwp := p.distance_to(wp)
 	if dwp < _best - 15.0:
 		_best = dwp
@@ -406,7 +570,8 @@ func follow(ship: Ship) -> bool:
 			_time_left = 0.0
 			_best = INF
 			_no_progress = 0.0
-			_cool_until = brain.world.time + 15.0
+			if not _retrace:
+				_cool_until = brain.world.time + 15.0
 			brain.path = PackedVector2Array()
 			brain.path_goal = Vector2.INF
 			return false

@@ -16,7 +16,9 @@ extends RefCounted
 ## board (AdmiralBoardMothership). The AI admiral buys the next level
 ## whenever the treasury holds the cost plus 1,000 after reserving the cost
 ## of the next step of its normal build plan (so the plan still comes
-## first). Counted in Game.usage as "doctrine_levels" (levels finished) and
+## first). The deliberately weak test admiral (--admiral-ai=weak) does not
+## buy it, like every other feature AI (AdmiralWeak.ai_acts). Counted in
+## Game.usage as "doctrine_levels" (levels finished) and
 ## "doctrine_credits".
 ##
 ## WHO USES IT: FeatureRegistry installs it for --variant=doctrine:on.
@@ -127,8 +129,10 @@ func _tick(dt: float) -> void:
 	if _ai_t > 0.0:
 		return
 	_ai_t = 1.0
+	# (A computer admiral buys, except the deliberately weak test admiral: the
+	# feature AIs act only for a non-weak one, see AdmiralWeak.ai_acts.)
 	for team in 2:
-		if world.admiral_ai[team] != null:
+		if AdmiralWeak.ai_acts(world, team):
 			_ai_buy(team)
 
 

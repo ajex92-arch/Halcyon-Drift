@@ -50,7 +50,7 @@ the user wants multiple resolutions tested.
   projectiles 2.3 ms) -> needs a perf pass.
 - Run a match: godot --headless --path remake --fixed-fps 60 -- --all-ai --max-minutes=8 --profile
 - Next: wave 1 of module agents (ui, pilot_ai, lanes, support) working in
-  mirror copies under scratchpad/work/<module>/ and delivering only their
+  mirror copies in the lead's working folder and delivering only their
   owned files; lead does the core perf pass meanwhile.
 - The wave-1 agents died at the session limit too. From here on the lead
   works inline, sequentially (no parallel agents).
@@ -164,7 +164,7 @@ the user wants multiple resolutions tested.
   minions per side): removed from the AI plan. Cinder sat on 14k treasury.
 - Multi-agent bug review (workflow, read-only; the session limit killed most
   verifiers, so the 41 findings were verified by hand; record in
-  scratchpad/review_findings.txt). Fixed:
+  the lead's working folder). Fixed:
   * Mothership.hit_t sampled 5 points: ion beams passed through the hull
     in ~20% of positions. Now <= 60 u sampling + bisection.
   * Projectiles: a torpedo killed after its own step stayed in `active`, so
@@ -401,7 +401,7 @@ that merges the best ideas into a new branch.
 - Behaviour-identical refactor proof: tests/det_hash.gd prints a hash of
   the whole game state every 5 s of a seeded match (--late starts at 25:00
   fully teched so sieges/capitals run). Seeded matches are deterministic
-  (3 parallel runs identical to 25:00). Tooling in the session scratchpad:
+  (3 parallel runs identical to 25:00). Tooling in the lead's working folder:
   det_check.ps1 (normal 900 s + late 300 s vs baseline), run_checks.ps1
   (import, load_all, bot_pilot, support_probe, headless UI tours),
   doc_check.ps1 (header/function/member doc coverage), merge_group.ps1.
@@ -438,9 +438,9 @@ that merges the best ideas into a new branch.
   admiral_control, world_core, ship, hud, panels, map_core, combat, team,
   data); entities, shell, tests in progress.
 - Fun research done: docs/FUN_RESEARCH.md (raw) and docs/FUN_PLAN.md (the
-  rules). Shared queue for matches: scratchpad run_batch.ps1 (6 slots).
+  rules). Shared queue for matches: run_batch.ps1 (6 slots).
 - NEXT (after the reset): verify main (run_checks, det_check, doc_check);
-  launch the main-prep workflow (scratchpad wf_prep.js: P1 hooks + the
+  launch the main-prep workflow (wf_prep.js: P1 hooks + the
   waypoint bug fix + escort_wing variant + skill jitter + damage event,
   P2 fun_probe v2 + scorer + arena matrix, P3 det-identical speed-up);
   regenerate det baselines; run baseline v2 (40 seeds, --skill-jitter);
@@ -453,7 +453,7 @@ that merges the best ideas into a new branch.
   checks OK; det_hash identical to the original (normal + late).
 - docs/CODE_GUIDE.md: a beginner's map of the whole code (folders, one
   tick step by step, every area's parts, the speed-ups, how to find
-  things, a 199-term glossary). Built by scratchpad make_code_guide.py from
+  things, a 199-term glossary). Built by make_code_guide.py from
   the agents' module maps; the README points at it.
 - Speed-ups, all det-identical (seeded fingerprint unchanged), about 12%
   overall (A/B side by side, seed 7, 14 min: 385 -> 347 ms per sim-second,
@@ -542,7 +542,7 @@ that merges the best ideas into a new branch.
     including the end screen and the start screen): its class, place,
     size, text, font size and colour, box style and gaps. Every conversion
     matched the old UI line for line (2,057 lines) before it was banked;
-    scratchpad ui_dump.ps1 runs and compares it. The pilot UI tour now
+    ui_dump.ps1 runs and compares it. The pilot UI tour now
     runs to the end headless (run_checks waits for "ui_tour: done").
   * Windowed screenshots are for eyes only: the player's ship follows the
     real mouse, so two windowed runs of the same build differ.
@@ -559,7 +559,7 @@ that merges the best ideas into a new branch.
 - AI bug hunt (the user: check pilot flight pathing, behaviour and
   targeting, then a deep dive of AI pilots, minions and the admiral before
   the fun plan, so bad AI doesn't skew the fun data). New probe
-  tests/pilot_audit.gd (kept in the scratchpad for now). Seed 7, 25 min:
+  tests/pilot_audit.gd (kept outside the project for now). Seed 7, 25 min:
   98 stuck episodes, ~3,900 ship-seconds of rock contact, 6 crash deaths,
   11% of fight samples aimed at targets behind asteroids, big ships not
   approaching their hold point in 58% of samples (68% late game).
@@ -576,7 +576,7 @@ that merges the best ideas into a new branch.
 
 ### 2026-10-15 ~15:20: deep-dive salvage (no code changed in main)
 The stopped investigators' work was rebuilt from their fix copies and
-transcripts into the scratchpad's deepdive\PRELIM.md: 24 candidate AI fixes
+transcripts into the deep-dive notes (PRELIM.md): 24 candidate AI fixes
 (flight 5, pilot behaviour 8, targeting 7, minions 4), each behind a switch
 in a scratch copy. Newly measured: fighter and bomber minions face the
 target instead of the lead point they compute, so only ~22% of fighter
@@ -601,7 +601,7 @@ queued to run during the usage wait.
   mid is chosen 5-13% of the time against 14-36% by real progress. No
   siege dented a mothership in 30 minutes. Repair bays last ~3 minutes on
   average, costing each side 5,000-8,500 credits per match.
-Details and next steps: the scratchpad's deepdive\PRELIM.md and STATE.md.
+Details and next steps: the deep-dive notes (PRELIM.md and STATE.md), kept outside the project.
 ### 2026-10-15 ~17:50: P2 banked (fun probe v2 and the fun scorer)
 16 files from the P2 copy into main: tests/fun_probe.gd and its parts
 (tests/lib/fun_probe_time/fights/kills/lead/motherships/economy/ttk.gd,
@@ -1839,6 +1839,90 @@ Checks:
 - Checks (on an export of the fix commit f6c77bb; the later commits change docs only): `det_check -Full` against the standard-rules baselines (normal 180 lines, late 60 lines, seed 7): normal IDENTICAL over 180 lines (END t=900 189 units f2ba4199), late IDENTICAL over 60 lines (END t=1800 172 units d374fd49). `run_checks` CHECKS ALL OK (the live entries; the removed tools' entries print SKIP); `script_error_scan` SCRIPT ERRORS 0 over the 42 logs of the run. `tools/ui_layout_check.py` "UI LAYOUT: clean" on the project folder for the pilot and Admiral tours at 1280x720, 1366x657 and 1920x1080, before and after. The browser check above ran on the export of f6c77bb; its console shows only the engine's usual lines at exit.
 - Notes for the next reader: a check that reads the project folder cannot see this kind of bug; look at the exported data too (PITFALLS has the steps). The measuring build keeps `tests/` in a copy of the Web preset, because the UI tour lives there; the shipped preset leaves it out. The v0.3.0 Windows download has the same defect (the Windows preset's exported data gives the same pile-up; the exe itself was not run), so the fix ships as v0.3.1. Nothing in the release workflow or `run_checks` tests an exported pack's layout yet; until one does, every push to main gets the browser check above.
 
+### 2026-10-20: ships stuck in the asteroids
+
+- The request (the user, Saturday, with a screenshot of the browser game): "I have here a screenshot showing a ship stuck
+  in the asteroids. Playing the match further notes more of these instances. Come up with a plan to try and fix them."
+  (The screenshot stays private; it was not copied anywhere.)
+- The study (12 cloud matches, seeds 301-312, v0.1.0, and PC replays): 340 stuck episodes (28 a match), half of them
+  rock-bound (160), half stalls in the open lane that are slow turning and waiting, not rocks. Three causes were
+  confirmed. (1) A route's first leg ended at a route dot hidden behind rocks: RouteGraph.nearest() took the nearest dot
+  when none of the 8 nearest was visible, and the plain unstick planned the same route from the same spot (112 of the 160
+  rock-bound episodes). (2) PilotEscape threw away exits nearer than 120 units, sent a ship that saw no dot to the
+  farthest cell of a closed region, and left the route empty during an escape (the audit's "noroute" counts were
+  escapes, not map gaps). (3) fight() flew small ships, mostly bombers, straight at a target through the lane wall, and
+  its stuck timer lived only in travel(). A ship stuck for a whole match (a "trap") happened in about one match in four.
+- Four changes, one commit each:
+  1. The route's way onto the graph is the cheapest dot the ship can fly to: RouteGraph.entry() weighs "distance to
+     the dot + cost of the rest of the route" (costs_to(), one search from the goal's dot, remembered) among the dots
+     within 2,500 units whose straight line is clear of every rock by the ship's radius plus 6; path() takes the
+     radius, minions and drones are untouched. With no such dot (no_entry) PilotFlight.travel() plans an escape at once
+     (PilotEscape.plan_now()) and plans the route again from where it ends.
+  2. A real unstick: PilotTrail (new) keeps up to 24 breadcrumbs of free spots; the first stall (4 s without
+     progress, PilotFlight.stall()) flies the track back to the first spot where the ship can join the route graph and
+     plans again; a stall also happens in a fight (PilotFlight.watch_pinned(): forward thrust without moving for 3 s,
+     then the target is given up for 6 s); a second stall in the same place plans an escape as before. A stall bans the
+     route dot the ship was flying to for 60 s, so the new route goes round it (RouteGraph.node_path() and path() take
+     banned dots; another jungle gate): a trace of a whole match showed a ship overshooting one gate for 1,000 s.
+  3. The escape planner: any exit to a dot is taken, however near (cells are tested from 30 units out); when the
+     coarse grid sees no dot, a fine grid over 800 units looks again before the ship settles for the farthest cell;
+     the 8 dots it looks for are the cheapest to join on the way to the goal; the brain keeps a route (the escape's
+     waypoints, then the route from its dot) while an escape flies; a grid with many cells costs more work units.
+  4. Small ships do not take a target (pick_target, prey) or a turret (push_target: its stand-off point) with a rock
+     between, and fight() flies travel() to the goal instead of straight at a hidden target more than 450 units away.
+  New numbers, all named constants with notes: RouteGraph ENTRY_RANGE 2500, ENTRY_TRIES 12, ENTRY_MARGIN 6, ENTRY_START
+  12; PilotFlight REPLAN_WAIT 1, PINNED_FWD 0.5, PINNED_SPEED 30, PINNED_T 3, BAN_T 60; PilotTrail STEP 50, MAX_CRUMBS
+  24; PilotEscape PLAN_RETRY 3, RETRACE_MIN 40, RETRACE_TIME 10, FAR_MIN 120, TEST_MIN 30, COARSE_HALF 1100,
+  COARSE_MARGIN 4, FINE_HALF 800, FINE_CELL 6, FINE_MARGIN 0.4, CANDIDATE_DOTS 8; PilotCombat HIDDEN_CLOSE 450.
+- New and changed test tools (no game change): tests/pilot_audit.gd now writes, for every stuck episode, the pilot, the
+  rock class (on a rock, next to one, in the open), the end time and why, and the seconds of rock contact; the counters
+  stuck_class_*, stuck_team_*, no_route_escape and no_route_plain (an empty path while an escape flies, apart from a
+  really missing route), escape_samples, and the "traps" list with traps, trap_seconds, trap_rock_seconds and
+  traps_farming (a ship that stays within 400 units for 60 s while it scrapes a rock for 2 s; mostly fighting = a camp
+  being farmed). tests/stuck_trace2.gd is the trace harness of the study (EPJ, TRAPJ, TRACE, ESC, TOP_ROCK and TOP_ESC
+  lines; pictures in a window). tests/stuck_spots.gd replays 91 old stuck spots in 3 waves, 100 s each: with the old
+  code 5.7 of 91 ships were still within 400 units after 100 s (mean of 3 seeds) and 1,193 ship-seconds were spent
+  near the start; after the four changes 0.7 and 389 (seconds of rock contact 922 -> 277).
+- PC matches, the same three seeds before and after (401-403, 1,500 s each, pilot_audit; PC numbers, for looking only):
+  stuck episodes 49 -> 39 (rock-bound 32 -> 11, in the open lane 17 -> 28: slow frigates, which this does not touch),
+  seconds of rock contact 2,455 -> 849 (-65%), traps (60 s rule) 4 -> 0 (a fighter at the Drake notch for 727 s, one at
+  the tl crack for 1,274 s, a lance for 74 s, a fighter for 64 s), crash deaths 2 -> 1, no_route_far 1,281 -> 13 (the
+  rest of the old count was escapes with an empty route), shots into rocks 126 -> 59, jungle share of pilot time 46.5%
+  -> 50.5%, monster kills by pilots 446 -> 475, pilot deaths 487 -> 545 (+12%, the matches go differently).
+- Cloud matches (pilot_audit, fun_probe and admiral_audit on 12 fresh seeds, 313-324, up to 60 minutes each; "before"
+  is the build with only the measuring probe, "after" is this branch's last code commit): stuck episodes 447 -> 314
+  (-30%); the rock-bound ones 206 -> 54 (-74%; Aurelian 81 -> 27, Vhorr 125 -> 27); in the open lane 241 -> 260 (+8%,
+  not touched); seconds of rock contact 11,073 -> 6,947 (-37%: while fighting -63%, in the lane state -50%, at home
+  -88%, but in the jungle state +24%, 2,905 -> 3,616); traps (60 s rule, farming left out) 8 -> 2 and their seconds
+  6,303 -> 130; no_route_far 2,644 -> 136; crash deaths 19 -> 23 (a count of about 20 events: within chance); jungle
+  share of pilot time +1%, monster kills by pilots 3,501 -> 3,511, pilot deaths -3%; admiral decisions per minute 2.95
+  -> 2.66 and mining drones lost -10%; 9 of 12 matches end (6 of 12 before). The aims of -80% rock-bound episodes and
+  -50% seconds of rock contact are not met (-74% and -37%).
+- Fun meter (for information, the same 12 cloud seeds): FUN 56.1 -> 61.4; one ingredient fell by more than 15 points,
+  S10 "Admiral matters" 82.9 -> 64.6. Its two late-game parts (spending ratio and admiral decisions per minute) are
+  counted from minute 30 on; more matches now end between minute 37 and 57 (their ratios 0.14 to 0.52) instead of
+  running to the 60-minute cap (about 0.97 in both sets), so the figure follows the changed mix of matches. Admiral
+  decisions per minute over the whole match went 2.95 -> 2.66.
+- What is left (the 54 rock-bound episodes of the cloud matches, and 3 PC matches of the old and the new build with an
+  instrumented test build, not committed): the 54 episodes are first-leg slowdowns (53 of 54), short (median 2 s after
+  the 8-second flag), ships that still move at about 64 units a second with the nose far off the goal, and two thirds of
+  them touch no rock: a slow turn beside rocks, not a pin; 16 of them are within 500 units of a jungle gate. Of the
+  separate scrapes that start while a ship follows its route (contacts more than 3 s apart), 65% start within 500
+  units of one of the 24 jungle gates (the straight links of 1,950 to 2,150 units, 78 to 101 wide at the throat); for
+  lances, which are about half of all rock contact in these matches, nearly all of those are on the jungle side, 0 to
+  200 units before the throat, after the turn at the gate's inside dot (45 degrees on median, 61% over 0.7 rad). The
+  old build scraped the same gates (separate scrapes by lances in the jungle: 176 before, 165 after) but most of its
+  rock seconds were ships pinned elsewhere; the new build moves on, and the gates are what is left.
+- Checks of the final build: run_checks ALL OK (load_all, bot_pilot, support_probe, both UI tours, both wheel checks;
+  the difficulty check is not on this branch). doc_check clean on every changed script. Determinism (seed 7, det_check
+  -Full, two runs A and B): identical to each other over 180 + 60 hash lines, normal END t=900 231 units 3548724f,
+  late END t=1800 211 units 33c83823. The game plays differently from v0.2.1 on purpose, from the first hash line (t=5
+  normal, t=1505 late: the first pilots' routes start at other dots); the commit with only the test tools (the
+  measuring probe) was IDENTICAL to v0.2.1's reference runs (normal f957a77a, late ccbb4bde). No script error in any
+  log. Speed (perf_probe, old and new build side by side, 3 pairs): the pilots' brains (s_ctrl) +2.4% in the normal
+  match and 0.0% in the late game, the whole simulation +0.9% normal (the late pair differs by +7%, from other
+  fights, not from the brains).
+
 ### 2026-10-26: hotfix: in the browser a click lands where the pointer is from the first load
 
 - The report (the user, Mon 10-26, the website): when the page is first loaded the buttons do not match where the mouse is; to press a button the mouse has to be moved down slightly; after a window resize it is right.
@@ -1855,3 +1939,74 @@ Checks:
   A real click on the drawn centre of "Fly as a Pilot" at 1366x657 on the first load: not a press before, a press after.
 - Checks (on the export of the fix commit; the commit after it changes docs only): `run_checks` CHECKS ALL OK (21 entries OK; the 10 entries of the removed tools print SKIP). `script_error_scan` SCRIPT ERRORS 0 over the 42 logs of that run, the 2 determinism logs and the 6 tour logs. `det_check -Full` against the standard-rules baselines (normal 180 lines, late 60 lines, seed 7): normal IDENTICAL over 180 lines (END t=900 189 units f2ba4199), late IDENTICAL over 60 lines (END t=1800 172 units d374fd49). `doc_check` clean on `window_mode.gd` (4/4 functions, 1/1 members), and `tools/api_index.py` gives the same `API_INDEX.md`. `tools/ui_layout_check.py` "UI LAYOUT: clean" (0 problems) on the desktop UI tour, pilot and Admiral, at 1280x720, 1366x657 and 1920x1080.
 - Notes for the next reader: nothing on the desktop can show this, because the desktop window is never smaller than the minimum. The browser check needs a page shorter than 720 pixels, real mouse events, and a screenshot to know where things are drawn (what the game believes about its own layout is exactly what is wrong). The probe was a throwaway and is not in the project; PITFALLS has the steps.
+
+### 2026-10-28: ships stuck in the asteroids, round 2 (gates)
+
+- Why: the entry above fell short of two of its aims in the cloud A/B on the version it was built on: rock-bound stuck
+  episodes went down 74% (the aim was 80%) and seconds of rock contact down 37% (the aim was 50%). What was left sat
+  at the 24 jungle gates: ships scraped the rocks 0 to 200 units before a gate's narrowest part because they took the
+  corner at the gate's inside dot while still turning (45 degrees on median). Step 8 of PilotFlight.travel() already
+  slowed a ship for the way into the jungle, but for the way out only for a corner over 0.7 rad, and then only to 45%.
+- The change: leaving the jungle through a gate is slowed like entering it. A new flag, to_lane (the next waypoint is
+  the gate's inside dot, the one after it is on the open lane and the ship is in the jungle), gets the entry's corner
+  speed (28% of top speed, at least 120 units a second) and the same braking distance to the waypoint. Three conditions
+  and one line of code, no new constant and no switch; the comments of Step 8 and the header say so. A ship needs
+  about a second more for each gate it leaves the jungle through. Nothing else about the pilots' flight changes.
+- Evidence before it was built (six PC matches of 1,500 s, looking only, a throwaway copy): seconds of rock contact
+  1,779 -> 726 (-59%), rock-bound episodes 16 -> 6, a lance's contact on the later legs of a jungle route 269 s -> 5 s
+  (three matches), jungle share of pilot time 16.8% -> 16.6%, monster kills by pilots 937 -> 946. Stuck episodes in an
+  open lane (slow frigates and waiting ships, not rocks) went 44 -> 53, which is within the noise of six matches; the
+  cloud A/B decides.
+- Checks (on exports of the probe commit, of round 1 merged and of the change; the results commit changes docs only):
+  the probe commit on this version, with no game change, plays IDENTICAL to the reference runs of the release it starts
+  from (seed 7, normal 180 lines, END t=900 189 units f2ba4199; late 60 lines, END t=1800 172 units d374fd49). run_checks
+  ALL OK on all three, 21 entries each. doc_check clean on the 11 scripts the branch changes. Determinism of the change
+  (det_check -Full, two runs A and B): identical to each other over 180 + 60 hash lines, normal END t=900 161 units
+  ec7a3b3b, late END t=1800 153 units 669cb36e. The game plays differently from that release on purpose from the first
+  hash line (normal t=5, late t=1505: the first pilots' routes start at other dots, round 1); the change itself first
+  differs from round 1 merged at t=120 (normal) and t=1530 (late). No script error in any log. Speed (perf_probe, old
+  and new build side by side, seeds 7 and 11, 600 s): the pilots' brains (s_ctrl) +3.2%, the whole simulation +2.1%.
+  Replay of the 91 old stuck spots (3 seeds, 100 s): ships still near their spot after 100 s, 1.3 of 91 with round 1
+  merged and 0.7 with the change.
+- PC matches, looking only (3 matches of 1,500 s, round 1 merged against the change): seconds of rock contact 1,185 ->
+  371 (-69%), rock-bound stuck episodes 13 -> 2, stuck episodes in the open lane 15 -> 17, crash deaths 4 -> 2, jungle
+  share of pilot time 16.7% -> 16.2%, monster kills by pilots 418 -> 406. Two of the three matches with the change
+  ended before 1,500 s (a side won); the 12-match cloud A/B judges the aims, not these.
+
+### 2026-10-29: the presets patch: guards and small fixes in the rule-set code
+
+- What it is. A read of the rule-set code (the feature modules, the launch options and the places they hook in) found 13 low findings, none of which stopped a release. Three (a start-screen guard and two texts) went into v0.2.0. Ten were left for this patch; eight are fixed here, one commit each (the two launch option findings share one), on the code of v0.3.1. Two are kept apart (below): the Bomber's target guards, and the minion_cap strength rule, which was fixed here first and then taken out again.
+- Fixed:
+  1. Redeploy: a bay or turret destroyed during the 4 s spool is freed at the end of that frame, and a freed object compares equal to null, so `MatchRules.tick()` skipped `RedeployFeature.finish()` (it tested `spool_site != null`), the ship launched the normal way and `redeploy_site_lost` was never counted. With the feature on every hyperspace jump is a redeploy jump, so `tick()` tests the feature, and `finish()` takes the site only while it is a live object. The ship still appears at the mothership; only the count changes.
+  2. A `--preset` given with an empty name (`--preset=`) was read as no preset and played the standard rules; it is refused now ("PRESET UNKNOWN", exit code 3). A `--variant` pair that is not `name:value`, or whose name is not a variant, was dropped without a word; the match is refused now ("VARIANT UNKNOWN", exit code 3; `Game.variant_error`). The start screen shows the line and keeps both seat buttons off. Only the names are checked, not the values.
+  3. The mothership's emergency (`MothershipRetreat`) runs for every `retreat` value except `none` and `last_stand`, as in v0.1.0, so a mistyped value or a harness without the key still gets the systems failure. The default plays the same.
+  4. `breach` and `breach_extra`: when `install()` stopped early on an unknown value the module stayed registered with no tracker, and the HUD banner and the minimap read it; both functions now answer an empty list.
+  5. `attrition`: the mothership's shield refill is worked out again at every update (base number x the Flagship shield research x the attrition factor) instead of from a number cached at 40:00, so research finished later counts.
+  6. `doctrine`: the computer admiral's purchase asks `AdmiralWeak.ai_acts()` like every other feature AI, so the deliberately weak test admiral does not buy levels.
+  7. `waves_late:none`: the top bar says "No more minion waves" (`HudTopBar.wave_line()`) instead of a clock for an infinite next wave. Display only.
+- Not in this patch: the lane Bomber's extra target under `bomber_role:torp` and `:both` (the standard rules) ignores the guards the original target pick applies (a ship it gave up on behind rocks, a rock in the way, a ship under an enemy turret's guns). Fixing it changes what the computer Bomber shoots at in the standard rules, so it is kept apart from this patch.
+- Taken out again: the `minion_cap` strength rule. The cap divides a minion's strength by the research bonus its team has at the moment of the hit, but the strength was fixed at spawn, so a minion flying when Reinforced Waves finished hits pilot ships about 8% weaker than the 15% cap says (seen only in a match where that research finishes while minions are flying; the determinism seed does not show it). A fix was written and merged with this patch (the minion remembers the bonus it was made with), and then taken out of v0.3.2 on the user's answer (Sat 2026-10-31: "Take it out, test build first"). In v0.3.2 `minion_cap` works as it did in v0.3.1; the fix goes to the test build first.
+- New check: `tests/preset_guards_check.gd` (31 cases: the breach modules without a tracker, attrition's refill, Doctrine and the weak admiral, the wave line, the launch option errors, the start screen's `--variant` line, a redeploy site destroyed and freed during its spool). 0 failures; the redeploy case failed on the first version of the fix, which is how the freed-object behaviour above was found. Run it with `--no-pilots --no-jungle --admiral-ai=weak` (README).
+- Checks on the committed tip (the game code of 5961818, which still had the `minion_cap` fix; later commits are docs only): `det_check -Full` against the standard-rules baselines (seed 7): normal IDENTICAL over 180 lines, late IDENTICAL over 60 lines, so the standard rules play as v0.3.1 does on that seed. `run_checks` CHECKS ALL OK (the removed tools' entries print SKIP). `script_error_scan` SCRIPT ERRORS 0 over every log of the runs. `doc_check` clean on the 17 scripts the patch changes. Refusals confirmed by a match start: `--preset=`, `--variant=fleetcap:30` and `--variant=fleet_cap:6:0` each print their UNKNOWN line and stop; `--variant=fleet_cap:30` starts.
+
+### 2026-10-29: the pause menu (M-07)
+
+- The user's words (Sat 10-17): "For the main branch in the next version and user test branch, i want to add a pause menu". Their answers: it holds Resume and How to play, Restart and Quit to start, a Full screen toggle and Quit game; it comes after the Tuesday reset. Read as: P (and Esc) opens a menu over the paused game with those buttons; no other setting goes in it.
+- What changed: `scripts/ui/pause_menu.gd` and `scenes/ui/pause_menu.tscn` (`PauseMenu`, a card in the middle of the HUD over a dimmed game; the look `PauseLook` in `UiKit`). It is one of the HUD's big panels (`HudPanels`: made on first use, in `close_others()` and `any_open()`, and `relayout()` gives its card the room between the top bar and the bottom strip), so only one panel shows at a time and the pieces it would cover step aside; the big centre message "Paused" therefore never shows over it (it now says "Press P for the pause menu." for a pause with no menu, which only a test makes).
+- The keys (`HudInput`): P opens the menu, or resumes when the menu holds the game. Esc goes from the most urgent thing down: it cancels an armed map tool, else closes the open panels, else opens the menu. While the menu holds the game the other keys stay quiet: H opens How to play over the menu (closing it by H, Esc or its Close button brings the menu back: `HudPanels.panel_closed()`), Esc steps back (help to menu, question to buttons, menu to game), B, Tab and the rest do nothing. The game stays paused for all of it: the menu's pause is a "session" (`PauseMenu.active`, from `open()` to `resume()`), which outlasts the card while the help is open over it. Resume reads the mouse buttons again, because a button let go during a pause never reaches the World.
+- The buttons: Resume; How to play; Restart match (a new match at once in the same seat, team, difficulty and rules; no start screen); Quit to start (the start screen); Full screen / Windowed (the existing `WindowMode.toggle_fullscreen()`, the same switch as F11; its words follow the window, also when F11 changed it); Quit game (not in the browser build). Restart, Quit to start and Quit game ask "are you sure?" first (a Yes and a Back button; the brief named the first two, the third is the same question for the same cost).
+- Restart and Quit to start: `Game.restart_match(role)` and `Game.quit_to_start()` lift the pause and load the main scene again (what the end screen's New match does); `Game.restart_role` tells `main.gd`, which reads and empties it, to start the match in that seat at once instead of showing the start screen. Everything the next match reads (difficulty, team, rules, options) lives in `Game` and survives the reload; the World, HUD and sound are made from nothing.
+- The full screen switch was not new: main has had F11 / Alt+Enter (`WindowMode`) since v0.2.0, so the button reuses it.
+- The help's "The match" page has a Pause entry and the Fullscreen entry mentions the button; the README controls table and DESIGN A15 describe the menu; the CODE_GUIDE has the paragraph and a glossary entry.
+- Tests: `tests/pause_menu_check.gd` (new) plays P, Esc and H through the real input path and checks: Esc closes a panel before it opens a menu; the menu pauses the game and the match clock stands still for 30 frames and moves again after a resume; P and Esc open and resume; H, Esc and the Close button around the help; a question and Back; B and Tab do nothing under the menu; the buttons; an armed map tool is put away by Esc first (Admiral); the match ending under the menu lifts the pause; with `--restart-check` it presses Restart match and Quit to start with their Yes buttons and finds a fresh match (a new HUD, the same seat, the clock near zero, not paused, no start screen). `tests/ui_tour.gd` takes pictures of the menu and of the restart question (pilot: `p06a_pause`, `p06b_pause_ask`; Admiral: `a08b_pause`, `a08c_pause_ask`; they replace the old "Paused" message pictures) and `tests/wheel_check.gd` checks the wheel over the menu and over a question (with the pause lifted, or a paused game would not hear the wheel at all).
+- Checks (on exports of the game code, f0b6134; the later commits are tests and docs only): det_check -Full (the drawing code on) against the standard-rules baselines main keeps (the fork_ad3486a files), on an export of 972457e (the game code is f0b6134's): normal IDENTICAL over 180 lines, late IDENTICAL over 60 lines. A menu is never built in a windowless run, so this proves that the keys, the pause and the reload code change no match. `run_checks` CHECKS ALL OK (the live entries; the entries of the removed test tools print SKIP) with the two new `pause_menu_check` entries (pilot and Admiral, both with `--restart-check`). `script_error_scan` SCRIPT ERRORS 0 over every log of the runs. `doc_check` clean on the 12 changed scripts and on all 314 scripts (2014/2014 functions, 2775/2775 members). `tools/ui_layout_check.py` "UI LAYOUT: clean" for the pilot and Admiral tours at all ten sizes (1280x720, 1366x657, 1366x768, 1280x600, 1024x600, 1536x730, 1600x789, 1920x969, 1920x1080, 2560x1300), the pause pictures included. Windowed ui_tour pictures for both seats at 1280x720 and at 1366x657 (a window opens no shorter than the game's own 720, so the second is 1366x720), 0 script errors.
+- Notes for the next reader: a `Hud`-level test that needs the match to run under an open menu must lift the pause itself (see wheel_check); `Game.restart_role` is the one word that makes `main.gd` skip the start screen outside test runs.
+
+### 2026-10-31: v0.3.2 release: the stuck-ships fix (two rounds), the presets patch and the pause menu
+
+- The user's OK (Sat 10-31): "Yes, with patch A (Recommended)": v0.3.2 ships today with patch A of the presets patch; the tenth fix, the lane Bomber's target guards, waits. The release review then found that one of patch A's nine fixes, minion_cap, changes standard matches (when a team finishes Reinforced Waves while minions made before 25:00 are flying; seed 7's det runs cannot reach that). The user's answer: "Take it out, test build first": the fix is out of this release, and it goes to the test build first, with the Bomber fix.
+- What went in, on main's v0.3.1 plus the browser mouse hotfix: the stuck-ships fix, rounds 1 and 2 (the 2026-10-20 and 2026-10-28 entries above); the presets patch (2026-10-29, above) without its minion_cap fix (taken out again by a revert of that fix's commit; `tests/preset_guards_check.gd` has 31 cases); the pause menu (2026-10-29, above). Each was built and checked on v0.3.1's code and joined here with a merge of its own; the code joined without a conflict. The conflicts were in docs only: PROGRESS.md (main's entries first, then the four new entries in date order) and CODE_GUIDE.md (the tests paragraph, where the stuck fix's new tests and the presets patch's preset_guards_check both went; both kept). API_INDEX.md made again by tools/api_index.py comes out the same as the joined file.
+- The repository (the user's answer, Sat 10-31: "Take the notes off main"): the design notes folders `deep_dive/` and `fun_plan/reports/` are deleted from the current files; they stay in the history, which is not rewritten. The helper scripts in `session_tools/` take their folders from the caller (`ab_run.ps1 -Copies`, `merge_group.ps1` and `bank_group.ps1 -GroupsDir`, `salvage.py`'s third argument), a test comment and the docs name no work folders, and the docs that pointed at the build reports say where they went.
+- Play: a match plays differently from v0.3.1 from the first hash line, on purpose (the stuck fix: the first pilots' routes start at other dots); the pause menu and the presets patch play exactly as v0.3.1. det_check -Full (the drawing code on), on an export of the release code (ad71c69): against the stuck fix round 2's own result files, normal IDENTICAL over 180 lines and late IDENTICAL over 60, so the joins changed nothing; the joined code before the minion_cap fix came out (c14aec6) gave the same, and against the standard-rules baselines main keeps (the fork_ad3486a files) it differs from the first hash line (normal t=5, late t=1505), as planned. The last hash: normal t=900, 161 units, ec7a3b3b; late t=1800, 153 units, 669cb36e. Script errors 0.
+- The stuck fix's cloud A/B (12 all-AI matches, seeds 325-336, up to 60 minutes; v0.3.1, round 1 alone, both rounds): rock-bound stuck episodes 141 -> 23 -> 15; seconds of rock contact 9,002 -> 5,229 -> 2,510; open-lane stalls, round 1 alone -> both rounds, 188 -> 138; crash deaths 17 -> 14 -> 25. 24 more seeds, round 1 alone against both rounds: crash deaths 44 -> 49, inside the line set before the results. Both aims (rock-bound -80%, rock contact -50%) are met. The big hulls gain little (stuck seconds 216 -> 272 for frigates, Destroyers and Battlecruisers together, mostly in the open lanes).
+- Checks: run_checks.ps1 on an export of the release code (ad71c69): CHECKS ALL OK (21 checks pass; the 10 entries of the removed tools, unlock x4, speed x5 and camera_pause, print SKIP, as `Needs` makes them for a copy without their scripts); the release's three new checks pass (pause_menu_check as a pilot and as the Admiral, with --restart-check, and preset_guards_check, 31 cases); script errors 0 over every log; doc_check clean on the changed scripts (38 of 38 for the joins, 5 of 5 after the minion_cap fix came out); tools/api_index.py makes API_INDEX.md again with no change; the secret scan and the path scrub clean; an Opus release and privacy review (privacy clean, the joins right).

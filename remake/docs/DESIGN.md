@@ -689,6 +689,31 @@ Pacing target in AI matches: bombers ~3–4 min, corvettes ~6–8, frigates
   facing the threat and retreat when isolated. AI uses shield focus and
   energy routing. Skill varies per pilot (aim error, reaction, greed).
   **No idle orbiting:** stationary goals are held with a stop, not circled.
+- **Getting unstuck (added 2026-10-20):** AI ships used to end up
+  pinned in the asteroids (about 28 stuck episodes and 700 s of rock contact
+  a match in a 12-match study). A pilot's route now starts at the cheapest
+  route-graph dot the ship can really fly to (a straight line clear of every
+  rock by the ship's radius plus 6 units), not at the nearest dot; with no
+  such dot the ship is in the rocks and plans an escape at once: a grid
+  search for the nearest spot that sees a route dot (coarse cells first, then
+  fine cells, so a narrow gap a ship really passes is not missed), after which
+  the route goes on from that dot. A ship that makes no progress for 4 seconds
+  (a small ship in a fight: pushes forward without moving for 3 seconds) is
+  stalled. The first stall sends it back along its own track (a trail of up
+  to 24 breadcrumbs, one every 50 units, dropped while the ship touches no
+  rock) to the first spot where it can join the route graph again, and for 60
+  seconds its routes go round the route dot it was flying to (another jungle
+  gate, for example, when the first one pins it again and again); a second
+  stall in the same place plans an escape. Small ships no longer take
+  a target with a rock between them and the target, and with a hidden target
+  more than 450 units away they follow the route to their goal instead of
+  flying straight at it. A ship that leaves the jungle through a gate slows
+  for the gate's inside dot as it does when it enters: the route turns there,
+  about 45 degrees on median, from the winding jungle path onto the gate's
+  straight link, and a ship that takes it fast scrapes the rocks beside the
+  gate. The corner speed is the entry's (28% of top speed, at least 120 units
+  a second) and braking starts early enough. Stalls in an open lane (slow
+  turning and waiting frigates) are not touched.
 - **The opening (added 2026-10-17, v0.2.1, C24):** for the first 10 seconds
   (`Rules.AI_OPENING_HOLD`) every AI pilot of both teams waits near its own
   mothership, so a human player can get their bearings. From 10 s each AI
@@ -794,6 +819,16 @@ Pacing target in AI matches: bombers ~3–4 min, corvettes ~6–8, frigates
   turrets per node, bays, wards), Mothership (upgrades, move), Fleet
   (waypoint, minion control). Map tools with click-to-place.
 - **Scoreboard** (Tab for pilots), **How to play** (H), **End screen**.
+- **Pause menu** (P, or Esc when there is no map tool or panel to cancel or
+  close; the same key resumes): a card over the dimmed game, and the game waits
+  while it shows. Buttons: Resume; How to play (the help pages open over it and
+  closing them returns to it); Restart match (a new match at once in the same
+  seat, team, difficulty and rules, with no start screen); Quit to start (back
+  to the start screen); Full screen / Windowed (the same switch as F11); Quit
+  game (not in the browser build). Restart, Quit to start and Quit game ask
+  "are you sure?" first. While it holds the game the other keys stay quiet (H
+  shows the help, Esc steps back). It is one of the HUD's big panels, so only
+  one panel shows at a time and the pieces it would cover step aside.
 - **Highlight colour:** the menus have one highlight colour (the
   first line of the top-left panel, pressed and chosen buttons, selected tabs,
   prices, your own scoreboard row, the rally point). It is amber for an Aurelian

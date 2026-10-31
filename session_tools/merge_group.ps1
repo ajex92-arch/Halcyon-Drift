@@ -1,10 +1,12 @@
 param(
 	[Parameter(Mandatory = $true)][string]$Group,
+	# The folder that holds the groups' working copies (one folder per group).
+	[Parameter(Mandatory = $true)][string]$GroupsDir,
 	# Wildcard patterns (relative paths) the group is allowed to change or add.
 	[Parameter(Mandatory = $true)][string[]]$Allowed,
 	[switch]$DryRun,
 	# The snapshot the group's copy started from (default: the pre-notation
-	# snapshot scratchpad\original). A copy made later from main needs its
+	# snapshot, the folder original next to this script). A copy made later from main needs its
 	# own snapshot of main taken at the same moment.
 	[string]$Base = ""
 )
@@ -12,10 +14,10 @@ param(
 # from its scratch copy into the main remake, and deletes the ones it
 # removed. A file counts as changed by the group when it
 # differs from the untouched snapshot of the remake taken before the
-# notation pass (scratchpad\original). Refuses (and lists) any change
+# notation pass (the folder original next to this script). Refuses (and lists) any change
 # outside the group's allowed paths, so a stray edit can't sneak in.
 $sp = Split-Path -Parent $MyInvocation.MyCommand.Path
-$src = (Get-Item "$sp\notate\$Group").FullName
+$src = (Get-Item (Join-Path $GroupsDir $Group)).FullName
 $orig = (Get-Item $(if ($Base -ne "") { $Base } else { "$sp\original" })).FullName
 $dst = "<FC>\remake"
 $ok = @(); $stray = @()

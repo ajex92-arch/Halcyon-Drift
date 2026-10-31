@@ -9,8 +9,8 @@ v0.3.0 are not switches and stay). Since v0.3.0 a match with no `--preset` plays
 pick, the standard rules.
 The six forks' own manifests are kept in `docs/fork_manifests/<fork>.md`, with only their
 paths, base names and a few notes (the user's later decisions, the API index) updated for this
-repository (keys, values, usage counters and shared-file edits of each fork). Their build reports are in
-`../fun_plan/reports/`, and the plain-words summary of this release, with the validation
+repository (keys, values, usage counters and shared-file edits of each fork). Their build reports were in
+`../fun_plan/reports/` (taken off main in v0.3.2; still in the history), and the plain-words summary of this release, with the validation
 result, is `docs/RELEASE_NOTES.md`.
 
 ## The presets (the two chosen by the user, Sat 2026-10-17)
@@ -64,8 +64,12 @@ How to play a preset:
   a match plays without the option). `--variant` still works on top and wins for its keys:
   `--preset=pick --variant=fleet_cap:30` is the pick with the old rules' minion limit (a limit
   other than 60, so a requirement change).
-- An unknown preset name stops the match at its start ("PRESET UNKNOWN", exit code 3),
-  like a FEATURE CONFLICT, so a typo never plays other rules by mistake.
+- An unknown preset name, or an empty one (`--preset=`), stops the match at its start
+  ("PRESET UNKNOWN", exit code 3), like a FEATURE CONFLICT, so a typo never plays other rules
+  by mistake. So does a `--variant` pair that is not `name:value` or whose name is not a
+  variant ("VARIANT UNKNOWN", exit code 3; for example `fleetcap:30` or `fleet_cap:6:0`).
+  Only the names are checked, not the values; a value a feature does not know gets that
+  feature's own warning.
 - The strings live in `scripts/data/council_presets.gd` (CouncilPresets); the 80-seed
   validation ran the same strings as `--variant`.
 

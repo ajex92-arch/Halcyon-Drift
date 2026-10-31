@@ -47,10 +47,15 @@ changes.
 ## scripts/ai/pilot_escape.gd  (class_name PilotEscape extends RefCounted)
 - `func is_active() -> bool`
 - `func note_unstick(ship: Ship, to: Vector2) -> void`
+- `func plan_now(ship: Ship, to: Vector2) -> bool`
 - `func follow(ship: Ship) -> bool`
 
 ## scripts/ai/pilot_flight.gd  (class_name PilotFlight extends RefCounted)
 - `func reset_progress() -> void`
+- `func note_position(ship: Ship) -> void`
+- `func can_join_route(ship: Ship, to: Vector2) -> bool`
+- `func stall(ship: Ship, to: Vector2, ban_dot := true) -> void`
+- `func watch_pinned(ship: Ship) -> bool`
 - `func target_hidden(ship: Ship, to: Vector2) -> bool`
 - `func travel(ship: Ship, to: Vector2, arrive: float) -> void`
 - `func avoid_hulls(ship: Ship) -> void`
@@ -102,6 +107,11 @@ changes.
 - `static func engage_range(ship: Ship) -> float`
 - `static func standoff(ship: Ship, t: Unit, station: Vector2) -> Vector2`
 
+## scripts/ai/pilot_trail.gd  (class_name PilotTrail extends RefCounted)
+- `func note(p: Vector2, free: bool, ship_id: int) -> void`
+- `func back_from(p: Vector2, min_d: float) -> PackedVector2Array`
+- `func size() -> int`
+
 ## scripts/ai/skill_jitter.gd  (class_name SkillJitter extends RefCounted)
 - `static func jittered(base: float, slot: int) -> float`
 - `static func offset(slot: int) -> float`
@@ -135,6 +145,8 @@ changes.
 - `func choose_difficulty(level: String) -> void`
 - `func use_remembered_team() -> void`
 - `func choose_team(side: int) -> void`
+- `func restart_match(role: String) -> void`
+- `func quit_to_start() -> void`
 - `func opt(key: String, default_value = null)`
 - `func variant(key: String) -> String`
 - `func count_usage(key: String, n: int = 1) -> void`
@@ -188,8 +200,11 @@ changes.
 - `func connect_nodes(a: int, b: int, small_only: bool) -> void`
 - `func node_count() -> int`
 - `func nearest(p: Vector2, small: bool) -> int`
-- `func node_path(a: int, b: int, small: bool) -> PackedInt32Array`
-- `func path(from: Vector2, to: Vector2, small: bool) -> PackedVector2Array`
+- `func node_path(a: int, b: int, small: bool, banned := PackedInt32Array()) -> PackedInt32Array`
+- `func costs_to(b: int, small: bool) -> PackedFloat32Array`
+- `func entry(p: Vector2, b: int, small: bool, radius: float, banned := PackedInt32Array()) -> int`
+- `func dot_at(p: Vector2) -> int`
+- `func path(from: Vector2, to: Vector2, small: bool, radius: float = 0.0, banned := PackedInt32Array()) -> PackedVector2Array`
 
 ## scripts/core/route_graph_heap.gd  (class_name RouteGraphHeap extends RefCounted)
 - `static func push(heap: Array, f: float, node: int) -> void`
@@ -733,7 +748,7 @@ changes.
 - `static func path_half() -> float`
 - `static func allows(ship: Ship) -> bool`
 - `static func route_small(ship: Ship) -> bool`
-- `static func plan_route(route: RouteGraph, ship: Ship, from: Vector2, to: Vector2) -> PackedVector2Array`
+- `static func plan_route(route: RouteGraph, ship: Ship, from: Vector2, to: Vector2, strict := true, banned := PackedInt32Array()) -> PackedVector2Array`
 - `func install(w: World) -> void`
 
 ## scripts/features/jungle_scale.gd  (class_name JungleScaleFeature extends RefCounted)
@@ -1157,6 +1172,8 @@ changes.
 - `func toggle_board() -> void`
 - `func show_scoreboard(on: bool) -> void`
 - `func toggle_help() -> void`
+- `func toggle_pause_menu() -> void`
+- `func panel_closed() -> void`
 - `func close_others(keep: Control) -> void`
 - `func any_open() -> bool`
 
@@ -1173,11 +1190,24 @@ changes.
 
 ## scripts/ui/hud_top_bar.gd  (class_name HudTopBar extends PanelContainer)
 - `func refresh(world: World) -> void`
+- `static func wave_line(md: MinionDirector, time: float) -> String`
 
 ## scripts/ui/minimap.gd  (class_name Minimap extends Control)
 - `func setup(w: World, ov: CommandOverlay) -> void`
 - `func to_map(p: Vector2) -> Vector2`
 - `func to_world(m: Vector2) -> Vector2`
+
+## scripts/ui/pause_menu.gd  (class_name PauseMenu extends Control)
+- `func setup(h: Hud) -> void`
+- `func open() -> void`
+- `func show_card() -> void`
+- `func resume() -> void`
+- `func back() -> void`
+- `func end_session() -> void`
+- `func ask(which: String) -> void`
+- `func current_view() -> String`
+- `func set_room(top: float, bottom: float) -> void`
+- `func card_width() -> float`
 
 ## scripts/ui/scoreboard.gd  (class_name Scoreboard extends PanelContainer)
 - `func setup(w: World) -> void`

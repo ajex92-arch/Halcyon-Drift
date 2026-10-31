@@ -10,7 +10,9 @@ extends RefCounted
 ##     ones: minions about to die (last hits) and weak pilots are juicy
 ##     ("weak" counts hull and shields together, Unit.total_frac()),
 ##     turrets only count while our minions tank them, and a target with a
-##     rock between it and us is 700 worse (our shots would hit the rock).
+##     rock between it and us is 700 worse (our shots would hit the rock; a
+##     small ship leaves such a target alone: its pilot would fly straight at
+##     it through the rock).
 ##     The pilot we are shooting now gets STICK_BONUS (250) off, and stays a
 ##     candidate out to STICK_RANGE (1.3) times the range, so two pilots of
 ##     about equal value don't make us swap every think. A bomber in the
@@ -20,13 +22,14 @@ extends RefCounted
 ##   - push_target() finds a structure worth attacking with the wave (an
 ##     enemy turret, or the enemy mothership). Feature modules may change
 ##     how the turrets are scored (World.push_weight_hooks); with none, the
-##     nearest one wins, as always.
+##     nearest one wins, as always. A small ship only takes a turret that it
+##     can hit from its stand-off point (no rock between).
 ##   - Two feature modules reach in here when their variant is on (nothing
 ##     changes otherwise): EffFeature adds a weapon-aware term to every
 ##     score in pick_target(), and MsNosmallFeature makes small non-bomber
 ##     ships leave the enemy mothership alone (pick_target and push_target).
 ##   - prey() finds an enemy pilot worth hunting (one behind a rock scores
-##     700 worse, as in pick_target()).
+##     700 worse, as in pick_target(); a small ship skips it).
 ##   - farm_target() finds an enemy minion near our wave's front minion
 ##     (within FARM_RADIUS of it) to fly out to and shoot when nothing else
 ##     is in range. It scores minions with minion_score(), the same score
@@ -133,6 +136,7 @@ func pick_target(ship: Ship, r: float) -> Unit:
 	# times in 10, and do only x0.35 to them while the damage modifiers are
 	# kept (minions, drones, wards and small pilots).
 	var bomber_lane := ship.hull_id == "bomber" and brain.state == "lane"
+	var small := ship.is_small()
 	# Feature hook (eff:on): the weapon-aware target score, see EffFeature.
 	var eff_on := world.features.has("eff")
 	var best_adj := 0.0
@@ -204,9 +208,13 @@ func pick_target(ship: Ship, r: float) -> Unit:
 			s -= STICK_BONUS
 		# Step 3: keep the lowest score so far. A candidate that would win
 		# gets 700 added if a rock blocks the line to it (checked only then,
-		# to save the cost); it may lose its lead because of that.
+		# to save the cost); it may lose its lead because of that. A small
+		# ship leaves such a candidate alone altogether: its pilot would fly
+		# straight at it, into the rock wall between them.
 		if s < best_s:
 			if world.asteroids.segment_blocked(ship.global_position, u.global_position):
+				if small:
+					continue
 				s += 700.0
 				if s >= best_s:
 					continue
@@ -270,6 +278,10 @@ func push_target(ship: Ship, station: Vector2) -> Unit:
 			continue
 		var big_vs_pd := ship.size_class >= Rules.SIZE_LARGE and t.ttype == "pd"
 		if not big_vs_pd and not brain.senses.minions_tanking(t, ship.team):
+			continue
+		# A small ship (a bomber) has to be able to hit the turret from its
+		# stand-off point: not one with a rock between that spot and the turret.
+		if ship.is_small() and world.asteroids.segment_blocked(standoff(ship, t, station), t.global_position):
 			continue
 		# Its score: the distance, or with hooks what they make of it (a
 		# score of INF means "never this one").
@@ -351,8 +363,11 @@ func prey(ship: Ship, station: Vector2) -> Unit:
 		if brain.senses.odds_at(u.global_position, ship) < -1:
 			continue
 		# A pilot behind a rock scores 700 worse (checked only for a
-		# candidate that would otherwise win).
+		# candidate that would otherwise win); a small ship does not hunt one
+		# at all, it would fly straight at it through the rock.
 		if s < best_s and brain.world.asteroids.segment_blocked(ship.global_position, u.global_position):
+			if ship.is_small():
+				continue
 			s += 700.0
 		if s < best_s:
 			best_s = s

@@ -17,11 +17,12 @@ extends Node
 ## The tour covers the screens a player really meets, each in its busiest
 ## state: the hangar (all four tabs, and opened in flight), the docked
 ## message, the flying HUD with a full kill feed, earnings log and pop-up
-## hint, the help pages, the scoreboard, the pause message, both
+## hint, the help pages, the scoreboard, the pause menu (its buttons and
+## the question before a restart), both
 ## motherships in trouble, the dead screen with the hangar open over it,
 ## the end screen (with a pop-up hint shown just before the match ends)
 ## and the start screen; for an admiral the board's five tabs, the map
-## tool, the help, the pause and the hangar.
+## tool, the help, the pause menu and the hangar.
 ##
 ## HOW TO RUN IT ("godot" is the Godot console program, started from the
 ## folder that holds remake/):
@@ -58,9 +59,9 @@ extends Node
 ## loads tests/<name>.gd, adds it after the World and calls setup()), and
 ## builds the HUD headless only for --force-hud. It finds the node named
 ## "Hud" and calls the HUD's own functions: Hud._toggle_help(),
-## _show_scoreboard(), _toggle_board(), _on_match_over(),
-## Hangar._set_tab() / launch(), AdmiralBoard._set_tab(), HelpPanel._show()
-## and CommandOverlay arm() / apply_at() / disarm(). tests/lib/ui_dump.gd
+## _toggle_pause_menu(), _show_scoreboard(), _toggle_board(), _on_match_over(),
+## Hangar._set_tab() / launch(), AdmiralBoard._set_tab(), HelpPanel._show(),
+## PauseMenu.ask() and CommandOverlay arm() / apply_at() / disarm(). tests/lib/ui_dump.gd
 ## prints the dumps.
 
 ## The start screen, shown once at the end of the pilot tour (--auto runs
@@ -290,14 +291,17 @@ func _pilot_steps() -> Array:
 			hud._show_scoreboard(true)],
 		[9.5, func() -> void: await _shot("p06_scoreboard")],
 		# Close the scoreboard and jump the match clock to 64 s, past the
-		# first minion wave's time (45 s), for a picture of a wave. Pause
-		# for a picture of the pause message first.
+		# first minion wave's time (45 s), for a picture of a wave. Open the
+		# pause menu for its pictures first: the buttons, then the question
+		# before a restart, then resume.
 		[10.0, func() -> void:
 			hud._show_scoreboard(false)
 			world.time = 64.0
-			get_tree().paused = true],
+			hud._toggle_pause_menu()],
 		[10.4, func() -> void: await _shot("p06a_pause")],
-		[10.5, func() -> void: get_tree().paused = false],
+		[10.45, func() -> void: hud.pause_menu.ask(PauseMenu.VIEW_RESTART)],
+		[10.48, func() -> void: await _shot("p06b_pause_ask")],
+		[10.5, func() -> void: hud._toggle_pause_menu()],
 		[14.5, func() -> void: await _shot("p07_wave")],
 		# Both motherships in trouble: the longest top bar and banner text.
 		[14.7, func() -> void: _trouble(true)],
@@ -374,7 +378,8 @@ func _admiral_steps() -> Array:
 			hud.overlay.disarm()
 			world.camera.look_at_point(Vector2(20000, 13000))],
 		[11.0, func() -> void: await _shot("a08_map_mid")],
-		# The help (the Admiral page), the pause message, the hangar an
+		# The help (the Admiral page), the pause menu (its buttons, then the
+		# question before going back to the start screen), the hangar an
 		# admiral can open with B, and both motherships in trouble.
 		[11.2, func() -> void:
 			hud._toggle_help()
@@ -382,10 +387,12 @@ func _admiral_steps() -> Array:
 		[11.6, func() -> void: await _shot("a08a_help")],
 		[11.8, func() -> void:
 			hud._toggle_help()
-			get_tree().paused = true],
+			hud._toggle_pause_menu()],
 		[12.2, func() -> void: await _shot("a08b_pause")],
+		[12.22, func() -> void: hud.pause_menu.ask(PauseMenu.VIEW_START)],
+		[12.26, func() -> void: await _shot("a08c_pause_ask")],
 		[12.3, func() -> void:
-			get_tree().paused = false
+			hud._toggle_pause_menu()
 			hud._open_hangar()],
 		[12.8, func() -> void: await _shot("a09_hangar")],
 		[13.0, func() -> void:

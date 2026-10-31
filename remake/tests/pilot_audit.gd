@@ -9,7 +9,10 @@ extends Node
 ## scraped rocks are also counted per hull), on retreats (how much health
 ## a ship had when it turned back and how the retreat ended), on ships
 ## pressed against a mothership hull, and on what each big ship aims at
-## during a siege.
+## during a siege. For every stuck ship it also notes who it was, whether it
+## sat on or next to a rock, and when it got free; and it finds "traps":
+## ships that stay in one small area for a whole minute while they scrape a
+## rock, which the 8-second stuck rule cuts into pieces or misses.
 ##
 ## HOW IT WORKS: every tick it counts rock contacts (the ship's last move
 ## slid along something that isn't a unit; and, apart, a mothership hull).
@@ -17,10 +20,16 @@ extends Node
 ## at each flying AI pilot (its brain: state, goal, target, path) and adds
 ## to the counters below; every 2 s it remembers each ship's position, so a
 ## ship that moved less than 150 in 8 s while far from its goal counts as
-## stuck. Deaths come from Events.unit_killed. Every 60 s it prints one
+## stuck (an "episode": it ends when the ship moves on, dies or docks). The
+## same positions feed the trap rule: a ship that never goes farther than
+## TRAP_RADIUS from where a 60-second window began, and scrapes a rock for at
+## least 2 seconds of it, is trapped until it gets TRAP_LEAVE_MARGIN farther
+## out. A path that is empty while an escape flies (PilotEscape) is counted
+## apart from a path that is really missing. Deaths come from
+## Events.unit_killed. Every 60 s it prints one
 ## "AUDIT" line; at the end one "AUDIT_JSON {...}" line with every counter
 ## and the first examples of each problem, plus the lists of every pilot
-## death ("deaths") and every stuck episode ("stucks").
+## death ("deaths"), every stuck episode ("stucks") and every trap ("traps").
 ##
 ## HOW TO RUN IT ("godot" is the Godot console program, started from the
 ## folder that holds remake/):
@@ -32,6 +41,29 @@ extends Node
 ## game (it connects to Events.unit_killed and Events.damage_applied, and
 ## switches on Combat.emit_damage_events so that the second one is sent); it
 ## changes nothing in the match.
+
+## The trap rule looks at this many position samples (2 s apart, so 60 s).
+const TRAP_WINDOW := 30
+## A pilot is trapped when it never went farther than this (world units) from
+## where the window began.
+const TRAP_RADIUS := 400.0
+## ...and its ship scraped a rock for at least this many ticks in the window
+## (120 ticks = 2 s).
+const TRAP_ROCK_TICKS := 120
+## A trap ends once the ship is more than TRAP_RADIUS plus this (world units)
+## from the place where the trap was found.
+const TRAP_LEAVE_MARGIN := 150.0
+## The most traps the "traps" list keeps.
+const MAX_TRAPS := 300
+## A stuck ship counts as touching a rock when the gap between the ship's
+## circle and the nearest rock's solid circle is at most this (world units).
+const ROCK_CONTACT_GAP := 8.0
+## ...and as next to a rock when that gap is at most this (world units).
+const ROCK_NEAR_GAP := 60.0
+## The names of the rock classes of a stuck episode, by number (0 = in the
+## open, 1 = next to a rock, 2 = touching one); they end the counter names
+## "stuck_class_..." and "stuck_seconds_...".
+const ROCK_CLASSES := ["open", "near", "contact"]
 
 ## The running match (set by setup()).
 var world: World
@@ -47,8 +79,13 @@ var _report_t := 60.0
 var c := {}
 ## Examples of each problem: name -> Array of short Dictionaries (capped).
 var ex := {}
-## Per pilot (key = callsign): last positions (every 2 s), last state,
-## last target id, whether a stuck episode is running.
+## Per pilot (key = callsign), made by _h(): last positions (every 2 s), last
+## state, last target id, whether a stuck episode is running ("stuck", "row"
+## = its place in `stucks`, "cls" = its rock class, "rock_ep" = ticks of rock
+## contact in it), the trap window ("tpos" positions and "trock" rock ticks
+## per sample, "trap" = the running trap or null), the rock ticks since the
+## last position sample ("rock_cur") and when the pilot's ship last died
+## ("dead_t").
 var _hist := {}
 ## Every pilot death: [time, team, hull, state, cause, source, x, y, life s,
 ## health 0.5 s before, retreat age s, source x, source y].
@@ -57,8 +94,19 @@ var deaths := []
 ## x, goal y, goal distance, own mothership hull distance, rocks near, in
 ## open lane, seconds since launch, speed, angle to the goal (rad), route
 ## length, route index, forward x100, unstick timer, stuck timer, what the
-## last move slid along, solid things within 450].
+## last move slid along, solid things within 450, the pilot's callsign, the
+## rock class (2 = the ship touched a rock or was within ROCK_CONTACT_GAP of
+## one, 1 = within ROCK_NEAR_GAP, 0 = in the open), the time the episode ended
+## (-1 = never logged), why it ended ("moved", "died", "docked" or "end") and
+## the seconds of rock contact during it].
 var stucks := []
+## Every trap (the first MAX_TRAPS): [time found minus 60, time it ended, team,
+## callsign, hull, state when found, x and y where it was found, seconds of
+## rock contact, share of the time spent fighting, share with an empty path,
+## share with an escape flying, why it ended ("left", "died", "docked" or
+## "end")]. A trap that is mostly a fight (a camp being farmed) is counted in
+## "traps_farming" as well.
+var traps := []
 
 
 ## main.gd calls this once, right after the World is built.
@@ -156,6 +204,13 @@ func _physics_process(dt: float) -> void:
 			_add("rock_contact_ticks_" + b.state)
 			if b.target != null and is_instance_valid(b.target) and b.state != "home" and not b.combat.target_far(s):
 				_add("rock_contact_ticks_fighting")
+			# This pilot's own rock ticks: for its stuck episode and its trap.
+			var hr := _h(b.profile.callsign)
+			hr["rock_cur"] += 1
+			if hr["row"] >= 0:
+				hr["rock_ep"] += 1
+			if hr["trap"] != null:
+				(hr["trap"] as Dictionary)["rock_ticks"] += 1
 	_sample_t -= dt
 	if _sample_t <= 0.0:
 		_sample_t = 0.5
@@ -166,12 +221,16 @@ func _physics_process(dt: float) -> void:
 		_positions()
 	if world.time >= _report_t:
 		_report_t += 60.0
-		print("AUDIT t=%d stuck=%d rock_s=%.0f occl=%d/%d home_nofire=%d hold_far=%d/%d noroute=%d deaths=%d crash_deaths=%d" % [int(world.time),
+		print("AUDIT t=%d stuck=%d rock_s=%.0f occl=%d/%d home_nofire=%d hold_far=%d/%d noroute=%d deaths=%d crash_deaths=%d traps=%d" % [int(world.time),
 			int(c.get("stuck_episodes", 0)), float(c.get("rock_contact_ticks", 0)) / 60.0, int(c.get("occluded", 0)), int(c.get("fight_samples", 0)),
 			int(c.get("home_target_in_reach", 0)), int(c.get("hold_far_not_approaching", 0)), int(c.get("hold_far", 0)),
-			int(c.get("no_route_far", 0)), int(c.get("pilot_deaths", 0)), int(c.get("death_crash", 0))])
+			int(c.get("no_route_far", 0)), int(c.get("pilot_deaths", 0)), int(c.get("death_crash", 0)), int(c.get("traps", 0))])
 	if world.time >= secs or world.phase != "play":
-		print("AUDIT_JSON ", JSON.stringify({"time": snappedf(world.time, 1.0), "counters": c, "examples": ex, "deaths": deaths, "stucks": stucks}))
+		# Episodes and traps still running end here.
+		for key in _hist.keys():
+			_episode_end(_hist[key], "end")
+			_trap_end(_hist[key], "end")
+		print("AUDIT_JSON ", JSON.stringify({"time": snappedf(world.time, 1.0), "counters": c, "examples": ex, "deaths": deaths, "stucks": stucks, "traps": traps}))
 		get_tree().quit()
 
 
@@ -185,12 +244,15 @@ func _sample() -> void:
 			continue
 		var b := s.controller as PilotAI
 		var key := b.profile.callsign
-		var h: Dictionary = _hist.get(key, {"pos": [], "state": "", "target": 0, "stuck": false})
-		_hist[key] = h
+		var h := _h(key)
 		seen[key] = true
 		_add("samples")
 		_add("state_" + b.state)
 		_add("samples_" + s.hull_id)
+		# Time spent in an escape (PilotEscape) by hull.
+		if b.flight.escape.is_active():
+			_add("escape_samples")
+			_add("escape_samples_" + s.hull_id)
 		# State flips and target switches.
 		if h["state"] != "" and h["state"] != b.state:
 			_add("state_flips")
@@ -220,6 +282,16 @@ func _sample() -> void:
 		h["target"] = tid
 		var has_t := tid != 0 and b.target.alive
 		var fighting := has_t and b.state != "home" and b.state != "retreat" and not b.combat.target_far(s)
+		# A running trap: how this sample was spent.
+		if h["trap"] != null:
+			var tp: Dictionary = h["trap"]
+			tp["n"] += 1
+			if fighting:
+				tp["fight"] += 1
+			if b.path.is_empty():
+				tp["path_empty"] += 1
+			if b.flight.escape.is_active():
+				tp["esc"] += 1
 		# 1. Targets behind asteroids while fighting.
 		if fighting:
 			_add("fight_samples")
@@ -248,10 +320,13 @@ func _sample() -> void:
 					if face_err > 1.4:
 						_add("hold_far_behind_or_side")
 					_example("hold_far", {"who": key, "hull": s.hull_id, "dist": roundi(to_hold.length()), "face_err": snappedf(face_err, 0.01), "approach": roundi(approach), "intent": b.intent})
-		# 4. Far from the goal with no route planned.
+		# 4. Far from the goal with no route planned. The path is also empty
+		# while an escape flies; that is counted apart ("no_route_escape"), and
+		# "no_route_plain" is an empty path with no escape on.
 		var gd := s.global_position.distance_to(b.goal)
 		if not fighting and gd > 2500.0 and b.path.is_empty():
 			_add("no_route_far")
+			_add("no_route_escape" if b.flight.escape.is_active() else "no_route_plain")
 			_example("no_route_far", {"who": key, "hull": s.hull_id, "state": b.state, "pos": _v(s.global_position), "goal": _v(b.goal)})
 		# 5. A lane station (nothing to shoot) on or next to rocks.
 		if b.state == "lane" and not has_t and b.intent == "":
@@ -301,18 +376,22 @@ func _sample() -> void:
 
 
 ## Every 2 s: remember positions; a ship that moved less than 150 over the
-## last 8 s while more than 800 from its goal, and not fighting, is stuck.
+## last 8 s while more than 800 from its goal, and not fighting, is stuck. The
+## same positions feed the trap rule (_trap_check). A pilot that is no longer
+## flying (it died or docked) ends its episode and its trap.
 func _positions() -> void:
+	var seen := {}
 	for s: Ship in world.ships:
 		if not s.alive or not (s.controller is PilotAI):
 			continue
 		var b := s.controller as PilotAI
-		var h: Dictionary = _hist.get(b.profile.callsign, {"pos": [], "state": "", "target": 0, "stuck": false})
-		_hist[b.profile.callsign] = h
+		var h := _h(b.profile.callsign)
+		seen[b.profile.callsign] = true
 		var ps: Array = h["pos"]
 		ps.append(s.global_position)
 		if ps.size() > 5:
 			ps.pop_front()
+		_trap_check(s, b, h)
 		if ps.size() < 5:
 			continue
 		var moved := 0.0
@@ -323,23 +402,151 @@ func _positions() -> void:
 		var far := s.global_position.distance_to(b.goal) > 800.0
 		var stuck := moved < 150.0 and far and not fighting
 		if stuck and not h["stuck"]:
-			_add("stuck_episodes")
-			_add("stuck_" + b.state)
-			_example("stuck", {"who": b.profile.callsign, "hull": s.hull_id, "state": b.state, "pos": _v(s.global_position), "goal": _v(b.goal),
-				"goal_d": roundi(s.global_position.distance_to(b.goal)), "open": world.map.in_open_lane(s.global_position),
-				"rocks_near": not world.asteroids.clear_at(s.global_position, s.radius + 60.0), "path": b.path.size(), "path_i": b.path_i})
-			if stucks.size() < 600:
-				var oms := world.mothership(s.team)
-				stucks.append([roundi(world.time), s.team, s.hull_id, b.state, roundi(s.global_position.x), roundi(s.global_position.y),
-					roundi(b.goal.x), roundi(b.goal.y), roundi(s.global_position.distance_to(b.goal)),
-					roundi(oms.hull_dist(s.global_position)) if oms != null else -1,
-					not world.asteroids.clear_at(s.global_position, s.radius + 60.0), world.map.in_open_lane(s.global_position),
-					roundi(world.time - b.launched_at), roundi(s.velocity.length()), snappedf(absf(Util.ang_diff(s.rotation, (b.goal - s.global_position).angle())), 0.01),
-					b.path.size(), b.path_i, roundi(s.controls.forward * 100.0), snappedf(b.flight._unstick_t, 0.1), snappedf(b.flight._stuck_t, 0.1), _colliders(s), _near(s)])
+			_episode_start(s, b, h)
+		elif h["stuck"] and not stuck:
+			_episode_end(h, "moved")
 		if stuck:
 			_add("stuck_seconds", 2.0)
 			_add("stuck_seconds_" + s.hull_id, 2.0)
+			_add("stuck_seconds_" + ROCK_CLASSES[int(h["cls"])], 2.0)
 		h["stuck"] = stuck
+	# Pilots no longer in the sky: their episode and trap are over.
+	for key in _hist.keys():
+		if seen.has(key):
+			continue
+		var gone: Dictionary = _hist[key]
+		var why := "died" if world.time - float(gone["dead_t"]) < 4.0 else "docked"
+		_episode_end(gone, why)
+		_trap_end(gone, why)
+		gone["stuck"] = false
+		(gone["tpos"] as Array).clear()
+		(gone["trock"] as Array).clear()
+
+
+## The history of the pilot called `key`: it is made the first time it is
+## asked for (see `_hist` for what it holds).
+func _h(key: String) -> Dictionary:
+	if not _hist.has(key):
+		_hist[key] = {"pos": [], "state": "", "target": 0, "stuck": false, "row": -1, "cls": 0, "rock_ep": 0,
+			"tpos": [], "trock": [], "trap": null, "rock_cur": 0, "dead_t": -999.0}
+	return _hist[key]
+
+
+## How near the nearest rock is to a circle at `p` with radius `r`: the gap
+## (world units) between the circle and the rock's solid circle (95% of its
+## radius), negative when they overlap.
+func _rock_gap(p: Vector2, r: float) -> float:
+	var near := PackedInt32Array()
+	world.asteroids.nearby(p, r + 400.0, near)
+	var best := 9999.0
+	for i in near:
+		best = minf(best, p.distance_to(world.asteroids.pos[i]) - 0.95 * world.asteroids.rad[i] - r)
+	return best
+
+
+## A stuck episode begins (ship `s`, brain `b`, history `h`): count it by
+## state, rock class and team, keep an example and, for the first 600, a row
+## in `stucks`.
+func _episode_start(s: Ship, b: PilotAI, h: Dictionary) -> void:
+	_add("stuck_episodes")
+	_add("stuck_" + b.state)
+	_example("stuck", {"who": b.profile.callsign, "hull": s.hull_id, "state": b.state, "pos": _v(s.global_position), "goal": _v(b.goal),
+		"goal_d": roundi(s.global_position.distance_to(b.goal)), "open": world.map.in_open_lane(s.global_position),
+		"rocks_near": not world.asteroids.clear_at(s.global_position, s.radius + 60.0), "path": b.path.size(), "path_i": b.path_i})
+	# Its rock class: on a rock (2), next to one (1) or in the open (0).
+	var slid := _colliders(s).contains("rock")
+	var gap := _rock_gap(s.global_position, s.radius)
+	var cls := 2 if (slid or gap <= ROCK_CONTACT_GAP) else (1 if gap <= ROCK_NEAR_GAP else 0)
+	h["cls"] = cls
+	_add("stuck_class_" + ROCK_CLASSES[cls])
+	_add("stuck_team_%d" % s.team)
+	if cls > 0:
+		_add("stuck_rock_team_%d" % s.team)
+	h["row"] = -1
+	h["rock_ep"] = 0
+	if stucks.size() < 600:
+		var oms := world.mothership(s.team)
+		stucks.append([roundi(world.time), s.team, s.hull_id, b.state, roundi(s.global_position.x), roundi(s.global_position.y),
+			roundi(b.goal.x), roundi(b.goal.y), roundi(s.global_position.distance_to(b.goal)),
+			roundi(oms.hull_dist(s.global_position)) if oms != null else -1,
+			not world.asteroids.clear_at(s.global_position, s.radius + 60.0), world.map.in_open_lane(s.global_position),
+			roundi(world.time - b.launched_at), roundi(s.velocity.length()), snappedf(absf(Util.ang_diff(s.rotation, (b.goal - s.global_position).angle())), 0.01),
+			b.path.size(), b.path_i, roundi(s.controls.forward * 100.0), snappedf(b.flight._unstick_t, 0.1), snappedf(b.flight._stuck_t, 0.1), _colliders(s), _near(s),
+			b.profile.callsign, cls, -1, "", 0.0])
+		h["row"] = stucks.size() - 1
+
+
+## The running stuck episode of history `h` ends now, for reason `why`
+## ("moved", "died", "docked" or "end"): its row in `stucks` gets the end
+## time, the reason and the seconds of rock contact. Does nothing when no
+## episode has a row.
+func _episode_end(h: Dictionary, why: String) -> void:
+	var row: int = h["row"]
+	if row < 0:
+		return
+	var r: Array = stucks[row]
+	r[24] = roundi(world.time)
+	r[25] = why
+	r[26] = snappedf(float(h["rock_ep"]) / 60.0, 0.1)
+	h["row"] = -1
+
+
+## Every 2 s for each flying pilot: add the position and the rock ticks since
+## the last sample to the 60-second window, look for a new trap, and end a
+## trap that the ship has left.
+func _trap_check(s: Ship, b: PilotAI, h: Dictionary) -> void:
+	var tpos: Array = h["tpos"]
+	tpos.append(s.global_position)
+	if tpos.size() > TRAP_WINDOW:
+		tpos.pop_front()
+	var trock: Array = h["trock"]
+	trock.append(h["rock_cur"])
+	if trock.size() > TRAP_WINDOW:
+		trock.pop_front()
+	h["rock_cur"] = 0
+	if tpos.size() < TRAP_WINDOW:
+		return
+	var trap: Variant = h["trap"]
+	if trap != null:
+		if s.global_position.distance_to((trap as Dictionary)["center"]) > TRAP_RADIUS + TRAP_LEAVE_MARGIN:
+			_trap_end(h, "left")
+		return
+	# The ship stayed within TRAP_RADIUS of where the window began, scraping rock.
+	var farthest := 0.0
+	for p: Vector2 in tpos:
+		farthest = maxf(farthest, p.distance_to(tpos[0]))
+	var rock_ticks := 0
+	for v in trock:
+		rock_ticks += int(v)
+	if farthest < TRAP_RADIUS and rock_ticks >= TRAP_ROCK_TICKS:
+		h["trap"] = {"t0": world.time - 2.0 * float(TRAP_WINDOW), "team": s.team, "who": b.profile.callsign, "hull": s.hull_id, "state0": b.state,
+			"center": s.global_position, "rock_ticks": rock_ticks, "n": 0, "fight": 0, "path_empty": 0, "esc": 0}
+
+
+## The running trap of history `h` (if any) ends now, for reason `why`
+## ("left", "died", "docked" or "end"): count it and keep its row in `traps`.
+func _trap_end(h: Dictionary, why: String) -> void:
+	var trap: Variant = h["trap"]
+	if trap == null:
+		return
+	h["trap"] = null
+	var tp: Dictionary = trap
+	var samples := maxf(1.0, float(tp["n"]))
+	var secs_in := world.time - float(tp["t0"])
+	var fight_share := float(tp["fight"]) / samples
+	_add("traps")
+	_add("trap_seconds", secs_in)
+	_add("trap_rock_seconds", float(tp["rock_ticks"]) / 60.0)
+	_add("traps_team_%d" % int(tp["team"]))
+	# A pilot that fought for most of the time is farming a camp, not stuck.
+	if fight_share >= 0.5:
+		_add("traps_farming")
+		_add("trap_seconds_farming", secs_in)
+	if traps.size() < MAX_TRAPS:
+		var centre: Vector2 = tp["center"]
+		traps.append([roundi(tp["t0"]), roundi(world.time), tp["team"], tp["who"], tp["hull"], tp["state0"], roundi(centre.x), roundi(centre.y),
+			snappedf(float(tp["rock_ticks"]) / 60.0, 0.1), snappedf(fight_share, 0.01), snappedf(float(tp["path_empty"]) / samples, 0.01),
+			snappedf(float(tp["esc"]) / samples, 0.01), why])
 
 
 ## How a pilot died (Events.unit_killed): crash, turret, minion, pilot,
@@ -384,7 +591,8 @@ func _on_killed(u: Node, info: RefCounted) -> void:
 		_add("death_src_%s_%s" % [cause, src_id])
 	# How it ended: in retreat (after how long), or never retreated; and what
 	# health it had half a second earlier (a burst kill from a healthy ship).
-	var h: Dictionary = _hist.get(b.profile.callsign, {})
+	var h := _h(b.profile.callsign)
+	h["dead_t"] = world.time
 	var ret_age := -1.0
 	if float(h.get("ret_t", 0.0)) > 0.0:
 		ret_age = world.time - float(h["ret_t"])

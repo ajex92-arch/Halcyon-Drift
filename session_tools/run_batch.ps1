@@ -18,7 +18,7 @@ param(
 # between 06:00 and 18:00, when the user needs the PC (the user allows full
 # use from 18:00 to 06:00).
 #
-# How it works: there are 6 "slot" files in scratchpad\slots. To start a
+# How it works: there are 6 "slot" files in the slots folder next to this script. To start a
 # match the script must create one of them (only one process can create a
 # given file). The slot file holds the Godot process id; when that process
 # has ended (or the slot is older than 3 hours) the slot is free again.

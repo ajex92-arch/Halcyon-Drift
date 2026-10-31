@@ -1,7 +1,7 @@
 # endgame_closure fork: manifest
 
-This is the build manifest of one fun-experiment fork, kept as it was when the fork was merged into the game (v0.2.0), with only its paths, base names and a few notes (the user's later decisions, the API index) updated for this repository. Paths are relative to `remake/`; the build report is
-`../fun_plan/reports/endgame_closure_build.md`.
+This is the build manifest of one fun-experiment fork, kept as it was when the fork was merged into the game (v0.2.0), with only its paths, base names and a few notes (the user's later decisions, the API index) updated for this repository. Paths are relative to `remake/`; the build report was
+`../fun_plan/reports/endgame_closure_build.md` (taken off main in v0.3.2; still in the history).
 
 **Note on the damage-modifiers switch (2026-10-18, 2026-10-20):** the damage table and the mothership attacker-size rule are behind one switch, `Rules.DAMAGE_MODIFIERS_REMOVED` (DESIGN.md A5). With the switch off (the default of this build) the keys below do what this manifest says. With it on, `ms_soft:mult` does nothing (the tuned number `mothership_attacker_large` is not set), `eff:on` does nothing (its term is always 0), and `breach:fulldmg`'s x2.0 on a mothership is a real doubling (it was made to undo the minions' x0.5, which is not applied). The text below describes the fork as it was merged.
 

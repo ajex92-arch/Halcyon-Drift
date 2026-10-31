@@ -1,6 +1,6 @@
 # FORK_MANIFEST: pacing_downtime (fork A of the fun plan)
 
-This is the build manifest of one fun-experiment fork, kept as it was when the fork was merged into the game (v0.2.0), with only its paths, base names and a few notes (the user's later decisions, the API index) updated for this repository. Paths are relative to `remake/`; the build report is `../fun_plan/reports/pacing_downtime_build.md`.
+This is the build manifest of one fun-experiment fork, kept as it was when the fork was merged into the game (v0.2.0), with only its paths, base names and a few notes (the user's later decisions, the API index) updated for this repository. Paths are relative to `remake/`; the build report was `../fun_plan/reports/pacing_downtime_build.md` (taken off main in v0.3.2; still in the history).
 
 Base: the game with every AI fix (the AI deep dive's pass 3, banked into `remake/` before v0.1.0). Every idea is a feature module behind its own variant key.
 With every key at its default (`off`) no new code runs: no random draws, no units, no changed numbers.

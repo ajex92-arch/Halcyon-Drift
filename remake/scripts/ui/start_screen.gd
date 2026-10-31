@@ -23,7 +23,8 @@ extends Control
 ## understood (Game.preset_error), _ready() adds one wrapping line under the
 ## rules text (made in code, not in the scene) that says so and to relaunch the
 ## game without the option or with a known name, and both seat buttons stay off,
-## since no screen can clear the error.
+## since no screen can clear the error. A --variant that was not understood
+## (Game.variant_error) is shown the same way.
 ## Below that, _build_difficulty() adds the difficulty row (also made in code):
 ## the heading DIFFICULTY with one button per level (Difficulty.ORDER: Easy,
 ## Medium, Hard, Very hard, Extreme) and the chosen level's one-line description,
@@ -63,8 +64,8 @@ signal chosen(role: String)
 ## The wrapped texts inside the two seat cards (half the card each).
 @onready var _seat_texts: Array[Label] = [$Scroll/Center/Card/Col/Seats/Admiral/Col/Body, $Scroll/Center/Card/Col/Seats/Pilot/Col/Body]
 ## The line under the rules text that names a launch option that was not
-## understood. Null unless Game.preset_error is set. Made by
-## _build_launch_note().
+## understood. Null unless Game.preset_error or Game.variant_error is set. Made
+## by _build_launch_note().
 var _launch_note: Label = null
 ## The difficulty buttons, by level id (Difficulty.ORDER). Made by
 ## _build_difficulty().
@@ -119,16 +120,22 @@ func _use_team_accent() -> void:
 
 
 ## Add the launch line right under the rules text, but only when the game was
-## launched with a --preset that was not understood (Game.preset_error): the
-## match would refuse to start and no screen picks other rules, so the line
-## says to relaunch the game without the option or with a known name, and both
-## seat buttons stay off (_refresh_seats()). Otherwise nothing is added. The
-## line is a wrapping label, so it joins _wide_texts.
+## launched with a --preset or a --variant that was not understood
+## (Game.preset_error, Game.variant_error): the match would refuse to start and
+## no screen picks other rules, so the line says to relaunch the game without
+## the option or with a known name, and both seat buttons stay off
+## (_refresh_seats()). Otherwise nothing is added. The line is a wrapping
+## label, so it joins _wide_texts.
 func _build_launch_note() -> void:
-	if Game.preset_error == "":
+	if Game.preset_error == "" and Game.variant_error == "":
 		return
 	var col: VBoxContainer = $Scroll/Center/Card/Col
-	_launch_note = UiKit.label("The launch option --preset was not understood: %s. Relaunch the game without it, or with one of those names. The seat buttons stay off until you do." % Game.preset_error, 13, UiKit.accent(), true)
+	var text := ""
+	if Game.preset_error != "":
+		text = "The launch option --preset was not understood: %s. Relaunch the game without it, or with one of those names. " % Game.preset_error
+	if Game.variant_error != "":
+		text += "The launch option --variant was not understood: %s. Relaunch the game without it, or with names the game knows. " % Game.variant_error
+	_launch_note = UiKit.label(text + "The seat buttons stay off until you do.", 13, UiKit.accent(), true)
 	col.add_child(_launch_note)
 	col.move_child(_launch_note, $Scroll/Center/Card/Col/Rules.get_index() + 1)
 	_wide_texts.append(_launch_note)
@@ -265,12 +272,12 @@ func _show_team() -> void:
 
 
 ## Enable the two seat buttons, unless a launch option was not understood (an
-## unknown --preset, --difficulty or --team): the match would refuse to start, so
-## both stay off. A level above clears an unknown --difficulty and a team above
-## clears an unknown --team; an unknown --preset stays until the game is launched
-## again.
+## unknown --preset, --variant, --difficulty or --team): the match would refuse
+## to start, so both stay off. A level above clears an unknown --difficulty and
+## a team above clears an unknown --team; an unknown --preset or --variant stays
+## until the game is launched again.
 func _refresh_seats() -> void:
-	var blocked: bool = Game.preset_error != "" or Game.difficulty_error != "" or Game.team_error != ""
+	var blocked: bool = Game.preset_error != "" or Game.variant_error != "" or Game.difficulty_error != "" or Game.team_error != ""
 	$Scroll/Center/Card/Col/Seats/Admiral/Col/Pick.disabled = blocked
 	$Scroll/Center/Card/Col/Seats/Pilot/Col/Pick.disabled = blocked
 

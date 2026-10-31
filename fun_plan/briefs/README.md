@@ -31,8 +31,8 @@ machine-hours per pair. Each brief lists a screening order: drop ideas from the 
 - **REQ-CHANGE rule (FUN_PLAN section 1):** nothing is rejected for breaking a requirement; it is built as an opt-in variant, measured,
   and flagged `REQ-CHANGE: <requirement>` (`DESIGN` when only the research rejected it). Gates it breaks by design (wave 5/4/1, mothership
   constants, ms_duel) are REPORTED, not blocking.
-- **Matches only through the shared queue** `scratchpad\run_batch.ps1` (full path and the exact call are in every brief; 6 matches at once
-  18:00-06:00, 3 by day; run it in the background). Suggested log home: `scratchpad\fun\logs\<fork>\<tag>`.
+- **Matches only through the shared queue** `run_batch.ps1` (the full path and the exact call are in every brief; 6 matches at once
+  18:00-06:00, 3 by day; run it in the background). Suggested log home: a `logs\<fork>\<tag>` folder in the lead's working folder.
 - **Screen / final:** 6 seeds 101-106 with `--skill-jitter` at the 60-min cap, or 10 symmetric late runs (seeds 101-110, `--late
   --symmetric --secs=1200`) for endgame and admiral ideas. A screen only rejects: keep an idea if its target ingredient rises 8+ points
   and FUN does not fall. The best combination then runs on seeds 101-120 vs baseline v2 (`tools/fun_score.py --dir <logs> --vs

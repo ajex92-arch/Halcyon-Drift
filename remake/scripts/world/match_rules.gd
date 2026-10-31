@@ -78,8 +78,13 @@ func tick(dt: float) -> void:
 				p.state = "docked"
 				p.respawn_t = 0.0
 				# Feature hook (Forward Redeploy): a jump to a bay or a
-				# turret lands next to it (RedeployFeature.finish).
-				if p.spool_site != null:
+				# turret lands next to it (RedeployFeature.finish). With the
+				# feature on every hyperspace jump is one of these
+				# (WorldHangar hands it to RedeployFeature.start), so the test
+				# is the feature, not the site: a site destroyed during the
+				# spool is a freed object that compares equal to null, and
+				# finish() must still count it.
+				if world.features.has("redeploy"):
 					(world.features["redeploy"] as RedeployFeature).finish(p)
 					continue
 				var bay := p.spool_bay

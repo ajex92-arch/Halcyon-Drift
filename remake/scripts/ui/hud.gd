@@ -43,19 +43,22 @@ extends Control
 ## it. Every 0.1 seconds (10 times a second) _refresh() tells every widget
 ## to update its text.
 ## Big panels: Hangar (B), Admiral board (Tab, admiral), Scoreboard (hold
-## Tab, pilots), Help (H) and the End screen. They are made from their own
+## Tab, pilots), Help (H), the Pause menu (P or Esc) and the End screen. They
+## are made from their own
 ## scenes when first needed. HudPanels keeps only one of them open at a
 ## time. HudLayout keeps the pieces out of each other's way: it moves the
 ## top bar, the gear slots and the ship readout aside when the window is
 ## narrow, and hides the pieces a big panel would cover while it is open.
-## HudInput routes the keys: Esc closes panels or cancels a map
-## tool, C switches the Admiral's camera between free and following their
-## ship, P pauses, F launches when docked (in flight, PlayerController
+## HudInput routes the keys: Esc closes panels, cancels a map
+## tool, or (with nothing to close) opens the pause menu, C switches the
+## Admiral's camera between free and following their
+## ship, P opens the pause menu (or resumes), F launches when docked (in flight, PlayerController
 ## uses F to dock instead). DESIGN.md A15 shows the layout.
 ##
 ## WHO USES IT: main.gd loads scenes/ui/hud.tscn and calls setup(world).
 ## tests/ui_tour.gd finds the "Hud" node and uses hud.hangar, hud.board,
-## hud.overlay, _toggle_help(), _show_scoreboard() and _toggle_board(). Its
+## hud.overlay, _toggle_help(), _show_scoreboard(), _toggle_board() and
+## _toggle_pause_menu(). Its
 ## parts: the widgets above, HudPanels (opens and closes panels) and
 ## HudInput (menu keys).
 
@@ -89,6 +92,8 @@ var board: AdmiralBoard = null
 var scoreboard: Scoreboard = null
 ## The help pages (H). Made on first use; null until then.
 var help: HelpPanel = null
+## The pause menu (P or Esc). Made on first use; null until then.
+var pause_menu: PauseMenu = null
 ## The end-of-match screen. Made when the match ends; null until then.
 var end_screen: EndScreen = null
 
@@ -190,6 +195,18 @@ func _toggle_help() -> void:
 	panels.toggle_help()
 
 
+## Open the pause menu (and pause the game), or end the pause if the menu holds
+## it. Forwards to HudPanels.toggle_pause_menu().
+func _toggle_pause_menu() -> void:
+	panels.toggle_pause_menu()
+
+
+## Is the game being held paused by the pause menu (also while the help pages
+## are open over it)?
+func _pause_menu_active() -> bool:
+	return pause_menu != null and pause_menu.active
+
+
 ## Hide every big panel except `keep` (null hides them all). Forwards to
 ## HudPanels.close_others().
 func _close_others(keep: Control) -> void:
@@ -246,6 +263,8 @@ func _on_admiral_result(team: int, action: String, ok: bool, message: String) ->
 ## would be drawn over the end screen's text).
 func _on_match_over(winner: int, reason: String) -> void:
 	get_tree().paused = false
+	if pause_menu != null:
+		pause_menu.end_session()
 	_close_others(null)
 	overlay.disarm()
 	toast_box.visible = false

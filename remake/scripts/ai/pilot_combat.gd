@@ -24,9 +24,14 @@ extends RefCounted
 ##     at the target: the battlecruiser (first gun: an ion turret) fires its
 ##     heavy cannon without lead;
 ##   - a strike craft holds fire while a rock is between it and the target
-##     (the shot would hit the rock), and gives the target up for 6 seconds
-##     once it has stayed hidden for 3.
-## Otherwise PilotFlight.travel() flies us to the goal.
+##     (the shot would hit the rock), flies the route to its goal instead of
+##     straight at a target more than HIDDEN_CLOSE away, and gives the target
+##     up for 6 seconds once it has stayed hidden for 3;
+##   - a strike craft that pushes forward without moving for 3 seconds is
+##     pinned against a rock (PilotFlight.watch_pinned()): it flies back along
+##     its own track and gives the target up for 6 seconds.
+## Otherwise PilotFlight.travel() flies us to the goal. While an escape or a
+## retrace (PilotEscape) is on, travel() flies it, fight or not.
 ##
 ## WHO USES IT: PilotAI.update() calls steer() every tick. It uses
 ## PilotFlight (travel, avoid_rocks, and target_hidden() with its hidden_t
@@ -49,6 +54,11 @@ extends RefCounted
 ##   beam        a gun whose shot hits instantly along a line (the lance,
 ##               the ion frigate), so it needs no lead.
 ##   angles      in radians: 0.1 is about 6 degrees, 1.0 about 57 degrees.
+
+## A strike craft whose target is hidden behind a rock flies the route to its
+## goal instead of straight at the target, unless the target is closer than
+## this (world units).
+const HIDDEN_CLOSE := 450.0
 
 ## The pilot brain this part belongs to (we read its target, goal, state,
 ## skill and orbit). It is reached through a weak link: see `_ai_ref`.
@@ -80,10 +90,13 @@ func steer(ship: Ship) -> void:
 	c.special = false
 	if brain.target != null and (not is_instance_valid(brain.target) or not brain.target.alive):
 		brain.target = null
+	# The breadcrumb trail of free spots (PilotTrail).
+	brain.flight.note_position(ship)
 	# Step 2: fight, unless going home, retreating, falling back (small
-	# ships), or the target is still far away.
+	# ships), or the target is still far away. A ship that is flying an escape
+	# or a retrace (PilotEscape) flies it first.
 	var leaving := brain.state == "retreat" or (brain.fallback_t > 0.0 and ship.is_small())
-	if brain.target != null and brain.state != "home" and not leaving and not target_far(ship):
+	if brain.target != null and brain.state != "home" and not leaving and not target_far(ship) and not brain.flight.escape.is_active():
 		fight(ship)
 	else:
 		# Retreating (or falling back): fly away, and only take shots that
@@ -205,6 +218,15 @@ func fight(ship: Ship) -> void:
 		brain.flight.travel(ship, brain.goal, 160.0)
 		c.aim_point = c.face_point
 		return
+	# A rock between us and a target that is not close: flying straight at it,
+	# as the code below does, only pins the ship against the rock (the lane
+	# walls). Go the way round instead: travel() to the goal, which is the
+	# stand-off point for a push or a hunt and our station otherwise. Close to
+	# the target the dogfight goes on, a rock that near can be flown round.
+	if hidden and d > HIDDEN_CLOSE:
+		brain.flight.travel(ship, brain.goal, 160.0)
+		c.aim_point = c.face_point
+		return
 	# How far (in radians) the nose is from the aim point.
 	var ang_err := absf(Util.ang_diff(ship.rotation, (aim - ship.global_position).angle()))
 	match ship.hull_id:
@@ -274,3 +296,12 @@ func fight(ship: Ship) -> void:
 			c.special = false
 	# Step 4: don't fly into rocks while dogfighting (PilotFlight).
 	brain.flight.avoid_rocks(ship)
+	# Step 5: a ship that pushes forward and does not move is pinned against a
+	# rock. travel()'s stuck timer does not run in a fight, so PilotFlight
+	# watches for it here; the ship is then stalled (it flies back along its
+	# track) and gives the target up for 6 s, as for a hidden one.
+	if brain.flight.watch_pinned(ship):
+		brain.skip_id = target.get_instance_id()
+		brain.skip_until = brain.world.time + 6.0
+		brain.target = null
+		brain.lock_target = null

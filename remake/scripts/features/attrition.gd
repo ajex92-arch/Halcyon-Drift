@@ -15,8 +15,11 @@ extends RefCounted
 ##          minions are unaffected.
 ## It uses the incoming-damage hook (unit.incoming_mults["attrition"]) and
 ## updates it once a second (new turrets get it at the next update). The
-## shield refill is set on the shield object (ShieldZones.regen); research
-## that finishes after 40:00 resets it, and the next update sets it again.
+## shield refill is set on the shield object (ShieldZones.regen) as the ship's
+## own refill (its base number times the Flagship shield research, as
+## MothershipGuns.apply_upgrades works it out, read again at every update)
+## times the attrition factor; research that finishes after 40:00 resets it,
+## and the next update sets it again from the new research.
 ## The AI needs no rule: it simply plays on a battlefield where bases fall.
 ## Every second the attrition is on is counted in Game.usage as
 ## "attrition_seconds". The module draws no random numbers.
@@ -47,9 +50,6 @@ var _t := 0.0
 var _shift := 0.0
 ## True once the warning was sent.
 var _warned := false
-## Each mothership's normal shield refill speed (points per second),
-## remembered when attrition starts: [Halcyon's, Cinder's] (0 = not yet).
-var _base_regen := [0.0, 0.0]
 
 
 ## Switch attrition on for match `w`. FeatureRegistry calls this once at
@@ -87,9 +87,10 @@ func _tick(dt: float) -> void:
 		if ms == null or not ms.alive:
 			continue
 		ms.incoming_mults[KEY] = dmg
-		if float(_base_regen[t]) <= 0.0:
-			_base_regen[t] = ms.shields.regen
-		ms.shields.regen = float(_base_regen[t]) * regen
+		# The ship's own refill speed, worked out again from its base number and
+		# the team's Flagship shield research (MothershipGuns.apply_upgrades does
+		# the same), so research that finished after 40:00 counts too.
+		ms.shields.regen = ms.base_regen * (1.0 + world.teams[t].ms_shield) * regen
 	for turret: Turret in world.turrets:
 		if turret.alive:
 			turret.incoming_mults[KEY] = dmg

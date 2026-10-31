@@ -114,11 +114,17 @@ func _scale_hook(m: Minion, target: Unit, scale: float) -> float:
 	return scale
 
 
-## The HUD banner for the human on `team` (see BreachTracker.banner()).
+## The HUD banner for the human on `team` (see BreachTracker.banner()). None
+## when install() stopped early on an unknown value and made no tracker.
 func banner(_w: World, team: int) -> Array:
+	if tracker == null:
+		return []
 	return tracker.banner(team)
 
 
-## The minimap chevrons (see BreachTracker.marks()).
+## The minimap chevrons (see BreachTracker.marks()). None when install()
+## stopped early on an unknown value and made no tracker.
 func minimap_chevrons(_w: World) -> Array:
+	if tracker == null:
+		return []
 	return tracker.marks()

@@ -6,8 +6,9 @@ extends RefCounted
 ## HOW IT WORKS: the first time the hull is at or below 35% of its maximum
 ## (def "retreat_threshold"), the "retreat" game option decides what
 ## happens:
-##   - "systems_failure" (the default): the hull is first raised back up to
-##     35% if it fell lower; then for 45 s (def "retreat_time") pilots can't
+##   - "systems_failure" (the default, and what any value other than the two
+##     below gives, as in v0.1.0): the hull is first raised back up to 35% if
+##     it fell lower; then for 45 s (def "retreat_time") pilots can't
 ##     launch, respawn or shop at the mothership, and its guns fire at half
 ##     speed. Mothership.failure_t counts down. The news feed says what
 ##     happened and a warning sound plays.
@@ -47,9 +48,12 @@ static func check(ms: Mothership) -> void:
 		return
 	# Step 1: the "retreat" game option. "none" just uses it up.
 	ms.retreat_used = true
-	# Only "systems_failure" does anything here: "none" does nothing and
-	# "last_stand" is run by its own feature module (LastStandFeature).
-	if Game.variant("retreat") != "systems_failure":
+	# Every value except two runs the systems failure, as in v0.1.0 (so a
+	# mistyped value or a missing key still gives the failure): "none" does
+	# nothing and "last_stand" is run by its own feature module
+	# (LastStandFeature).
+	var mode := Game.variant("retreat")
+	if mode == "none" or mode == "last_stand":
 		return
 	# Step 2: raise the hull back to the threshold and fail systems for a
 	# while.

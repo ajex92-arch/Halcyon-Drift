@@ -20,7 +20,7 @@ extends PanelContainer
 
 ## The match clock ("12:34").
 @onready var _clock: Label = $Row/Middle/Clock
-## "Next minion wave 0:21" (or that free waves have stopped).
+## "Next minion wave 0:21" (or that free waves have stopped: wave_line()).
 @onready var _wave: Label = $Row/Middle/Wave
 ## Each team's mothership hull bar (index = team: 0 Aurelian, 1 Vhorr).
 @onready var _ms_bars: Array[ProgressBar] = [$Row/Halcyon/Hull, $Row/Cinder/Hull]
@@ -40,21 +40,26 @@ func _ready() -> void:
 
 ## Rewrite the clock, the wave timer and both teams' columns.
 func refresh(world: World) -> void:
-	# Step 1: the clock and the wave timer. Once BOTH teams have built the
-	# Fleet Command module, no free minion waves launch any more.
+	# Step 1: the clock and the wave timer.
 	UiKit.set_text(_clock, Util.clock(world.time))
-	var md := world.minion_director
-	var w := ""
-	if md.controlled(0) and md.controlled(1):
-		w = "Fleet Command: no free waves"
-	else:
-		w = "Next minion wave %s" % Util.clock(maxf(0.0, md.next_wave - world.time))
-	UiKit.set_text(_wave, w)
+	UiKit.set_text(_wave, wave_line(world.minion_director, world.time))
 	# Step 2: each team's column. vt = the team we watch as (-1 = we see
 	# everything, as a spectator).
 	var vt := world.viewer_team
 	for t in 2:
 		_refresh_team(world, t, vt)
+
+
+## The wave timer's text at match time `time` (seconds). Once BOTH teams have
+## built the Fleet Command module no free minion waves launch any more, and
+## when no wave is due ever again (next_wave is INF: the waves_late variant
+## "none") there is no countdown to show either.
+static func wave_line(md: MinionDirector, time: float) -> String:
+	if md.controlled(0) and md.controlled(1):
+		return "Fleet Command: no free waves"
+	if is_inf(md.next_wave):
+		return "No more minion waves"
+	return "Next minion wave %s" % Util.clock(maxf(0.0, md.next_wave - time))
 
 
 ## Rewrite team `t`'s hull bar, name line and turret line.

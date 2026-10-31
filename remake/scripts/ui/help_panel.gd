@@ -32,7 +32,8 @@ const PAGES := {
 		["The jungle", "Derelict monster camps (gunships, and carriers that launch snub fighters) sit in the jungle and pay a reward split by damage, with a bonus for the last hit. They respawn 1-2 minutes after being cleared."],
 		["Credits", "Pilots earn credits from last hits, kills and assists, derelicts, destroying turrets and drones, and a share of every ore delivery. Spend them in the hangar on ships, modules, pilot gear and repair kits. The Admiral spends the separate team treasury."],
 		["Respawning", "Destroyed pilots respawn at the mothership after a few seconds (longer as the match goes on). Gear is kept; the ship and its modules are lost. When 4 or more pilots respawn within 30 seconds, the mothership is strained: its guns slow and its shields stop recharging for a while."],
-		["Fullscreen", "F11 or Alt+Enter switches between the window and borderless fullscreen."],
+		["Pause (P or Esc)", "P opens the pause menu, and so does Esc when there is no map tool or panel to close. The match waits while it shows. It has Resume, How to play, Restart match (a new match in the same seat, on the same team and rules), Quit to start (back to the start screen), Full screen and, outside the browser, Quit game. Restart and the two quit buttons ask first. P or Esc resumes."],
+		["Fullscreen", "F11 or Alt+Enter switches between the window and borderless fullscreen. The pause menu has a button for it too."],
 	],
 	"Flying": [
 		["Moving", "The mouse aims and your ship turns to face it. W thrusts forward, S brakes and reverses, A / D slide sideways, Shift boosts (strike craft). Hold Ctrl to lock your heading: big ships keep their shields facing a threat while their turrets keep tracking the mouse. V toggles flight assist (off = drift)."],

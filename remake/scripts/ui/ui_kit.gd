@@ -24,8 +24,8 @@ extends RefCounted
 ## belong to the pilot, not to whichever button was clicked last.
 ##
 ## WHO USES IT: the scripts in scripts/ui/: Hud and its widgets, Hangar,
-## AdmiralBoard, Scoreboard, HelpPanel, EndScreen, StartScreen, CardButton
-## and ShipStatus.
+## AdmiralBoard, Scoreboard, HelpPanel, PauseMenu, EndScreen, StartScreen,
+## CardButton and ShipStatus.
 
 ## The named box looks for scenes: [name, fill colour, how solid (0..1),
 ## space inside in pixels]. make_theme() turns each into a PanelContainer
@@ -38,6 +38,7 @@ const PANEL_LOOKS := [
 	["BoardLook", Palette.PANEL, 0.97, 12],   # Admiral board
 	["HangarLook", Palette.PANEL, 0.97, 14],  # hangar
 	["HelpLook", Palette.PANEL, 0.97, 16],    # help pages
+	["PauseLook", Palette.PANEL, 0.97, 18],   # pause menu card
 	["ScoreLook", Palette.PANEL, 0.96, 14],   # scoreboard
 	["SeatLook", Palette.INK, 1.0, 14],       # start screen seat card
 	["StartLook", Palette.PANEL, 0.95, 22],   # start screen main card

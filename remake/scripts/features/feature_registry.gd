@@ -84,7 +84,9 @@ extends RefCounted
 ## prints "FEATURE CONFLICT: ..." and quits the game with exit code 3, so a
 ## test match with an impossible combination stops at once instead of
 ## measuring something nobody asked for. The same happens, with "PRESET
-## UNKNOWN: ...", when --preset names no preset (CouncilPresets), and,
+## UNKNOWN: ...", when --preset names no preset (CouncilPresets) or is given
+## empty, with "VARIANT UNKNOWN: ...", when a --variant pair is not a known
+## name:value (Rules.VARIANT_DEFAULTS), and,
 ## with "DIFFICULTY UNKNOWN: ...", when --difficulty names no level (Difficulty),
 ## and with "TEAM UNKNOWN: ...", when --team names no team the human can play for.
 
@@ -229,6 +231,14 @@ static func install(world: World) -> void:
 	if Game.preset_error != "":
 		print("PRESET UNKNOWN: " + Game.preset_error)
 		push_error("PRESET UNKNOWN: " + Game.preset_error)
+		(Engine.get_main_loop() as SceneTree).quit(3)
+		return
+	# Step 0a1: refuse a match with a --variant pair that is not a known
+	# name:value (Game.variant_error) the same way, so a mistyped variant name
+	# never quietly plays the preset's or the default rules.
+	if Game.variant_error != "":
+		print("VARIANT UNKNOWN: " + Game.variant_error)
+		push_error("VARIANT UNKNOWN: " + Game.variant_error)
 		(Engine.get_main_loop() as SceneTree).quit(3)
 		return
 	# Step 0a2: refuse a match whose difficulty is unknown (--difficulty=<level>,

@@ -37,11 +37,15 @@ extends Node
 ## count_usage(); Rules.tune() reads tunables; the fun probe prints usage;
 ## PilotAI and SkillJitter read --skill-jitter and --seed; tests read
 ## their own options (such as --secs); the end screen clears Game.world
-## before a new match. The start screen calls use_remembered_difficulty() and
+## before a new match, and the pause menu's Restart and Quit to start go
+## through restart_match() and quit_to_start() (they load the main scene again;
+## main.gd then starts the match in restart_role at once, or shows the start
+## screen when it is empty). The start screen calls use_remembered_difficulty() and
 ## choose_difficulty() (its difficulty buttons), use_remembered_team() and
-## choose_team() (its team buttons) and reads preset_error; WorldSetup reads
-## `difficulty` and `human_team` when it builds a match; and FeatureRegistry reads
-## preset_error, difficulty_error and team_error.
+## choose_team() (its team buttons) and reads preset_error and variant_error;
+## WorldSetup reads `difficulty` and `human_team` when it builds a match; and
+## FeatureRegistry reads preset_error, variant_error, difficulty_error and
+## team_error.
 ##
 ## The options (who reads them in brackets):
 ##   --role=pilot|admiral|spectator   the human's seat. Without --auto (and
@@ -65,7 +69,10 @@ extends Node
 ##                                    (names and values: see
 ##                                    Rules.VARIANT_DEFAULTS). A variant
 ##                                    that has a feature module switches
-##                                    it on (FeatureRegistry).
+##                                    it on (FeatureRegistry). A pair that
+##                                    is not name:value, or a name that is
+##                                    not a variant, stops the match at its
+##                                    start (FeatureRegistry, exit code 3).
 ##   --preset=none|within|pick        the rules, for tests and research: a
 ##                                    named --variant string
 ##                                    (CouncilPresets). The preset is
@@ -75,9 +82,10 @@ extends Node
 ##                                    (Council's pick), the standard rules.
 ##                                    "none" is the old standard rules (every
 ##                                    variant at its default). No screen offers
-##                                    the choice. An unknown name stops the
-##                                    match at its start (FeatureRegistry,
-##                                    exit code 3). (Game, StartScreen)
+##                                    the choice. An unknown name, or an empty
+##                                    one ("--preset="), stops the match at
+##                                    its start (FeatureRegistry, exit code
+##                                    3). (Game, StartScreen)
 ##   --difficulty=<level>             the difficulty of a single-player match
 ##                                    (easy, medium, hard, very_hard or
 ##                                    extreme; Difficulty): how much the enemy
@@ -164,6 +172,11 @@ extends Node
 ## The running match (a World), or null between matches. WorldSetup sets
 ## it when a match is built; the end screen clears it before a new match.
 var world: Node = null
+## The seat the next match starts in at once, without the start screen: "pilot",
+## "admiral" or "spectator". Empty (the usual state) means "show the start
+## screen". restart_match() sets it just before the main scene loads again;
+## main.gd reads it there and empties it.
+var restart_role := ""
 ## The command-line options: name (without the "--") -> value. "--seed=7"
 ## gives "seed" -> "7" (always text); a bare "--auto" gives "auto" -> true.
 var options := {}
@@ -181,6 +194,13 @@ var preset := ""
 ## match (exit code 3), so a typo never plays other rules by mistake. The
 ## start screen shows the line and keeps its seat buttons off.
 var preset_error := ""
+## Why the --variant that was asked for could not be used: "" when it could (or
+## when none was asked for), else a line naming the first pair that is not a
+## "name:value" pair or whose name is not a rule variant (a key of
+## Rules.VARIANT_DEFAULTS). FeatureRegistry.install() then refuses the match
+## (exit code 3), so a mistyped variant name never quietly plays other rules.
+## The start screen shows the line and keeps its seat buttons off.
+var variant_error := ""
 ## Feature hook: tuned numbers changed for this match, by name: name ->
 ## new value (for example "kill_base" -> 150.0). Empty (the default) =
 ## every number has its normal value. A feature module sets entries in its
@@ -298,7 +318,7 @@ func _parse_options() -> void:
 	# Step 2: the variants: start from the defaults, then the preset named by
 	# --preset (the standard rules when none is named), then each "name:value"
 	# pair of --variant (see _build_variants()). The preset is named in the log.
-	_build_variants(str(options.get("preset", "")))
+	_build_variants(str(options.get("preset", "")), options.has("preset"))
 	if preset != "":
 		var pairs := CouncilPresets.variant_string(preset)
 		print("preset: %s = %s" % [preset, pairs if pairs != "" else "(every variant at its default)"])
@@ -307,14 +327,20 @@ func _parse_options() -> void:
 ## Build `variants`: start from Rules.VARIANT_DEFAULTS, then apply the pairs
 ## of preset `preset_name` (CouncilPresets; "" = CouncilPresets.STANDARD, the
 ## standard rules), then the pairs of --variant, so --variant wins where both
-## set a key. Sets `preset` and `preset_error`: an unknown preset name adds
-## nothing and leaves an error line for FeatureRegistry.
-func _build_variants(preset_name: String) -> void:
+## set a key. Sets `preset`, `preset_error` and `variant_error`: an unknown
+## preset name adds nothing and leaves an error line for FeatureRegistry, and
+## so does a --preset given with an empty name (`preset_given` is true when the
+## option was on the command line at all, so "--preset=" is told apart from no
+## --preset), and so does a --variant pair that is not a known name:value.
+func _build_variants(preset_name: String, preset_given: bool = false) -> void:
 	variants = Rules.VARIANT_DEFAULTS.duplicate()
 	preset = ""
 	preset_error = ""
+	variant_error = ""
 	var wanted := preset_name if preset_name != "" else CouncilPresets.STANDARD
-	if CouncilPresets.is_preset(wanted):
+	if preset_given and preset_name == "":
+		preset_error = "no preset name was given (the presets are: %s)" % ", ".join(PackedStringArray(CouncilPresets.ORDER))
+	elif CouncilPresets.is_preset(wanted):
 		preset = wanted
 		_apply_pairs(CouncilPresets.variant_string(wanted))
 	else:
@@ -323,11 +349,20 @@ func _build_variants(preset_name: String) -> void:
 
 
 ## Apply each "name:value" pair of `text` (pairs split by commas) to
-## `variants`; a pair that isn't exactly name:value is skipped.
+## `variants`. A pair that is not exactly name:value (an empty name or value,
+## a third part) or whose name is not a rule variant (Rules.VARIANT_DEFAULTS)
+## is not applied; the first one is named in `variant_error`, which
+## FeatureRegistry turns into a refusal.
 func _apply_pairs(text: String) -> void:
 	for pair in text.split(",", false):
 		var kv := pair.split(":")
-		if kv.size() == 2:
+		if kv.size() != 2 or kv[0] == "" or kv[1] == "":
+			if variant_error == "":
+				variant_error = "\"%s\" is not a name:value pair" % pair
+		elif not Rules.VARIANT_DEFAULTS.has(kv[0]):
+			if variant_error == "":
+				variant_error = "unknown variant name \"%s\" (check its spelling)" % kv[0]
+		else:
 			variants[kv[0]] = kv[1]
 
 
@@ -398,6 +433,31 @@ func choose_team(side: int) -> void:
 	var err := cfg.save(SETTINGS_FILE)
 	if err != OK:
 		push_warning("settings: cannot write %s (error %d); the team will not be remembered" % [SETTINGS_FILE, err])
+
+
+## Start the match again in seat `role` (the pause menu's Restart): the same
+## seat, the same team, difficulty and rules (Game keeps all of those), with
+## no start screen in between. The main scene is loaded again, so the new match
+## is built from nothing; the pause is lifted first, or the new match would
+## start paused.
+func restart_match(role: String) -> void:
+	restart_role = role
+	_load_main_scene_again()
+
+
+## Go back to the start screen (the pause menu's Quit to start): the main scene
+## is loaded again, with no seat chosen.
+func quit_to_start() -> void:
+	restart_role = ""
+	_load_main_scene_again()
+
+
+## Forget the running match, lift the pause and load the main scene again (what
+## the end screen's New match does too).
+func _load_main_scene_again() -> void:
+	world = null
+	get_tree().paused = false
+	get_tree().reload_current_scene()
 
 
 ## The value of option `key` (the name without "--"), or `default_value`

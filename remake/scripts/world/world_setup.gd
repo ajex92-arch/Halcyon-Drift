@@ -67,6 +67,9 @@ static func build(w: World, role: String) -> void:
 	# The map's route finder asks this whether a straight hop from a to b
 	# misses every rock (with 16 world units to spare).
 	w.map.route.clear_fn = func(a: Vector2, b: Vector2) -> bool: return w.asteroids.segment_hit(a, b, 16.0).is_empty()
+	# ...and a pilot's ship asks the same with its own room to spare: the way
+	# onto the road map is a dot it can fly to (RouteGraph.entry()).
+	w.map.route.clear_pad_fn = func(a: Vector2, b: Vector2, pad: float) -> bool: return w.asteroids.segment_hit(a, b, pad).is_empty()
 
 	# Step 3: the systems. Each spatial hash covers the whole map
 	# (MapLayout.W by MapLayout.H world units).

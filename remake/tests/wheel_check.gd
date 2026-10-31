@@ -2,7 +2,8 @@ extends Node
 ## WHAT THIS IS: the check that the mouse wheel over an open menu never
 ## zooms the camera behind it. The menus are the Admiral board (each of its
 ## five tabs), the hangar (each of its four tabs), the help (each page),
-## the scoreboard and the end screen. The camera zooms on the wheel input
+## the pause menu (its buttons and a question), the scoreboard and the end
+## screen. The camera zooms on the wheel input
 ## no screen used (CameraRig._unhandled_input), so a wheel turn over a
 ## menu must scroll the menu or do nothing.
 ##
@@ -39,9 +40,10 @@ extends Node
 ##
 ## WHO USES IT: main.gd loads it for --test=wheel_check (see ui_tour.gd for
 ## how tests are loaded). It calls the HUD's own functions:
-## Hud._toggle_board(), _open_hangar(), _toggle_help(), _show_scoreboard()
-## _close_others() and _on_match_over(), then AdmiralBoard._set_tab(),
-## Hangar._set_tab() and HelpPanel._show(). The quick checks (run_checks) run it for both roles.
+## Hud._toggle_board(), _open_hangar(), _toggle_help(), _toggle_pause_menu(),
+## _show_scoreboard(), _close_others() and _on_match_over(), then
+## AdmiralBoard._set_tab(), Hangar._set_tab(), HelpPanel._show() and
+## PauseMenu.ask() / resume(). The quick checks (run_checks) run it for both roles.
 
 ## The board's tabs and the hangar's tabs, in the order they appear.
 const BOARD_TABS := ["Research", "Build", "Mothership", "Fleet", "Pilots"]
@@ -126,6 +128,15 @@ func _run() -> void:
 		hud.help._show(p)
 		await _check("help " + p, hud.help)
 	hud._close_others(null)
+	# Step 4b: the pause menu, on its buttons and on a question. Its pause is
+	# lifted again for the check: a paused game would not hear the wheel at all,
+	# so a leak could not show.
+	hud._toggle_pause_menu()
+	get_tree().paused = false
+	await _check("pause menu", hud.pause_menu)
+	hud.pause_menu.ask(PauseMenu.VIEW_RESTART)
+	await _check("pause menu question", hud.pause_menu)
+	hud.pause_menu.resume()
 	# Step 5: the scoreboard (a pilot holds Tab for it).
 	hud._show_scoreboard(true)
 	await _check("scoreboard", hud.scoreboard)

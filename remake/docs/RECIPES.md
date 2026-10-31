@@ -113,7 +113,7 @@ match (`match_probe --secs=720`) if play changes; a bigger one needs everything 
 - **What tools write**: `docs/API_INDEX.md` (run `tools/api_index.py`), the `.uid` and `.import` files (Godot
   writes them; commit them, never edit them) and the `.godot` folder.
 - **Records**: `docs/USER_REQUIREMENTS_2026-10-13.md`, `docs/prompt1_original_brief.txt`,
-  `docs/prompt2_amendments.txt`, `docs/fork_manifests/`, `fun_plan/`, `deep_dive/` and `release_notes/`.
+  `docs/prompt2_amendments.txt`, `docs/fork_manifests/`, `fun_plan/` and `release_notes/`.
 - **Release and build files**: `.github/`, `export_presets.cfg`, the root `README.md` and
   `docs/RELEASE_NOTES.md` (the lead writes them at release).
 - **Only when your brief names them**: `project.godot` (autoloads, stretch and window settings) and

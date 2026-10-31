@@ -1,8 +1,8 @@
 class_name HudInput
 extends RefCounted
 ## WHAT THIS IS: the part of the HUD that decides what the menu keys do:
-## P pause, Tab (Admiral board or scoreboard), B hangar, H help, Esc
-## cancel / close, C camera and F launch.
+## P pause menu, Tab (Admiral board or scoreboard), B hangar, H help, Esc
+## cancel / close / pause menu, C camera and F launch.
 ##
 ## HOW IT WORKS: Godot gives the HUD every key press the game didn't use
 ## (Hud._unhandled_input) and the HUD passes it to handle(). Keys only work
@@ -10,7 +10,12 @@ extends RefCounted
 ## repeat ("echo") is ignored. Each key that does something is marked
 ## "handled", so nothing else reacts to it as well. The key names
 ## ("hangar", "dock", ...) are actions set up in Game (autoload/game.gd),
-## for example "dock" is F and "admiral_board" is Tab.
+## for example "dock" is F and "admiral_board" is Tab. P opens the pause
+## menu from anywhere, and ends the pause when the menu holds it. Esc works
+## from the most urgent thing down: it cancels an armed map tool, else closes
+## the open panels, else opens the pause menu. While the pause menu holds the
+## game, the other keys stay quiet: H shows the help pages over it, Esc steps
+## back (help to menu, question to buttons, menu to game).
 ##
 ## WHO USES IT: Hud makes one (hud.router) and calls handle() for each key.
 ## It opens panels through the Hud's forwarding functions (HudPanels does
@@ -42,10 +47,21 @@ func handle(event: InputEvent) -> void:
 		return
 	if world.phase != "play":
 		return
-	# Step 2: P pauses or resumes the whole game.
+	# Step 2: P opens the pause menu, which pauses the whole game, or ends the
+	# pause when the menu holds it.
 	if k.pressed and k.physical_keycode == KEY_P:
-		hud.get_tree().paused = not hud.get_tree().paused
+		hud._toggle_pause_menu()
 		_handled()
+		return
+	# Step 2c: while the pause menu holds the game, the other keys stay quiet. H
+	# shows the help pages over the menu; Esc steps back; the rest do nothing.
+	if hud._pause_menu_active():
+		if k.pressed and event.is_action("help"):
+			hud._toggle_help()
+			_handled()
+		elif k.pressed and event.is_action("cancel"):
+			hud.pause_menu.back()
+			_handled()
 		return
 	# Step 3: Tab. The Admiral toggles their board on each press; a pilot
 	# sees the scoreboard only while Tab is held down (press shows it,
@@ -73,12 +89,14 @@ func handle(event: InputEvent) -> void:
 		hud._toggle_help()
 		_handled()
 	# Step 6: Esc cancels an armed map tool first; otherwise it closes
-	# every panel.
+	# every panel; with nothing to cancel or close it opens the pause menu.
 	elif event.is_action("cancel"):
 		if hud.overlay.tool != "":
 			hud.overlay.disarm()
-		else:
+		elif hud._any_panel_open():
 			hud._close_others(null)
+		else:
+			hud._toggle_pause_menu()
 		_handled()
 	# Step 7: C switches the Admiral's camera between free and following
 	# their ship (a pilot's camera is always free: Space centers it, see

@@ -3,7 +3,9 @@
 # 6 at night). Seeds 7, 11, 13. Logs: deepdive\runs\ab\<tag>_seed<N>.txt.
 # -Seq A = pilot audits (base, flight, behaviour, targeting; normal + late)
 # -Seq B = minion audit and targeting shot probe (base vs fix)
-param([string]$Seq = "A")
+# -Copies = the folder that holds the working copies named in the job list
+# (dd_flight_fix, dd_behavior_fix, ...), one folder per copy.
+param([string]$Seq = "A", [Parameter(Mandatory = $true)][string]$Copies)
 $sp = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $rb = Join-Path $sp "run_batch.ps1"
 $out = Join-Path $sp "deepdive\runs\ab"
@@ -28,7 +30,7 @@ if ($Seq -eq "A") {
 		@("dd_targeting_fix", "dd_target_probe", "tp_fix", @("--secs=900", $targ)))
 }
 foreach ($j in $jobs) {
-	& $rb -Project (Join-Path $sp ("notate\" + $j[0])) -Seeds $seeds -OutDir $out -Tag $j[2] -Test $j[1] -Extra $j[3] | Out-Null
+	& $rb -Project (Join-Path $Copies $j[0]) -Seeds $seeds -OutDir $out -Tag $j[2] -Test $j[1] -Extra $j[3] | Out-Null
 	Add-Content (Join-Path $out "progress.txt") ("{0} done {1}" -f (Get-Date -Format "HH:mm"), $j[2])
 }
 Add-Content (Join-Path $out "progress.txt") ("{0} SEQ {1} FINISHED" -f (Get-Date -Format "HH:mm"), $Seq)

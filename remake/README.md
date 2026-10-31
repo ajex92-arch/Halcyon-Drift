@@ -32,7 +32,9 @@ match:
   credits, then hold your lane, push turrets with your minions and break the
   enemy mothership. An AI Admiral commands.
 
-Press **H** in game for the full how-to-play.
+Press **H** in game for the full how-to-play, and **P** or **Esc** for the pause
+menu (resume, how to play, restart the match, back to the start screen, full
+screen, quit).
 
 ### The standard rules
 
@@ -115,9 +117,9 @@ or `extreme`).
 | C | Admiral: switch the camera between free and following your own ship |
 | V | Flight assist on/off |
 | Wheel, + / - | Zoom (pilots are limited by ship size) |
-| P | Pause |
+| P | Pause menu (the game waits; P again resumes) |
 | H | How to play |
-| Esc | Close panels, cancel a map tool |
+| Esc | Cancel a map tool, close panels, or open the pause menu when there is nothing to close (Esc again resumes) |
 | F11 / Alt+Enter | Switch between the window and borderless fullscreen (in a browser, Alt+Enter; F11 stays the browser's own) |
 
 ## Layout
@@ -227,6 +229,11 @@ godot --headless --path remake --fixed-fps 60 -- --auto --role=pilot --bot=input
 # The mouse wheel over an open menu never zooms the camera behind it (--role=pilot or admiral)
 godot --headless --path remake -- --auto --role=admiral --bot=tour --force-hud --test=wheel_check
 
+# The pause menu: P, Esc and H through the real input path, the match clock standing still while it shows, the
+# buttons and questions, the match ending under it; --restart-check also presses Restart match and Quit to start
+# (the main scene loads again with a fresh match). --role=pilot or admiral
+godot --headless --path remake --fixed-fps 60 -- --auto --role=pilot --bot=pause --force-hud --restart-check --test=pause_menu_check
+
 # A round that grazes the rim of a big hull's hit circle is found by the hit search
 # (the two frigates and the two capitals; a few seconds)
 godot --headless --path remake -- --auto --all-ai --no-pilots --no-jungle --no-admiral-ai --test=hit_reach_check
@@ -248,6 +255,12 @@ godot --headless --path remake -- --all-ai --no-pilots --no-jungle --no-admiral-
 # prints "turret_repair_check: N failures")
 godot --headless --path remake -- --all-ai --no-pilots --no-jungle --no-admiral-ai --test=turret_repair_check
 
+# The guards of the rule-set code (the breach modules without a tracker,
+# attrition's refill, Fleet Doctrine and the weak admiral, the top bar's wave line, the launch option errors, a
+# redeploy site destroyed during its spool; a few seconds; prints "preset_guards_check: N failures"; the weak
+# admiral is needed for the Doctrine case)
+godot --headless --path remake --fixed-fps 60 -- --all-ai --no-pilots --no-jungle --admiral-ai=weak --seed=7 --test=preset_guards_check
+
 # A damaged turret, repair bay and fighter beside a Logistics Corvette: hulls and the turret's shield second by
 # second (40 match seconds; one TURRET_PROBE_JSON line)
 godot --headless --path remake -- --all-ai --no-pilots --no-jungle --no-admiral-ai --test=turret_repair_probe
@@ -256,6 +269,12 @@ godot --headless --path remake -- --all-ai --no-pilots --no-jungle --no-admiral-
 # pilot ship deaths and lifetimes per hull, time to kill, money, turrets built and lost, hull gained by turrets
 # and what the Logistics Corvettes' repairs raised, one CHANGE_PROBE_JSON line (--late starts at 25:00)
 godot --headless --path remake --fixed-fps 60 -- --all-ai --skill-jitter --sim-only --test=change_probe --secs=1800
+
+# Ships stuck in the asteroids: a line for every stuck episode and every trap of a whole match
+godot --headless --path remake --fixed-fps 60 -- --all-ai --seed=305 --skill-jitter --sim-only --test=stuck_trace2 --secs=1500
+
+# Replay of the 91 spots where ships got stuck (wave 0, 1 or 2): how long each ship stays near its spot
+godot --headless --path remake --fixed-fps 60 -- --auto --all-ai --no-pilots --no-jungle --no-admiral-ai --sim-only --test=stuck_spots --st-wave=0 --secs=100
 
 # Every script and scene loads
 godot --headless --path remake -- --auto --all-ai --test=load_all

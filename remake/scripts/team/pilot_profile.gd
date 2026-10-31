@@ -58,8 +58,9 @@ var respawn_t := 0.0
 var spool_bay: RepairBay = null
 ## Feature hook (Forward Redeploy, RedeployFeature): the repair bay or turret
 ## a redeploy jump will land at (null = none; always null unless
-## --variant=redeploy is on). MatchRules.tick hands it to
-## RedeployFeature.finish() when the spool ends.
+## --variant=redeploy is on). MatchRules.tick calls RedeployFeature.finish()
+## when the spool ends; a site destroyed meanwhile is a freed object by then
+## (it compares equal to null), which finish() counts as a lost site.
 var spool_site: Unit = null
 ## An AI pilot's job: "top", "mid" or "bot" (a lane), "jungle" or "flex".
 ## A human admiral's own record says "admiral".

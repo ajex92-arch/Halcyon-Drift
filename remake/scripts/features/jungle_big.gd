@@ -116,14 +116,19 @@ static func route_small(ship: Ship) -> bool:
 ## points as RouteGraph.path). Small ships, and every ship with the variant
 ## off, get RouteGraph.path(from, to, ship.is_small()) as always. A bigger
 ## ship that is allowed in gets the lane-only route or the jungle route,
-## whichever takes less flying time. PilotFlight calls it.
-static func plan_route(route: RouteGraph, ship: Ship, from: Vector2, to: Vector2) -> PackedVector2Array:
+## whichever takes less flying time. The way onto the road map is the cheapest
+## dot the ship can fly to (RouteGraph.entry()), and the route is empty with
+## RouteGraph.no_entry set when there is none; `strict` false asks for the old
+## way, the nearest dot, even when rocks hide it. The dots in `banned` are not
+## used as the way onto the map. PilotFlight calls it.
+static func plan_route(route: RouteGraph, ship: Ship, from: Vector2, to: Vector2, strict := true, banned := PackedInt32Array()) -> PackedVector2Array:
+	var radius := ship.radius if strict else 0.0
 	# Step 1: the ordinary answer for ships that are not affected.
 	if ship.is_small() or level() == 0 or not allows(ship):
-		return route.path(from, to, ship.is_small())
+		return route.path(from, to, ship.is_small(), radius, banned)
 	# Step 2: the two candidates.
-	var lanes := route.path(from, to, false)
-	var jungle := route.path(from, to, true)
+	var lanes := route.path(from, to, false, radius, banned)
+	var jungle := route.path(from, to, true, radius, banned)
 	if jungle.is_empty():
 		return lanes
 	# A real choice exists when the jungle-allowed route differs from the

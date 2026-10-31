@@ -11,7 +11,7 @@ extends RefCounted
 ## font size and colour, box style, bar value, gaps). Node names are left
 ## out on purpose: nodes made in code get made-up names, nodes in a scene
 ## get real ones, and both must dump the same. Two builds whose dumps match
-## look the same on screen (scratchpad ui_dump.ps1 compares them).
+## look the same on screen (the helper script ui_dump.ps1 compares them).
 ## With `layout` on (the tour's --dump-layout option) each step also prints
 ## one "UIVIEW <step> <w>x<h>" line (the size of the window) and every
 ## UIDUMP line gets extra facts after a " |L| " marker, the ones

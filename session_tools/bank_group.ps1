@@ -1,8 +1,10 @@
 param(
 	[Parameter(Mandatory = $true)][string]$Group,
+	# The folder that holds the groups' working copies (see merge_group.ps1).
+	[Parameter(Mandatory = $true)][string]$GroupsDir,
 	[Parameter(Mandatory = $true)][string[]]$Allowed,
 	# The snapshot the group's copy started from (see merge_group.ps1);
-	# rollbacks also restore from it. Default: scratchpad\original.
+	# rollbacks also restore from it. Default: the folder original next to this script.
 	[string]$Base = ""
 )
 # Banks one finished group into the main remake, safely when several agents
@@ -41,13 +43,13 @@ while ($true) {
 try {
 	# 2. Merge: the dry run gives the list of files (and refuses strays and
 	# conflicts before anything is touched); then the real merge.
-	$plan = & "$sp\merge_group.ps1" -Group $Group -Allowed $Allowed -Base $Base -DryRun
+	$plan = & "$sp\merge_group.ps1" -Group $Group -GroupsDir $GroupsDir -Allowed $Allowed -Base $Base -DryRun
 	if (-not ($plan | Where-Object { $_ -match '^MERGED' })) { $plan; "BANK FAILED (merge refused)"; return }
 	$copied = @($plan | Where-Object { $_ -match '^copied ' } | ForEach-Object { $_.Substring(7) })
 	$deleted = @($plan | Where-Object { $_ -match '^deleted ' } | ForEach-Object { $_.Substring(8) })
 	$merged = $false
 	try {
-		$m = & "$sp\merge_group.ps1" -Group $Group -Allowed $Allowed -Base $Base -ErrorAction Stop
+		$m = & "$sp\merge_group.ps1" -Group $Group -GroupsDir $GroupsDir -Allowed $Allowed -Base $Base -ErrorAction Stop
 		$m
 		$merged = [bool]($m | Where-Object { $_ -match '^MERGED' })
 	} catch {

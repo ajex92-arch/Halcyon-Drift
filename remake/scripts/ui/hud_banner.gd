@@ -61,7 +61,7 @@ func refresh() -> void:
 	# Paused, or an Admiral map tool waiting for a click on the map.
 	if get_tree().paused:
 		title = "Paused"
-		sub = "Press P to resume."
+		sub = "Press P for the pause menu."
 	elif hud.overlay.tool != "":
 		title = hud.overlay.hint()
 		# Amber is this banner's tone for a notice; red stays for danger.

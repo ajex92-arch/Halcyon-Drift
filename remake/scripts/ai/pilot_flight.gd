@@ -11,12 +11,22 @@ extends RefCounted
 ##     (a network of safe paths, with jungle paths only for strike craft)
 ##     for a list of waypoints (stepping-stone points along the way), and
 ##     fly to them one by one.
+##     The route starts at the cheapest dot of the graph that the ship can
+##     really fly to (RouteGraph.entry(): a straight line clear of every rock
+##     by the ship's radius). When there is none, the ship is in the rocks:
+##     PilotEscape plans a way out at once.
 ##     Point the nose at the next waypoint, thrust when lined up, and brake
 ##     when we would overshoot the end. Slow down before a sharp corner of
-##     the route and before a jungle gate, so we do not swing wide into the
-##     wall. If we make no real progress for 4 seconds, back off for a
-##     second and plan again; if that happens twice in the same place,
-##     PilotEscape plans a way out of the rock pocket.
+##     the route, before a jungle gate and before the corner that leads out
+##     of one, so we do not swing wide into the wall. If we make no real
+##     progress for 4 seconds the ship is stalled
+##     (stall()): it flies back along its own breadcrumb trail (PilotTrail)
+##     to a spot where it can join the route graph and plans again, going
+##     round the dot it was flying to (another gate, for example); if that
+##     happens twice in the same place,
+##     PilotEscape plans a way out of the rock pocket. A small ship in a
+##     fight does not use travel(), so watch_pinned() does the same for a ship
+##     that pushes forward and does not move.
 ##   - avoid_rocks(): look a little ahead of where we're going; if that spot
 ##     is inside a rock, turn and slide away from it (and brake if we're
 ##     heading straight in). It starts with avoid_hulls(): a ship about to
@@ -25,12 +35,13 @@ extends RefCounted
 ##   - target_hidden(): is a rock between us and the target? PilotCombat
 ##     asks it so that nobody shoots into a rock.
 ##
-## WHO USES IT: PilotCombat (steer and fight call travel, avoid_rocks and
-## target_hidden). travel() asks SiegeFixFeature.throttle() when the
-## siege_fix variant is on. It reads the route graph (world.map.route), the
-## asteroid field (world.asteroids) and the motherships' hulls
-## (World.mothership(), Mothership.hull_dist; avoid_hulls), and makes a
-## PilotEscape part for the rock pockets. The planned route itself lives on the brain
+## WHO USES IT: PilotCombat (steer and fight call travel, avoid_rocks,
+## note_position, watch_pinned and target_hidden). travel() asks
+## SiegeFixFeature.throttle() when the siege_fix variant is on. It reads the
+## route graph (world.map.route), the asteroid field (world.asteroids) and the
+## motherships' hulls (World.mothership(), Mothership.hull_dist; avoid_hulls),
+## and makes a PilotEscape part for the rock pockets and a PilotTrail for the
+## breadcrumbs. The planned route itself lives on the brain
 ## (PilotAI.path, path_i, path_goal) because tests read it.
 ##
 ## Timing note: the stuck timers here count 1/60 of a second per call:
@@ -38,6 +49,22 @@ extends RefCounted
 ## second. (Ticks where we dogfight instead don't count.)
 ## Angles are in radians ("rad"): 0.1 rad is about 6 degrees, 1 rad about
 ## 57 degrees.
+
+## After a route plan found no way onto the route graph, travel() waits this
+## many seconds before it plans again.
+const REPLAN_WAIT := 1.0
+## A ship in a fight is "pinned" when it asks for at least this much forward
+## thrust (0..1) ...
+const PINNED_FWD := 0.5
+## ... and moves slower than this (world units a second) ...
+const PINNED_SPEED := 30.0
+## ... for this many seconds. It is then stalled, like a ship whose stuck timer
+## fired in travel().
+const PINNED_T := 3.0
+## When a ship is stalled, the route dot it was flying to is not used in its
+## routes for this many seconds: the new route goes round it, through another
+## gate for example, and does not fly the same line again.
+const BAN_T := 60.0
 
 ## The pilot brain this part belongs to (we read its goal, skill and orbit,
 ## and keep its route). It is reached through a weak link: see `_ai_ref`.
@@ -87,6 +114,16 @@ var _hid := false
 var _hid_clear := 0
 ## The part that gets the ship out of rock pockets (see PilotEscape).
 var escape: PilotEscape
+## Seconds left before travel() may plan a route again after a plan found no
+## way onto the route graph (0 = it may).
+var _replan_t := 0.0
+## The breadcrumb trail of recent free spots (see PilotTrail).
+var trail := PilotTrail.new()
+## Seconds the ship has asked for forward thrust in a fight without moving.
+var _pin_t := 0.0
+## Route dots that the ship's routes go round for a while: dot number -> game
+## time (seconds) the ban ends.
+var _banned := {}
 
 
 ## Remember which brain we belong to.
@@ -100,6 +137,74 @@ func _init(owner: PilotAI) -> void:
 func reset_progress() -> void:
 	_stuck_t = 0.0
 	_prog_wp = Vector2.INF
+
+
+## Every tick (PilotCombat.steer() calls it): drop a breadcrumb when the ship
+## is touching no rock.
+func note_position(ship: Ship) -> void:
+	trail.note(ship.global_position, ship.get_slide_collision_count() == 0, ship.get_instance_id())
+
+
+## The route dots that are banned right now (the bans that have run out are
+## forgotten).
+func _banned_dots() -> PackedInt32Array:
+	var out := PackedInt32Array()
+	var now := ai.world.time
+	for k in _banned.keys():
+		if float(_banned[k]) > now:
+			out.append(int(k))
+		else:
+			_banned.erase(k)
+	return out
+
+
+## Can the ship join the route graph from where it is, on its way to `to`: is
+## there a dot it can fly to (RouteGraph.entry(), leaving out banned dots)?
+## PilotEscape asks it to know when a retrace has brought the ship far enough
+## out of the rocks.
+func can_join_route(ship: Ship, to: Vector2) -> bool:
+	var route := ai.world.map.route
+	var small := JungleBigFeature.route_small(ship)
+	return route.entry(ship.global_position, route.nearest(to, small), small, ship.radius, _banned_dots()) >= 0
+
+
+## The ship is stalled: the stuck timer of travel() fired (no real progress
+## for 4 s) or watch_pinned() found it pinned in a fight. `to` is the final
+## goal of the trip. With `ban_dot`, the route dot the ship was flying to is
+## banned for BAN_T seconds (not for a ship pinned in a fight: it was not
+## flying its route). PilotEscape counts the stall (the first one retraces the
+## ship's track, a second close by plans an escape); unless an escape or
+## retrace is on, the ship backs off for a second, and the route is thrown
+## away and planned again.
+func stall(ship: Ship, to: Vector2, ban_dot := true) -> void:
+	var brain := ai
+	if ban_dot and brain.path_i < brain.path.size() - 1:
+		var dot := brain.world.map.route.dot_at(brain.path[brain.path_i])
+		if dot >= 0:
+			_banned[dot] = brain.world.time + BAN_T
+	_unstick_t = 1.0
+	brain.path = PackedVector2Array()
+	brain.path_goal = Vector2.INF
+	escape.note_unstick(ship, to)
+	if escape.is_active():
+		_unstick_t = 0.0
+
+
+## In a fight a small ship flies at its target without travel(), so its stuck
+## timer never runs. Call this every tick of the fight: a ship that asks for
+## forward thrust (PINNED_FWD) but moves slower than PINNED_SPEED for PINNED_T
+## seconds is pinned against a rock; it is stalled (stall()). Returns true on
+## that tick, and the caller gives its target up.
+func watch_pinned(ship: Ship) -> bool:
+	if ship.controls.forward >= PINNED_FWD and ship.velocity.length() < PINNED_SPEED:
+		_pin_t += 1.0 / 60.0
+		if _pin_t > PINNED_T:
+			_pin_t = 0.0
+			stall(ship, ai.goal, false)
+			return true
+	else:
+		_pin_t = 0.0
+	return false
 
 
 ## Is the target hidden, i.e. does a rock stop a shot flying straight from
@@ -141,7 +246,8 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 	# of the straight line (checked about 4 times a second, or when the goal
 	# moves 150 units; playtest: the first jungler of every match flew
 	# straight at its camp from a gate and clipped the wall beside it). Plan a
-	# new route when we have none or the goal moved over 600.
+	# new route when we have none (after a plan that found no way onto the graph,
+	# only once REPLAN_WAIT seconds have passed) or the goal moved over 600.
 	var use_route := p.distance_to(to) > 2500.0 or not world.map.in_open_lane(p)
 	if not use_route:
 		_line_t -= 1
@@ -151,10 +257,25 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 			_line_blocked = not world.asteroids.segment_hit(p, to, ship.radius + 8.0).is_empty()
 		use_route = _line_blocked
 	if use_route:
-		if brain.path_goal == Vector2.INF or brain.path_goal.distance_to(to) > 600.0 or brain.path.is_empty():
-			brain.path = JungleBigFeature.plan_route(world.map.route, ship, p, to)
+		_replan_t = maxf(0.0, _replan_t - 1.0 / 60.0)
+		if brain.path_goal == Vector2.INF or brain.path_goal.distance_to(to) > 600.0 or (brain.path.is_empty() and _replan_t <= 0.0):
+			var banned := _banned_dots()
+			brain.path = JungleBigFeature.plan_route(world.map.route, ship, p, to, true, banned)
+			# The bans cut every route or every way onto the graph: plan without them.
+			if brain.path.is_empty() and not banned.is_empty():
+				brain.path = JungleBigFeature.plan_route(world.map.route, ship, p, to)
 			brain.path_i = 0
 			brain.path_goal = to
+			# No dot of the route graph that the ship can fly to from here: the
+			# first leg would end at a dot that rocks hide, and the ship would
+			# press itself against them. Plan an escape at once instead; the
+			# route is planned again from where the escape ends. If no escape
+			# can be planned, fly the old way, at the nearest dot.
+			if brain.path.is_empty() and world.map.route.no_entry:
+				_replan_t = REPLAN_WAIT
+				if escape.plan_now(ship, to) and escape.follow(ship):
+					return
+				brain.path = JungleBigFeature.plan_route(world.map.route, ship, p, to, false)
 		if not brain.path.is_empty():
 			# Thread jungle gates (86 wide) precisely: near or in the jungle,
 			# reach each waypoint (within 110 instead of 350) before turning
@@ -176,9 +297,12 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 			if brain.path_i < brain.path.size() - 1:
 				waypoint = brain.path[brain.path_i]
 	# Step 2: unstick. No real progress toward the current waypoint for 4 s
-	# (pinned on rocks, or circling one) -> back off for a second and plan
-	# again (the second time in the same place, plan an escape instead: see
-	# PilotEscape). While backing off we reverse and slide, nothing else.
+	# (pinned on rocks, or circling one) -> the ship is stalled (see stall()):
+	# the first time it flies back along its own track and plans again from a
+	# spot where it can join the route graph (the second time in the same
+	# place, it plans an escape instead: see PilotEscape); with no track it
+	# backs off for a second. While backing off we reverse and slide, nothing
+	# else.
 	if _unstick_t > 0.0:
 		_unstick_t -= 1.0 / 60.0
 		c.face_point = p + Vector2.from_angle(ship.rotation) * 400.0
@@ -201,13 +325,7 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 		_stuck_t += 1.0 / 60.0
 		if _stuck_t > 4.0:
 			_stuck_t = 0.0
-			_unstick_t = 1.0
-			escape.note_unstick(ship, to)
-			brain.path = PackedVector2Array()
-			brain.path_goal = Vector2.INF
-			# A planned escape replaces the backing off.
-			if escape.is_active():
-				_unstick_t = 0.0
+			stall(ship, to)
 	# Step 4: how far off the nose is, how fast we're closing, and how far
 	# we'd slide while braking (stopping distance = speed^2 / (2 x braking
 	# power), the usual physics formula).
@@ -248,20 +366,29 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 	# 69% for our pilots).
 	if in_jungle and ship.velocity.length() > ship.f_max * (0.55 + 0.15 * brain.skill):
 		c.forward = minf(c.forward, 0.0 if err < 0.4 else -0.4)
-	# Step 8: slow down before a sharp corner of the route or the entry into
-	# the jungle (a gate). A ship coming down a lane at boost speed (about
-	# 1,000 units a second) cannot turn through a gate: its turning circle is
-	# 300 units wide, so it swings wide of the gate and rams the wall beside
-	# it (playtest: the first jungler crashed at the same notch next to a gate
-	# 13 s after launch, every match). The corner speed is 28-45% of top
-	# speed (at most 38% within 1,000 units of the gate), and braking starts
-	# early enough (counting on 80% of the reverse thrusters' power).
+	# Step 8: slow down before a sharp corner of the route, the entry into
+	# the jungle (a gate) or the corner that leads out through a gate. A ship
+	# coming down a lane at boost speed (about 1,000 units a second) cannot
+	# turn through a gate: its turning circle is 300 units wide, so it swings
+	# wide of the gate and rams the wall beside it (playtest: the first
+	# jungler crashed at the same notch next to a gate 13 s after launch,
+	# every match). The way out is the same corner the other way round: the
+	# gate's inside dot is only about 200 units short of its narrowest part,
+	# and the route turns there (45 degrees on median) from the winding
+	# jungle path onto the gate's straight link, so a ship that takes it fast
+	# is still turning at the gate and scrapes the rocks beside it. The
+	# corner speed is 28-45% of top speed (at most 38% within 1,000 units of
+	# the gate), and braking starts early enough (counting on 80% of the
+	# reverse thrusters' power).
 	if use_route and brain.path_i < brain.path.size() - 1:
 		var after: Vector2 = brain.path[brain.path_i + 1]
 		var v_in := (waypoint - p).normalized()
 		var v_out := (after - waypoint).normalized()
 		var turn := acos(clampf(v_in.dot(v_out), -1.0, 1.0))
 		var to_jungle := not world.map.in_open_lane(after) and world.map.in_open_lane(waypoint)
+		# Leaving the jungle through a gate: the next waypoint is the gate's inside
+		# dot, the one after it is on the open lane, and the ship is in the jungle.
+		var to_lane := world.map.in_open_lane(after) and not world.map.in_open_lane(waypoint) and not world.map.in_open_lane(p)
 		# How far along the route is the first waypoint inside the jungle (the
 		# far side of a gate)? Within 1,000 of it, fly the gate approach slowly.
 		var gate_d := INF
@@ -274,15 +401,15 @@ func travel(ship: Ship, to: Vector2, arrive: float) -> void:
 					gate_d = acc
 					break
 		var v_cap := INF
-		if turn > 0.7 or to_jungle:
-			v_cap = maxf(120.0, ship.f_max * (0.28 if (turn > 1.2 or to_jungle) else 0.45))
+		if turn > 0.7 or to_jungle or to_lane:
+			v_cap = maxf(120.0, ship.f_max * (0.28 if (turn > 1.2 or to_jungle or to_lane) else 0.45))
 		if gate_d < 1000.0:
 			v_cap = minf(v_cap, ship.f_max * 0.38)
 		var v_now := ship.velocity.length()
 		if v_now > v_cap:
 			# Distance to the point where the cap applies: the corner (turn) or
 			# 800 before the gate's far side.
-			var cap_d := dist if (turn > 0.7 or to_jungle) else maxf(0.0, gate_d - 800.0)
+			var cap_d := dist if (turn > 0.7 or to_jungle or to_lane) else maxf(0.0, gate_d - 800.0)
 			var need := (v_now * v_now - v_cap * v_cap) / (2.0 * rev * 0.8)
 			if cap_d < need + 120.0 or gate_d < 800.0:
 				c.forward = minf(c.forward, -0.8 if v_now > v_cap * 1.3 else 0.0)

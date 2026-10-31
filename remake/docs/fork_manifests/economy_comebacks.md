@@ -106,4 +106,4 @@ Registered in `Rules.VARIANT_DEFAULTS` (all `"off"`) and `FeatureRegistry.FEATUR
 
 ## Verification notes
 
-See `../fun_plan/reports/economy_comebacks_build.md` (checks, determinism, smoke results, screen commands).
+See `../fun_plan/reports/economy_comebacks_build.md` (taken off main in v0.3.2; still in the history) (checks, determinism, smoke results, screen commands).

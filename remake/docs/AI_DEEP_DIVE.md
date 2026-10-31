@@ -3,7 +3,7 @@
 Written 2026-10-16. Plain-language report of the deep dive into the AI pilots,
 the minions and the AI admiral, done before the fun plan. Every number below
 comes from all-AI test matches run on this PC (about 500 logged runs); the
-raw notes are in the session scratchpad (`deepdive\`), not in the project.
+raw notes were kept outside the project.
 State of the code: pass 1 is in the game (banked 2026-10-16 02:20), pass 2 is
 ported, reviewed and being banked, pass 3 is planned (section 4).
 
@@ -441,7 +441,7 @@ Godot_v4.7.2-stable_win64_console.exe --headless --path "<project>" --fixed-fps 
 - Late game: add `--late` and use `--secs=300` (pilots) or `--secs=900` (admiral).
 - Admiral: `--test=admiral_audit --secs=1800`. The file `tests/admiral_audit.gd` arrives with pass 2.
 - Each probe prints a line every game minute and one `AUDIT_JSON` line at the end; compare the counters old vs new on the same seeds (use 6 seeds; 3 cannot resolve +-10%).
-- The comparison scripts (`ab_compare.py`, `int2_summary.py`, `adm2_cmp.py`) are in the session scratchpad `deepdive\`, not yet in the project. Copy them if you want them kept.
+- The comparison scripts (`ab_compare.py`, `int2_summary.py`, `adm2_cmp.py`) were kept outside the project and are not in it.
 
 **Healthy numbers for 6 matches of 15 min on the game with passes 1 and 2**
 (a big drift means something regressed): stuck episodes about 33-37; stuck

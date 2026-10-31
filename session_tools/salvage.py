@@ -3,10 +3,13 @@
 #     last assistant texts/thoughts  -> salvage/<label>_notes.md
 #  2. the code they changed in their copies (dd_<d>, dd_<d>_fix) vs dd_base,
 #     scripts/ only, as unified diffs -> salvage/<d>_diff.md
+# Usage: salvage.py <work folder> <transcripts folder> <copies folder>
+# (the copies folder holds the investigators' dd_<d> and dd_<d>_fix copies).
 import difflib, json, os, re, sys
 
 SP = sys.argv[1]
 TR = sys.argv[2]
+COPIES = sys.argv[3]
 OUT = os.path.join(SP, "deepdive", "salvage")
 os.makedirs(OUT, exist_ok=True)
 index = []
@@ -55,7 +58,7 @@ base = os.path.join(SP, "dd_base")
 for d in ["flight", "behavior", "targeting", "minions", "admiral"]:
     parts = []
     for copy in ["dd_" + d, "dd_" + d + "_fix"]:
-        root = os.path.join(SP, "notate", copy)
+        root = os.path.join(COPIES, copy)
         if not os.path.isdir(root):
             continue
         new_tests = []

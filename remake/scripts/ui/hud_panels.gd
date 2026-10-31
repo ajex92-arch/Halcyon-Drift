@@ -1,8 +1,8 @@
 class_name HudPanels
 extends RefCounted
 ## WHAT THIS IS: the part of the HUD that opens and closes the big panels
-## that cover the screen: the hangar, the Admiral board, the scoreboard and
-## the help pages. Only one of them is open at a time.
+## that cover the screen: the hangar, the Admiral board, the scoreboard, the
+## help pages and the pause menu. Only one of them is open at a time.
 ##
 ## HOW IT WORKS: each panel is made from its scene file the first time it
 ## is needed, and after that it is only shown or hidden. Opening a panel
@@ -21,11 +21,17 @@ extends RefCounted
 ## size measured from the panel itself could never get smaller again after
 ## the window shrank. When the window is resized and a panel's width changes
 ## by more than 20 pixels, the panel rebuilds its current tab.
+## The pause menu is the one panel that is not stretched over the window: it
+## is a card in the middle of the room the other pieces leave free
+## (relayout() hands it that room). The pause it holds outlasts the card: while
+## How to play is open over the menu the menu is hidden but the game stays
+## paused, and when the help closes panel_closed() shows the menu again.
 ##
 ## WHO USES IT: Hud makes one (hud.panels) and forwards _open_hangar(),
-## _toggle_board(), _show_scoreboard(), _toggle_help(), _close_others() and
+## _toggle_board(), _show_scoreboard(), _toggle_help(), _toggle_pause_menu(),
+## _close_others() and
 ## _any_panel_open() here. The panels themselves are kept on the Hud
-## (hud.hangar, hud.board, hud.scoreboard, hud.help), because HudInput,
+## (hud.hangar, hud.board, hud.scoreboard, hud.help, hud.pause_menu), because HudInput,
 ## HudBanner and tests/ui_tour.gd read them there. HudLayout calls
 ## relayout().
 
@@ -37,6 +43,8 @@ const BOARD_SCENE := preload("res://scenes/ui/admiral_board.tscn")
 const SCORE_SCENE := preload("res://scenes/ui/scoreboard.tscn")
 ## The help pages' scene.
 const HELP_SCENE := preload("res://scenes/ui/help_panel.tscn")
+## The pause menu's scene.
+const PAUSE_SCENE := preload("res://scenes/ui/pause_menu.tscn")
 
 ## How far (pixels) each panel keeps in from the left and right edges of
 ## the window: the hangar's.
@@ -86,6 +94,11 @@ func relayout() -> void:
 		if c != null and (absf(c.offset_top - top) > 0.5 or absf(c.offset_bottom + bottom) > 0.5):
 			c.offset_top = top
 			c.offset_bottom = -bottom
+	# The pause menu's card is centred in the room under the top bar (and the "me"
+	# panel, if the card reaches over it) and above the bottom strip.
+	if hud.pause_menu != null:
+		var card_left := (hud.get_viewport_rect().size.x - hud.pause_menu.card_width()) * 0.5
+		hud.pause_menu.set_room(hud.layout.panel_top(card_left), bottom)
 	if hud.scoreboard != null:
 		# It is centred on the window (its left edge is where that puts it),
 		# and the free room is lower than the middle of the window by half the
@@ -189,29 +202,58 @@ func toggle_help() -> void:
 		panel_rect(hud.help, HELP_SIDE)
 		hud.add_child(hud.help)
 		_help_w = UiKit.panel_width(hud.help)
-		hud.help.closed.connect(func() -> void: hud.help.visible = false)
+		hud.help.closed.connect(func() -> void:
+			hud.help.visible = false
+			panel_closed())
 		hud.help.visible = false
 	hud.help.visible = not hud.help.visible
 	if hud.help.visible:
 		close_others(hud.help)
 	else:
 		hud.layout.apply()
+		panel_closed()
+
+
+## Open the pause menu (making it first if needed): the game pauses and the
+## other panels close. If the menu is holding the game paused already (its card
+## showing, or hidden behind the help pages), end the pause instead.
+func toggle_pause_menu() -> void:
+	# Step 1: first time only: make the menu, hidden, on top of the HUD.
+	if hud.pause_menu == null:
+		hud.pause_menu = PAUSE_SCENE.instantiate()
+		hud.add_child(hud.pause_menu)
+		hud.pause_menu.setup(hud)
+	# Step 2: flip it.
+	if hud.pause_menu.active:
+		hud.pause_menu.resume()
+	else:
+		hud.pause_menu.open()
+
+
+## A panel was just closed. When the pause menu is still holding the game paused
+## and nothing else is open, the menu comes back: it is the screen the pause
+## belongs to (How to play, opened from the menu, returns to it).
+func panel_closed() -> void:
+	if hud.pause_menu != null and hud.pause_menu.active and not any_open():
+		hud.pause_menu.show_card()
 
 
 ## Hide every big panel except `keep` (pass null to hide them all). Panels
 ## that were never made are skipped. Then the rest of the HUD makes room
-## for whatever is left open (HudLayout).
+## for whatever is left open (HudLayout), and the pause menu comes back if
+## it was waiting behind a panel that closed (panel_closed()).
 func close_others(keep: Control) -> void:
-	for c: Control in [hud.hangar, hud.board, hud.help, hud.scoreboard]:
+	for c: Control in [hud.hangar, hud.board, hud.help, hud.scoreboard, hud.pause_menu]:
 		if c != null and c != keep:
 			c.visible = false
 	hud.layout.apply()
+	panel_closed()
 
 
 ## Is any big panel showing right now? (HudToast moves its pop-up out of
 ## the way when one is.)
 func any_open() -> bool:
-	for c: Control in [hud.hangar, hud.board, hud.help, hud.scoreboard]:
+	for c: Control in [hud.hangar, hud.board, hud.help, hud.scoreboard, hud.pause_menu]:
 		if c != null and c.visible:
 			return true
 	return false

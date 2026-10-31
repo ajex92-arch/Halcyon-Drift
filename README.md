@@ -25,9 +25,8 @@ test and improve it.
 
   The scripts expect the Godot console exe and a scratch folder. Their paths
   are set at the top of each script.
-- `deep_dive/`: the notes of the AI deep dive (state, plan, preliminary
-  findings and each investigator's findings).
-- `fun_plan/`: the fun-experiment fork briefs and build reports. The
+- `fun_plan/`: the fun-experiment fork briefs (the build reports left main
+  in v0.3.2; they are in the history). The
   binding plan is `remake/docs/FUN_PLAN.md`.
 
 ## Rules and teams

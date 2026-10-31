@@ -1,7 +1,7 @@
 # Fork manifest: teamfights_jungle (fork D of docs/FUN_PLAN.md)
 
 This is the build manifest of one fun-experiment fork, kept as it was when the fork was merged into the game (v0.2.0), with only its paths, base names and a few notes (the user's later decisions, the API index) updated for this repository.
-Paths are relative to `remake/`; the build report is `../fun_plan/reports/teamfights_jungle_build.md`.
+Paths are relative to `remake/`; the build report was `../fun_plan/reports/teamfights_jungle_build.md` (taken off main in v0.3.2; still in the history).
 
 Base: the game with every AI fix (the AI deep dive's pass 3, banked into remake/ before v0.1.0). Built for the fun plan: eight
 ideas, each a feature module behind its own variant key, all defaulting to "off". With every key at its default nothing changes:
