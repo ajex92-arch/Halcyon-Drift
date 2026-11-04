@@ -1,0 +1,12 @@
+batch: det_cloud_1104
+run: 41846294193
+finished: 2026-11-04T14:24:20Z
+runs: 4
+jobs: 8
+expected: 24
+present: 24
+missing: 0
+failed_jobs: 0
+filled_by_collect: 0
+matches_nonzero_exit: 0
+run_jobs_result: success
