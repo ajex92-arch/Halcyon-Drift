@@ -1,0 +1,28 @@
+# cloud results of batch det_cloud_1104: the files this batch leaves in this folder
+# runs: 4
+# jobs: 8
+# files: 24
+normA_seed7.txt
+normA_seed7_err.txt
+runner_normA_0.txt
+normA_seed11.txt
+normA_seed11_err.txt
+runner_normA_1.txt
+normA_seed13.txt
+normA_seed13_err.txt
+runner_normA_2.txt
+normB_seed7.txt
+normB_seed7_err.txt
+runner_normB_3.txt
+normB_seed11.txt
+normB_seed11_err.txt
+runner_normB_4.txt
+normB_seed13.txt
+normB_seed13_err.txt
+runner_normB_5.txt
+lateA_seed7.txt
+lateA_seed7_err.txt
+runner_lateA_6.txt
+lateB_seed7.txt
+lateB_seed7_err.txt
+runner_lateB_7.txt
