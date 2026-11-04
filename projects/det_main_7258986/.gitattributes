@@ -1,0 +1,5 @@
+# Godot writes its *.import files with LF line endings whenever it imports a
+# project. Where git converts line endings (core.autocrlf), a fresh copy of the
+# project would hold them with CRLF, and the first import would change them.
+# Keeping them LF makes an import change nothing.
+*.import text eol=lf

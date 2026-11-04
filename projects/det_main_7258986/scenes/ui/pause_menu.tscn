@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_root"]
+
+[node name="PauseMenu" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+mouse_force_pass_scroll_events = false
+script = ExtResource("1_root")
+
+[node name="Cover" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+mouse_filter = 0
+mouse_force_pass_scroll_events = false
+theme_type_variation = &"PauseLook"
+
+[node name="Col" type="VBoxContainer" parent="Center/Card"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Center/Card/Col"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Paused"
+
+[node name="Hint" type="Label" parent="Center/Card/Col"]
+layout_mode = 2
+theme_type_variation = &"MistText"
+theme_override_font_sizes/font_size = 13
+text = "Esc or P resumes the match."
+
+[node name="Items" type="VBoxContainer" parent="Center/Card/Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8

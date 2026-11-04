@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud_me_panel.gd" id="1_root"]
+
+[node name="MePanel" type="PanelContainer"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 8.0
+offset_bottom = 8.0
+mouse_filter = 2
+theme_type_variation = &"MeLook"
+script = ExtResource("1_root")
+
+[node name="Rows" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Rows"]
+layout_mode = 2
+theme_type_variation = &"AccentText"
+theme_override_font_sizes/font_size = 16
+
+[node name="Line" type="Label" parent="Rows"]
+layout_mode = 2
+theme_type_variation = &"MistText"
+theme_override_font_sizes/font_size = 12
+
+[node name="Earnings" type="VBoxContainer" parent="Rows"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0

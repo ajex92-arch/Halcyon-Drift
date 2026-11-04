@@ -1,0 +1,112 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hangar.gd" id="1_root"]
+
+[node name="Hangar" type="PanelContainer"]
+mouse_filter = 0
+mouse_force_pass_scroll_events = false
+theme_type_variation = &"HangarLook"
+script = ExtResource("1_root")
+
+[node name="Col" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Head" type="HBoxContainer" parent="Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Texts" type="VBoxContainer" parent="Col/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Col/Head/Texts"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Hangar"
+
+[node name="Status" type="Label" parent="Col/Head/Texts"]
+layout_mode = 2
+theme_type_variation = &"MistText"
+theme_override_font_sizes/font_size = 13
+
+[node name="Launch" type="Button" parent="Col/Head"]
+custom_minimum_size = Vector2(210, 44)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+theme_type_variation = &"PrimaryButton"
+text = "Launch (F)"
+
+[node name="Close" type="Button" parent="Col/Head"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Close (B)"
+
+[node name="BayRow" type="HBoxContainer" parent="Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Tabs" type="HBoxContainer" parent="Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Ships" type="Button" parent="Col/Tabs"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Ships"
+
+[node name="Modules" type="Button" parent="Col/Tabs"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Modules"
+
+[node name="Gear" type="Button" parent="Col/Tabs"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Gear"
+
+[node name="Kits" type="Button" parent="Col/Tabs"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 0
+text = "Kits"
+
+[node name="Scroll" type="ScrollContainer" parent="Col"]
+custom_minimum_size = Vector2(0, 240)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 1
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Col/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="SlotsHeading" type="Label" parent="Col"]
+layout_mode = 2
+theme_type_variation = &"MistText"
+theme_override_font_sizes/font_size = 12
+text = "YOUR 6 GEAR SLOTS (GEAR STAYS WITH YOU WHEN YOUR SHIP IS DESTROYED; CLICK A SLOT TO SELL IT FOR HALF)"
+
+[node name="Slots" type="HBoxContainer" parent="Col"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6

@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/entities/mining_drone.gd" id="1_root"]
+[ext_resource type="Script" path="res://scripts/entities/unit_visual.gd" id="2_visual"]
+
+[node name="MiningDrone" type="CharacterBody2D"]
+script = ExtResource("1_root")
+
+[node name="Visual" type="Node2D" parent="."]
+script = ExtResource("2_visual")

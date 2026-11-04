@@ -1,0 +1,51 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_root"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_top_bar.tscn" id="2_top"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_me_panel.tscn" id="3_me"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_feed.tscn" id="4_feed"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_banner.tscn" id="5_banner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_toast.tscn" id="6_toast"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ship_status.tscn" id="7_status"]
+[ext_resource type="PackedScene" path="res://scenes/ui/minimap.tscn" id="8_minimap"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_slots.tscn" id="9_slots"]
+
+[node name="Hud" type="Control"]
+process_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_root")
+
+[node name="TopBar" parent="." instance=ExtResource("2_top")]
+
+[node name="MePanel" parent="." instance=ExtResource("3_me")]
+
+[node name="Feed" parent="." instance=ExtResource("4_feed")]
+
+[node name="Banner" parent="." instance=ExtResource("5_banner")]
+
+[node name="Toast" parent="." instance=ExtResource("6_toast")]
+
+[node name="ShipStatus" parent="." instance=ExtResource("7_status")]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Minimap" parent="." instance=ExtResource("8_minimap")]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Slots" parent="." instance=ExtResource("9_slots")]

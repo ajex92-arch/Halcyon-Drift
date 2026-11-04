@@ -1,0 +1,175 @@
+class_name Scoreboard
+extends PanelContainer
+## WHAT THIS IS: the table of both teams' pilots: who they are, their ship,
+## K/D/A (kills / deaths / assists), minion last hits, derelicts cleared,
+## credits earned and what they are doing now.
+##
+## HOW IT WORKS: the layout is the scene scenes/ui/scoreboard.tscn: a box
+## (the "ScoreLook" look) holding a scroll area, Scroll, with one column in
+## it, Col > HalcyonHead, Halcyon, CinderHead, Cinder. Each team has a
+## heading line and a grid (a table)
+## whose first row is the column titles (Pilot, Ship, K / D / A, Minions,
+## Derelicts, Earned, Status); each title's minimum width in the scene is
+## its column's width in pixels. The box is as tall as its table, unless
+## `max_height` is smaller (a short window): then the table scrolls inside
+## the box. Twice a second while it is on screen,
+## _refresh() rewrites the headings (team kills, turrets destroyed,
+## mothership hull) and one row per pilot, best first (kills count 3,
+## assists 1). Rows are added or removed so each grid always has exactly
+## one per pilot; a new cell is as wide as the title at the top of its
+## column. An enemy's ship is shown only while our team can see it ("?"
+## and "Unseen" otherwise). Your own row is in the interface's highlight colour,
+## dead pilots grey.
+##
+## WHO USES IT: HudPanels makes it from scenes/ui/scoreboard.tscn for
+## pilots (shown while Tab is held). AdmiralBoard makes one from the same
+## scene for its Pilots tab, setting `embedded` first.
+
+## The game world (set by setup()).
+var world: World
+## True when shown inside another panel (the Admiral board): then it has no
+## background box of its own and lets the mouse pass through. Must be set
+## before the node joins the scene.
+var embedded := false
+## The tallest the box may be, in pixels (HudPanels sets it from the window's
+## height). A taller table scrolls inside the box. Ignored when embedded,
+## where the Admiral board scrolls the table itself.
+var max_height := INF:
+	set(v):
+		max_height = v
+		_fit()
+## Seconds until the next refresh (counts down from 0.5).
+var _t := 0.0
+## The scroll area that holds the table.
+@onready var _scroll: ScrollContainer = $Scroll
+## The table's column (headings and grids).
+@onready var _col: VBoxContainer = $Scroll/Col
+## One grid per team (index = team: 0 Aurelian, 1 Vhorr). Its first row is
+## the column titles.
+@onready var _grids: Array[GridContainer] = [$Scroll/Col/Halcyon, $Scroll/Col/Cinder]
+## One heading label per team.
+@onready var _heads: Array[Label] = [$Scroll/Col/HalcyonHead, $Scroll/Col/CinderHead]
+
+
+## Called once when the node joins the scene: inside the Admiral board,
+## drop our box and let the mouse pass through (and do not scroll: the board
+## does); give each team's heading the team's colour.
+func _ready() -> void:
+	if embedded:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		_scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	for t in 2:
+		_heads[t].add_theme_color_override("font_color", Palette.team(t))
+
+
+## Remember the world and fill the table once.
+func setup(w: World) -> void:
+	world = w
+	_refresh()
+
+
+## Make the scroll area as tall as the table, but no taller than the box may
+## be (max_height less the box's own padding). A scroll area asks for only
+## the height it is given, so this is what makes a tall table scroll
+## instead of making the box taller than the window.
+func _fit() -> void:
+	if embedded or _col == null:
+		return
+	var room := max_height - get_theme_stylebox("panel").get_minimum_size().y
+	var h := minf(_col.get_combined_minimum_size().y, room)
+	if absf(_scroll.custom_minimum_size.y - h) > 0.5:
+		_scroll.custom_minimum_size = Vector2(0, h)
+
+
+## Every frame: while on screen, refresh twice a second (every 0.5 s).
+func _process(dt: float) -> void:
+	if not is_visible_in_tree() or world == null:
+		return
+	_t -= dt
+	if _t <= 0.0:
+		_t = 0.5
+		_refresh()
+
+
+## Rewrite both teams' headings and rows (see HOW IT WORKS).
+func _refresh() -> void:
+	if world == null or _grids.is_empty():
+		return
+	var vt := world.viewer_team
+	for t in 2:
+		# Step 1: the heading.
+		var ts := world.teams[t]
+		var ms := world.mothership(t)
+		UiKit.set_text(_heads[t], "%s  ·  %d kills  ·  %d turrets destroyed  ·  mothership %d%%%s" % [Rules.TEAM_DISPLAY[t], ts.kills, ts.turrets_destroyed, int(ms.hull_frac() * 100.0), _feature_notes(t)])
+		# Step 2: this team's pilots, best score first.
+		var rows: Array = []
+		for p: PilotProfile in world.profiles:
+			if p.team == t:
+				rows.append(p)
+		rows.sort_custom(func(a: PilotProfile, b: PilotProfile) -> bool: return a.kills * 3 + a.assists > b.kills * 3 + b.assists)
+		# Step 3: make the grid exactly the right size: the title row plus
+		# one row per pilot (each row is one label per column). A new cell
+		# copies the size of the title at the top of its column.
+		var g := _grids[t]
+		var need := (rows.size() + 1) * g.columns
+		while g.get_child_count() < need:
+			var title: Label = g.get_child(g.get_child_count() % g.columns)
+			var l := UiKit.label("", 13, Palette.ICE)
+			l.custom_minimum_size = title.custom_minimum_size
+			l.clip_text = true
+			g.add_child(l)
+		while g.get_child_count() > need:
+			var last := g.get_child(g.get_child_count() - 1)
+			g.remove_child(last)
+			last.queue_free()
+		# Step 4: fill each pilot's row.
+		for r in rows.size():
+			var p: PilotProfile = rows[r]
+			_fill_row(g, r, p, t, vt)
+	# Step 5: the table may now be taller or shorter.
+	_fit()
+
+
+## Feature hook: the extra heading text of team `t`: whatever the feature
+## modules in World.features that have scoreboard_note(team) -> String say
+## (FeatsFeature lists the team's feats). "" when no feature is on. It goes
+## through Rules.display_label(), in case a note names a team by its
+## internal label.
+func _feature_notes(t: int) -> String:
+	var out := ""
+	if world.features.is_empty():
+		return out
+	for f: Object in world.features.values():
+		if f.has_method("scoreboard_note"):
+			out += str(f.call("scoreboard_note", t))
+	return Rules.display_label(out)
+
+
+## Write pilot `p` (of team `t`) into row `r` of grid `g` (row 0 is the
+## first pilot, just under the titles). `vt` is the team we see as
+## (-1 = a spectator who sees everything).
+func _fill_row(g: GridContainer, r: int, p: PilotProfile, t: int, vt: int) -> void:
+	# Step 1: the ship and the status, by what the pilot is doing.
+	var ship := "—"
+	var status := ""
+	match p.state:
+		"flying":
+			var visible_to_us := vt < 0 or t == vt or (p.ship != null and is_instance_valid(p.ship) and p.ship.visible_to(vt))
+			ship = String(Ships.HULLS[p.ship.hull_id]["label"]) if visible_to_us and p.ship != null and is_instance_valid(p.ship) else "?"
+			status = "Flying" if visible_to_us else "Unseen"
+		"docked":
+			status = "At the mothership"
+		"spooling":
+			status = "Hyperspace jump"
+		"dead":
+			status = "Respawn in %ds" % int(ceil(p.respawn_t))
+	if p.role == "admiral":
+		status = "Admiral · " + status
+	# Step 2: the cells, left to right, and the row's colour.
+	var vals := [p.callsign + (" (you)" if p.is_human else ""), ship, p.kda(), str(p.minion_kills), str(p.monster_kills), Util.money(p.earned), status]
+	for c in g.columns:
+		var l: Label = g.get_child((r + 1) * g.columns + c)
+		UiKit.set_text(l, vals[c])
+		l.add_theme_color_override("font_color", UiKit.accent() if p.is_human else (Palette.MIST if p.state == "dead" else Palette.ICE))
